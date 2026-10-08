@@ -55,32 +55,70 @@ tailwind.config = {
   .completing { animation: completeOut 0.4s ease-out forwards; }
   .pop { animation: pop 0.25s ease-out; }
 
+  /* Priority dots */
   .pri { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid currentColor; flex-shrink: 0; }
   .pri-high { background: currentColor; border-color: currentColor; }
   .pri-medium { background: linear-gradient(90deg, currentColor 50%, transparent 50%); border-color: currentColor; }
   .pri-low { background: transparent; border-color: currentColor; opacity: 0.45; }
+  .pri-none { background: transparent; border-color: transparent; opacity: 0; }
 
-  .cal-cell { aspect-ratio: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 0.3rem; cursor: pointer; position: relative; transition: background 0.15s; border-radius: 0.5rem; }
-  .cal-cell:hover { background: rgba(0,0,0,0.04); }
-  .dark .cal-cell:hover { background: rgba(255,255,255,0.05); }
+  /* ============================================
+     CALENDAR — full rewrite for clean hover/select
+  ============================================ */
+  .cal-cell {
+    aspect-ratio: 1 / 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    padding-top: 0.3rem;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.15s ease;
+    border-radius: 0.5rem;
+  }
+  .cal-cell:hover { background: #f4f4f5; }
+  .dark .cal-cell:hover { background: #27272a; }
   .cal-cell.other { opacity: 0.3; }
-  .cal-cell.selected { background: currentColor; }
-  .cal-cell.selected .cal-num { color: white; }
-  .dark .cal-cell.selected .cal-num { color: #09090b; }
-  .cal-cell.selected .cal-dot { background: white; }
-  .dark .cal-cell.selected .cal-dot { background: #09090b; }
-  .cal-num { font-size: 0.75rem; font-weight: 600; color: currentColor; line-height: 1; }
+
+  /* Day number: all get identical 22x22 slot so layout never shifts */
+  .cal-num {
+    font-size: 0.75rem; font-weight: 600;
+    color: #18181b; line-height: 1;
+    width: 22px; height: 22px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    box-sizing: border-box;
+    border: 1.5px solid transparent;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
   .dark .cal-num { color: #e4e4e7; }
-  .cal-cell.today .cal-num { color: white; background: #18181b; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-  .dark .cal-cell.today .cal-num { color: #09090b; background: #fafafa; }
-  .dark .cal-cell.today.selected .cal-num { background: transparent; color: #09090b; }
-  .cal-cell.selected.today .cal-num { background: transparent; color: white; }
+
+  /* Today = thin ring outline */
+  .cal-cell.today .cal-num { border-color: #a1a1aa; }
+  .dark .cal-cell.today .cal-num { border-color: #52525b; }
+
+  /* Selected cell: explicit solid background, high-specificity overrides */
+  .cal-cell.selected,
+  .cal-cell.selected:hover { background: #18181b; }
+  .dark .cal-cell.selected,
+  .dark .cal-cell.selected:hover { background: #fafafa; }
+
+  .cal-cell.selected .cal-num { color: #ffffff; }
+  .dark .cal-cell.selected .cal-num { color: #09090b; }
+  .cal-cell.selected.today .cal-num { border-color: #ffffff; }
+  .dark .cal-cell.selected.today .cal-num { border-color: #09090b; }
+
+  /* Dots */
   .cal-dots { display: flex; gap: 2px; margin-top: 3px; justify-content: center; }
   .cal-dot { width: 4px; height: 4px; border-radius: 50%; background: #18181b; }
   .dark .cal-dot { background: #e4e4e7; }
-  .cal-dot.ring { background: transparent; border: 1.5px solid currentColor; }
+  .cal-dot.ring { background: transparent; border: 1.5px solid #18181b; }
   .dark .cal-dot.ring { border-color: #e4e4e7; }
 
+  .cal-cell.selected .cal-dot { background: #ffffff; }
+  .dark .cal-cell.selected .cal-dot { background: #09090b; }
+  .cal-cell.selected .cal-dot.ring { background: transparent; border-color: #ffffff; }
+  .dark .cal-cell.selected .cal-dot.ring { background: transparent; border-color: #09090b; }
+
+  /* Checkbox */
   .checkbox {
     width: 22px; height: 22px; border-radius: 50%;
     border: 2px solid #a1a1aa; background: transparent;
@@ -95,6 +133,7 @@ tailwind.config = {
   .checkbox.done { background: #18181b; border-color: #18181b; color: white; }
   .dark .checkbox.done { background: #fafafa; border-color: #fafafa; color: #09090b; }
 
+  /* Snooze popover */
   .popover {
     position: absolute;
     background: white;
@@ -108,11 +147,8 @@ tailwind.config = {
   .dark .popover { background: #18181b; border-color: #27272a; }
 
   input[type="date"], input[type="time"] {
-    -webkit-appearance: none;
-    appearance: none;
-    min-width: 0;
-    width: 100%;
-    box-sizing: border-box;
+    -webkit-appearance: none; appearance: none;
+    min-width: 0; width: 100%; box-sizing: border-box;
   }
   input[type="date"]::-webkit-date-and-time-value { text-align: left; }
 
@@ -179,11 +215,12 @@ tailwind.config = {
           </div>
           <div>
             <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Priority</label>
-            <div class="flex gap-1 p-1 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl" id="priorityGroup">
-              <button type="button" data-priority="high" class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition">High</button>
-              <button type="button" data-priority="medium" class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition">Med</button>
-              <button type="button" data-priority="low" class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition">Low</button>
-            </div>
+            <select id="prioritySelect" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
+              <option value="none">None</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
           </div>
         </div>
 
@@ -203,12 +240,12 @@ tailwind.config = {
           <select id="repeatSelect" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
             <option value="">Never</option>
             <option value="daily">Daily</option>
-            <option value="every2days">Every 2 days</option>
+            <option value="weekdays">Weekdays (Mon–Fri)</option>
+            <option value="weekends">Weekends (Sat–Sun)</option>
             <option value="weekly">Weekly</option>
-            <option value="every2weeks">Every 2 weeks</option>
+            <option value="biweekly">Biweekly</option>
             <option value="monthly">Monthly</option>
             <option value="yearly">Yearly</option>
-            <option value="weekdays">Weekdays (Mon–Fri)</option>
             <option value="custom">Custom…</option>
           </select>
           <div id="customRepeatRow" class="hidden mt-2 flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300">
@@ -266,9 +303,9 @@ tailwind.config = {
 
     <div class="flex justify-center mb-6">
       <div class="inline-flex bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-1" id="allViewGroup">
-        <button onclick="setAllView('list')" data-view="list" class="seg-btn px-5 py-2 rounded-lg text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-white active">List</button>
-        <button onclick="setAllView('calendar')" data-view="calendar" class="seg-btn px-5 py-2 rounded-lg text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-white">Calendar</button>
-        <button onclick="setAllView('archive')" data-view="archive" class="seg-btn px-5 py-2 rounded-lg text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-white">Archive</button>
+        <button onclick="setAllView('list')" data-view="list" class="seg-btn px-3 sm:px-5 py-2 rounded-lg text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-white active">Upcoming</button>
+        <button onclick="setAllView('calendar')" data-view="calendar" class="seg-btn px-3 sm:px-5 py-2 rounded-lg text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-white">Calendar</button>
+        <button onclick="setAllView('archive')" data-view="archive" class="seg-btn px-3 sm:px-5 py-2 rounded-lg text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-white">Completed</button>
       </div>
     </div>
 
@@ -327,7 +364,7 @@ tailwind.config = {
 
         <div class="mt-6 pt-5 border-t border-zinc-100 dark:border-zinc-800">
           <h4 id="calendarSelectedTitle" class="text-xs uppercase font-bold tracking-wider text-zinc-400 mb-3"></h4>
-          <div id="calendarDayTasks" class="space-y-2"></div>
+          <div id="calendarDayTasks"></div>
         </div>
       </div>
     </div>
@@ -343,7 +380,7 @@ tailwind.config = {
           <div class="w-12 h-12 mx-auto mb-3 text-zinc-300 dark:text-zinc-600 flex items-center justify-center rounded-full bg-zinc-50 dark:bg-zinc-950">
             <i class="fa-solid fa-box-archive text-xl"></i>
           </div>
-          <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Nothing archived yet</p>
+          <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Nothing completed yet</p>
           <p class="text-xs text-zinc-400 mt-1">Completed tasks appear here.</p>
         </div>
       </div>
@@ -496,8 +533,8 @@ const CATEGORIES = [
   { name: 'Others',         icon: 'fa-circle' }
 ];
 
-const PRIORITY_LABEL = { high: 'High', medium: 'Medium', low: 'Low' };
-const PRIORITY_ORDER = { high: 0, medium: 1, low: 2 };
+const PRIORITY_LABEL = { high: 'High', medium: 'Medium', low: 'Low', none: 'None' };
+const PRIORITY_ORDER = { high: 0, medium: 1, low: 2, none: 3 };
 
 const STORAGE_KEY_TASKS = 'todo_tasks_v1';
 const STORAGE_KEY_THEME = 'todo_theme';
@@ -510,7 +547,6 @@ let editingId = null;
 let detailId = null;
 let pendingDeleteId = null;
 let currentFormType = 'Academic';
-let currentFormPriority = 'medium';
 let allSubView = 'list';
 let calendarMonth = '';
 let calendarSelectedDate = null;
@@ -561,6 +597,15 @@ function advanceDate(fromDate, recurrence) {
     }
     return next;
   }
+  if (freq === 'weekends') {
+    let next = addDaysStr(fromDate, 1);
+    for (let i = 0; i < 10; i++) {
+      const day = parseDate(next).getDay();
+      if (day === 0 || day === 6) return next;
+      next = addDaysStr(next, 1);
+    }
+    return next;
+  }
   return addDaysStr(fromDate, 1);
 }
 
@@ -568,6 +613,7 @@ function formatRecurrenceLabel(r) {
   if (!r) return '';
   const { freq, interval } = r;
   if (freq === 'weekdays') return 'Every weekday';
+  if (freq === 'weekends') return 'Every weekend';
   const unit = { daily: 'day', weekly: 'week', monthly: 'month', yearly: 'year' }[freq] || 'day';
   if (interval === 1) {
     if (freq === 'daily') return 'Every day';
@@ -636,7 +682,7 @@ const storageWarning = document.getElementById('storageWarning');
 const taskForm = document.getElementById('taskForm');
 const titleInput = document.getElementById('titleInput');
 const typeSelect = document.getElementById('typeSelect');
-const priorityGroup = document.getElementById('priorityGroup');
+const prioritySelect = document.getElementById('prioritySelect');
 const dateInput = document.getElementById('dateInput');
 const timeInput = document.getElementById('timeInput');
 const repeatSelect = document.getElementById('repeatSelect');
@@ -724,20 +770,6 @@ function populateTypeSelect() {
   typeSelect.value = currentFormType;
 }
 
-function setFormPriority(p) {
-  currentFormPriority = p;
-  priorityGroup.querySelectorAll('button').forEach(b => {
-    const on = b.dataset.priority === p;
-    b.className = `flex-1 py-1.5 rounded-lg text-xs font-semibold transition ${on ? 'bg-white dark:bg-zinc-800 shadow-sm text-zinc-900 dark:text-white' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'}`;
-  });
-}
-
-priorityGroup.addEventListener('click', (e) => {
-  const btn = e.target.closest('button[data-priority]');
-  if (!btn) return;
-  setFormPriority(btn.dataset.priority);
-});
-
 repeatSelect.addEventListener('change', () => {
   customRepeatRow.classList.toggle('hidden', repeatSelect.value !== 'custom');
 });
@@ -746,12 +778,12 @@ function getRecurrenceFromForm() {
   const v = repeatSelect.value;
   if (!v) return null;
   if (v === 'daily') return { freq: 'daily', interval: 1 };
-  if (v === 'every2days') return { freq: 'daily', interval: 2 };
+  if (v === 'weekdays') return { freq: 'weekdays', interval: 1 };
+  if (v === 'weekends') return { freq: 'weekends', interval: 1 };
   if (v === 'weekly') return { freq: 'weekly', interval: 1 };
-  if (v === 'every2weeks') return { freq: 'weekly', interval: 2 };
+  if (v === 'biweekly') return { freq: 'weekly', interval: 2 };
   if (v === 'monthly') return { freq: 'monthly', interval: 1 };
   if (v === 'yearly') return { freq: 'yearly', interval: 1 };
-  if (v === 'weekdays') return { freq: 'weekdays', interval: 1 };
   if (v === 'custom') {
     const n = Math.max(1, parseInt(customInterval.value) || 1);
     return { freq: customUnit.value, interval: n };
@@ -763,12 +795,12 @@ function setFormRecurrence(r) {
   if (!r) { repeatSelect.value = ''; customRepeatRow.classList.add('hidden'); return; }
   const { freq, interval } = r;
   if (freq === 'daily' && interval === 1) repeatSelect.value = 'daily';
-  else if (freq === 'daily' && interval === 2) repeatSelect.value = 'every2days';
+  else if (freq === 'weekdays') repeatSelect.value = 'weekdays';
+  else if (freq === 'weekends') repeatSelect.value = 'weekends';
   else if (freq === 'weekly' && interval === 1) repeatSelect.value = 'weekly';
-  else if (freq === 'weekly' && interval === 2) repeatSelect.value = 'every2weeks';
+  else if (freq === 'weekly' && interval === 2) repeatSelect.value = 'biweekly';
   else if (freq === 'monthly' && interval === 1) repeatSelect.value = 'monthly';
   else if (freq === 'yearly' && interval === 1) repeatSelect.value = 'yearly';
-  else if (freq === 'weekdays') repeatSelect.value = 'weekdays';
   else { repeatSelect.value = 'custom'; customInterval.value = interval; customUnit.value = freq; }
   customRepeatRow.classList.toggle('hidden', repeatSelect.value !== 'custom');
 }
@@ -780,7 +812,7 @@ function resetForm() {
   timeInput.value = '';
   dateInput.value = todayStr();
   setFormRecurrence(null);
-  setFormPriority('medium');
+  prioritySelect.value = 'none';
   currentFormType = 'Academic';
   typeSelect.value = currentFormType;
   formHeaderIcon.className = 'fa-solid fa-plus text-zinc-400';
@@ -794,12 +826,11 @@ window.startEdit = function(id) {
   const t = tasks.find(x => x.id === id);
   if (!t) return;
   closeDetail();
-  switchTab('today');
   editingId = id;
   titleInput.value = t.title;
   currentFormType = t.type;
   typeSelect.value = t.type;
-  setFormPriority(t.priority || 'medium');
+  prioritySelect.value = t.priority || 'none';
   dateInput.value = t.dueDate || '';
   timeInput.value = t.dueTime || '';
   setFormRecurrence(t.recurrence);
@@ -809,10 +840,16 @@ window.startEdit = function(id) {
   submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> Update Task';
   submitBtn.className = 'flex-1 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-bold text-sm shadow-sm transition-all duration-200 flex items-center justify-center gap-2';
   cancelEditBtn.classList.remove('hidden');
-  setTimeout(() => {
-    document.getElementById('formHeaderText').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    titleInput.focus();
-  }, 150);
+
+  // Single scroll: switchTab only if needed, then focus without scroll conflict
+  if (currentTab !== 'today') {
+    switchTab('today');
+    // switchTab already fires one smooth scroll to top. Focus without triggering another scroll.
+    setTimeout(() => { titleInput.focus({ preventScroll: true }); }, 350);
+  } else {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => { titleInput.focus({ preventScroll: true }); }, 350);
+  }
 };
 
 cancelEditBtn.addEventListener('click', resetForm);
@@ -826,7 +863,7 @@ taskForm.addEventListener('submit', (e) => {
     title,
     notes: notesInput.value.trim(),
     type: typeSelect.value,
-    priority: currentFormPriority,
+    priority: prioritySelect.value || 'none',
     dueDate: dateInput.value || null,
     dueTime: timeInput.value || null,
     recurrence: getRecurrenceFromForm()
@@ -883,11 +920,11 @@ function compareByDeadline(a, b) {
   if (a.dueTime && b.dueTime && a.dueTime !== b.dueTime) return a.dueTime < b.dueTime ? -1 : 1;
   if (a.dueTime && !b.dueTime) return -1;
   if (!a.dueTime && b.dueTime) return 1;
-  return (PRIORITY_ORDER[a.priority] ?? 1) - (PRIORITY_ORDER[b.priority] ?? 1);
+  return (PRIORITY_ORDER[a.priority] ?? 3) - (PRIORITY_ORDER[b.priority] ?? 3);
 }
 function compareByPriority(a, b) {
-  const pa = PRIORITY_ORDER[a.priority] ?? 1;
-  const pb = PRIORITY_ORDER[b.priority] ?? 1;
+  const pa = PRIORITY_ORDER[a.priority] ?? 3;
+  const pb = PRIORITY_ORDER[b.priority] ?? 3;
   if (pa !== pb) return pa - pb;
   return compareByDeadline(a, b);
 }
@@ -903,6 +940,7 @@ function renderTaskRow(t, opts = {}) {
   const today = todayStr();
   const isOverdue = !isCompleted && t.dueDate && t.dueDate < today;
   const typeIcon = getTypeIcon(t.type);
+  const pri = t.priority || 'none';
 
   const metaParts = [];
   if (t.dueDate) {
@@ -931,7 +969,7 @@ function renderTaskRow(t, opts = {}) {
         </div>
       </div>
       <div class="flex items-center gap-2 flex-shrink-0">
-        <span class="pri pri-${t.priority || 'medium'} text-zinc-900 dark:text-zinc-100"></span>
+        <span class="pri pri-${pri} text-zinc-900 dark:text-zinc-100"></span>
         ${showSnooze && isOverdue ? `
           <button class="p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800" data-snooze-btn="${t.id}" onclick="event.stopPropagation(); openSnooze(event, ${t.id})">
             <i class="fa-solid fa-clock-rotate-left text-xs"></i>
@@ -1097,6 +1135,8 @@ window.shiftCalendarMonth = function(delta) {
   const [y, m] = calendarMonth.split('-').map(Number);
   const d = new Date(y, m - 1 + delta, 1);
   calendarMonth = `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+  // Reset selection to the 1st of the new month
+  calendarSelectedDate = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-01`;
   renderCalendar();
 };
 
@@ -1177,14 +1217,28 @@ function renderCalendar() {
   });
   calendarSelectedTitle.textContent = dateLabel;
 
-  const dayTasks = sortTasks(active.filter(t => t.dueDate === calendarSelectedDate));
-  if (dayTasks.length === 0) {
-    calendarDayTasks.innerHTML = `
-      <p class="text-xs text-zinc-400 italic py-3 text-center">No tasks on this day.</p>
-    `;
-  } else {
-    calendarDayTasks.innerHTML = dayTasks.map(t => renderTaskRow(t)).join('');
+  const dayActive = sortTasks(active.filter(t => t.dueDate === calendarSelectedDate));
+  const dayCompleted = tasks.filter(t => t.completed && t.dueDate === calendarSelectedDate);
+
+  if (dayActive.length === 0 && dayCompleted.length === 0) {
+    calendarDayTasks.innerHTML = `<p class="text-xs text-zinc-400 italic py-3 text-center">No tasks on this day.</p>`;
+    return;
   }
+
+  let html = '';
+  if (dayActive.length > 0) {
+    html += `<div class="space-y-2">${dayActive.map(t => renderTaskRow(t)).join('')}</div>`;
+  }
+  if (dayCompleted.length > 0) {
+    const divider = dayActive.length > 0 ? 'mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800' : '';
+    html += `
+      <div class="${divider}">
+        <div class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2">Completed</div>
+        <div class="space-y-2">${dayCompleted.map(t => renderTaskRow(t)).join('')}</div>
+      </div>
+    `;
+  }
+  calendarDayTasks.innerHTML = html;
 }
 
 window.selectCalendarDay = function(date) {
@@ -1272,7 +1326,6 @@ window.toggleComplete = function(id) {
 
     saveData();
     const wasRecurring = !!t.recurrence;
-    const prevState = wasRecurring ? null : { completed: false, completedAt: null };
     const prevHistory = wasRecurring ? [...(t.history || [])] : null;
     const prevDue = wasRecurring ? (t.history[t.history.length - 1].dueDate) : null;
 
@@ -1310,6 +1363,7 @@ window.toggleComplete = function(id) {
     saveData();
     if (currentTab === 'all' && allSubView === 'archive') renderArchive();
     if (currentTab === 'all' && allSubView === 'list') renderList();
+    if (currentTab === 'all' && allSubView === 'calendar') renderCalendar();
     if (currentTab === 'today') renderToday();
     showToast('Moved back to active');
   }
@@ -1378,8 +1432,13 @@ window.openDetail = function(id) {
   document.getElementById('detailType').textContent = t.type;
   document.getElementById('detailTitle').textContent = t.title;
 
+  const pri = t.priority || 'none';
   const priEl = document.getElementById('detailPriority');
-  priEl.innerHTML = `<span class="inline-flex items-center gap-2"><span class="pri pri-${t.priority} text-zinc-800 dark:text-zinc-200"></span>${PRIORITY_LABEL[t.priority] || 'Medium'}</span>`;
+  if (pri === 'none') {
+    priEl.textContent = 'None';
+  } else {
+    priEl.innerHTML = `<span class="inline-flex items-center gap-2"><span class="pri pri-${pri} text-zinc-800 dark:text-zinc-200"></span>${PRIORITY_LABEL[pri]}</span>`;
+  }
 
   const dateRow = document.getElementById('detailDateRow');
   const dateEl = document.getElementById('detailDate');
@@ -1542,7 +1601,7 @@ window.addEventListener('load', () => {
   if (savedSort === 'priority' || savedSort === 'deadline') sortPref = savedSort;
 
   populateTypeSelect();
-  setFormPriority('medium');
+  prioritySelect.value = 'none';
   dateInput.value = todayStr();
 
   loadData();
