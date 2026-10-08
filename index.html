@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Tick — Task Tracker</title>
 
-<!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
@@ -24,14 +23,13 @@
 tailwind.config = {
   darkMode: 'class',
   theme: {
-    extend: {
-      fontFamily: { sans: ['Inter', 'sans-serif'] }
-    }
+    extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } }
   }
 };
 </script>
 
 <style>
+  html, body { min-height: 100dvh; }
   body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -45,17 +43,13 @@ tailwind.config = {
   @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
   @keyframes pop { 0% { transform: scale(0.8); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
-  @keyframes completeOut {
-    0% { opacity: 1; transform: translateX(0); }
-    100% { opacity: 0; transform: translateX(20px); }
-  }
+  @keyframes completeOut { 0% { opacity: 1; transform: translateX(0); } 100% { opacity: 0; transform: translateX(20px); } }
 
   .toast-enter { animation: slideUp 0.25s ease-out forwards; }
   .toast-exit { animation: fadeOut 0.25s ease-in forwards; }
   .completing { animation: completeOut 0.4s ease-out forwards; }
   .pop { animation: pop 0.25s ease-out; }
 
-  /* Priority marks */
   .pri-mark {
     display: inline-block;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -65,17 +59,14 @@ tailwind.config = {
     flex-shrink: 0;
     letter-spacing: -0.5px;
   }
-  .pri-mark-high { color: #18181b; }
-  .dark .pri-mark-high { color: #fafafa; }
-  .pri-mark-medium { color: #52525b; }
-  .dark .pri-mark-medium { color: #a1a1aa; }
-  .pri-mark-low { color: #a1a1aa; }
-  .dark .pri-mark-low { color: #71717a; }
+  .pri-mark-high { color: #dc2626; }
+  .dark .pri-mark-high { color: #f87171; }
+  .pri-mark-medium { color: #ea580c; }
+  .dark .pri-mark-medium { color: #fb923c; }
+  .pri-mark-low { color: #ca8a04; }
+  .dark .pri-mark-low { color: #facc15; }
   .pri-mark-none { visibility: hidden; }
 
-  /* ============================================
-     CALENDAR
-  ============================================ */
   .cal-cell {
     aspect-ratio: 1 / 1;
     display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
@@ -90,7 +81,6 @@ tailwind.config = {
   .cal-cell:hover { border-color: #d4d4d8; }
   .dark .cal-cell:hover { border-color: #3f3f46; }
   .cal-cell.other { opacity: 0.3; }
-
   .cal-num {
     font-size: 0.75rem; font-weight: 600;
     color: #18181b; line-height: 1;
@@ -100,33 +90,26 @@ tailwind.config = {
     box-sizing: border-box;
   }
   .dark .cal-num { color: #e4e4e7; }
-
   .cal-cell.today .cal-num { background: #18181b; color: #ffffff; }
   .dark .cal-cell.today .cal-num { background: #fafafa; color: #09090b; }
-
   .cal-cell.selected,
   .cal-cell.selected:hover { background: #18181b; border-color: transparent; }
   .dark .cal-cell.selected,
   .dark .cal-cell.selected:hover { background: #fafafa; border-color: transparent; }
-
   .cal-cell.selected .cal-num { color: #ffffff; }
   .dark .cal-cell.selected .cal-num { color: #09090b; }
-
   .cal-cell.selected.today .cal-num { background: #ffffff; color: #18181b; }
   .dark .cal-cell.selected.today .cal-num { background: #09090b; color: #fafafa; }
-
   .cal-dots { display: flex; gap: 2px; margin-top: 5px; justify-content: center; }
   .cal-dot { width: 4px; height: 4px; border-radius: 50%; background: #18181b; }
   .dark .cal-dot { background: #e4e4e7; }
   .cal-dot.ring { background: transparent; border: 1.5px solid #18181b; }
   .dark .cal-dot.ring { border-color: #e4e4e7; }
-
   .cal-cell.selected .cal-dot { background: #ffffff; }
   .dark .cal-cell.selected .cal-dot { background: #09090b; }
   .cal-cell.selected .cal-dot.ring { background: transparent; border-color: #ffffff; }
   .dark .cal-cell.selected .cal-dot.ring { background: transparent; border-color: #09090b; }
 
-  /* Checkbox */
   .checkbox {
     width: 22px; height: 22px; border-radius: 50%;
     border: 2px solid #a1a1aa; background: transparent;
@@ -141,7 +124,6 @@ tailwind.config = {
   .checkbox.done { background: #18181b; border-color: #18181b; color: white; }
   .dark .checkbox.done { background: #fafafa; border-color: #fafafa; color: #09090b; }
 
-  /* Snooze popover */
   .popover {
     position: absolute;
     background: white;
@@ -160,19 +142,10 @@ tailwind.config = {
   }
   input[type="date"]::-webkit-date-and-time-value { text-align: left; }
 
-  /* History panel date inputs */
   .history-date-input {
-    background: transparent;
-    border: none;
-    color: inherit;
-    font-family: inherit;
-    font-size: 0.875rem;
-    font-weight: 500;
-    padding: 3px 4px;
-    border-radius: 6px;
-    cursor: pointer;
-    width: 100%;
-    box-sizing: border-box;
+    background: transparent; border: none; color: inherit; font-family: inherit;
+    font-size: 0.875rem; font-weight: 500; padding: 3px 4px; border-radius: 6px;
+    cursor: pointer; width: 100%; box-sizing: border-box;
   }
   .history-date-input:hover { background: rgba(0,0,0,0.04); }
   .dark .history-date-input:hover { background: rgba(255,255,255,0.05); }
@@ -182,12 +155,24 @@ tailwind.config = {
   .seg-btn { transition: all 0.15s; }
   .seg-btn.active { background: white; color: #18181b; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
   .dark .seg-btn.active { background: #27272a; color: #fafafa; }
+
+  /* Sticky bottom nav with safe area */
+  .mobile-bottom-nav {
+    position: sticky;
+    bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    background: white;
+    border-top: 1px solid #e4e4e7;
+    box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.05);
+    z-index: 50;
+  }
+  .dark .mobile-bottom-nav { background: #18181b; border-top-color: #27272a; }
 </style>
 </head>
 
-<body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-100 min-h-screen transition-colors duration-200 pb-24 md:pb-8">
+<body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-100 min-h-[100dvh] flex flex-col transition-colors duration-200">
 
-<div id="app" class="max-w-3xl mx-auto px-4 py-6 md:py-8">
+<div id="app" class="max-w-3xl mx-auto px-4 py-6 md:py-8 w-full flex-1">
 
   <header class="flex justify-between items-center mb-6">
     <div>
@@ -330,9 +315,9 @@ tailwind.config = {
 
     <div class="flex justify-center mb-6">
       <div class="inline-flex bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-1" id="allViewGroup">
-        <button onclick="setAllView('list')" data-view="list" class="seg-btn px-3 sm:px-5 py-2 rounded-lg text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-white active">Upcoming</button>
-        <button onclick="setAllView('calendar')" data-view="calendar" class="seg-btn px-3 sm:px-5 py-2 rounded-lg text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-white">Calendar</button>
-        <button onclick="setAllView('archive')" data-view="archive" class="seg-btn px-3 sm:px-5 py-2 rounded-lg text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-white">Completed</button>
+        <button onclick="handleAllViewTap('list')" data-view="list" class="seg-btn px-3 sm:px-5 py-2 rounded-lg text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-white active">Upcoming</button>
+        <button onclick="handleAllViewTap('calendar')" data-view="calendar" class="seg-btn px-3 sm:px-5 py-2 rounded-lg text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-white">Calendar</button>
+        <button onclick="handleAllViewTap('archive')" data-view="archive" class="seg-btn px-3 sm:px-5 py-2 rounded-lg text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-white">Completed</button>
       </div>
     </div>
 
@@ -462,7 +447,7 @@ tailwind.config = {
   </footer>
 </div>
 
-<nav class="fixed bottom-0 left-0 right-0 bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 md:hidden flex justify-around py-2 z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+<nav class="mobile-bottom-nav md:hidden flex justify-around py-2">
   <button onclick="switchTab('today')" class="mobile-tab flex flex-col items-center gap-1 p-2 text-zinc-900 dark:text-white" data-tab="today">
     <i class="fa-solid fa-list-check text-lg"></i>
     <span class="text-[10px] font-medium">Today</span>
@@ -663,6 +648,17 @@ function advanceDate(fromDate, recurrence) {
   return addDaysStr(fromDate, 1);
 }
 
+/* Advance dueDate past today (strictly > today when not the current period) */
+function advanceDuePast(fromDate, recurrence, today) {
+  let d = fromDate;
+  let guard = 0;
+  while (d < today && guard < 5000) {
+    d = advanceDate(d, recurrence);
+    guard++;
+  }
+  return d;
+}
+
 function formatRecurrenceLabel(r) {
   if (!r) return '';
   const { freq, interval } = r;
@@ -777,6 +773,45 @@ const importConfirmModal = document.getElementById('importConfirmModal');
 const historyPanel = document.getElementById('historyPanel');
 const historyList = document.getElementById('historyList');
 
+/* =====================================================
+   STICKY NAV SHORTCUT PREVENTION (iOS keyboard)
+===================================================== */
+const isTouchDevice = () => window.matchMedia('(hover: none)').matches || window.innerWidth < 768;
+
+/* =====================================================
+   NORMALIZE RECURRING TASKS (day-rollover)
+===================================================== */
+function normalizeRecurring() {
+  const today = todayStr();
+  let changed = false;
+  tasks.forEach(t => {
+    if (!t.recurrence) return;
+    const completedToday = t.completed && t.completedAt &&
+      formatDate(new Date(t.completedAt)) === today;
+
+    if (completedToday) return; // still shows as done today
+
+    // Reset completion for a new period
+    if (t.completed) {
+      t.completed = false;
+      t.completedAt = null;
+      changed = true;
+    }
+    // Advance dueDate forward if it's in the past
+    if (!t.dueDate) {
+      t.dueDate = today;
+      changed = true;
+    } else if (t.dueDate < today) {
+      t.dueDate = advanceDuePast(t.dueDate, t.recurrence, today);
+      changed = true;
+    }
+  });
+  if (changed) saveData();
+}
+
+/* =====================================================
+   TABS
+===================================================== */
 window.switchTab = function(tabId) {
   currentTab = tabId;
   document.querySelectorAll('.tab-view').forEach(v => v.classList.add('hidden'));
@@ -803,6 +838,9 @@ window.switchTab = function(tabId) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
+/* =====================================================
+   DATA
+===================================================== */
 function loadData() {
   const raw = storageGet(STORAGE_KEY_TASKS);
   if (!raw) { tasks = []; return; }
@@ -817,6 +855,9 @@ function saveData() {
   return ok;
 }
 
+/* =====================================================
+   FORM
+===================================================== */
 function populateTypeSelect() {
   typeSelect.innerHTML = '';
   CATEGORIES.forEach(c => {
@@ -907,10 +948,10 @@ window.startEdit = function(id) {
 
   if (currentTab !== 'today') {
     switchTab('today');
-    setTimeout(() => { titleInput.focus({ preventScroll: true }); }, 350);
+    setTimeout(() => { if (!isTouchDevice()) titleInput.focus({ preventScroll: true }); }, 350);
   } else {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    setTimeout(() => { titleInput.focus({ preventScroll: true }); }, 350);
+    setTimeout(() => { if (!isTouchDevice()) titleInput.focus({ preventScroll: true }); }, 350);
   }
 };
 
@@ -921,14 +962,22 @@ taskForm.addEventListener('submit', (e) => {
   const title = titleInput.value.trim();
   if (!title) { titleInput.focus(); return; }
 
+  let dueDate = dateInput.value || null;
+  const recurrence = getRecurrenceFromForm();
+
+  // Auto-fill today's date if recurring but no date was picked
+  if (recurrence && !dueDate) {
+    dueDate = todayStr();
+  }
+
   const taskData = {
     title,
     notes: notesInput.value.trim(),
     type: typeSelect.value,
     priority: prioritySelect.value || 'none',
-    dueDate: dateInput.value || null,
+    dueDate,
     dueTime: timeInput.value || null,
-    recurrence: getRecurrenceFromForm()
+    recurrence
   };
 
   if (editingId !== null) {
@@ -952,7 +1001,8 @@ taskForm.addEventListener('submit', (e) => {
     notesInput.value = '';
     timeInput.value = '';
     setFormRecurrence(null);
-    titleInput.focus();
+    // Skip auto-focus on mobile to avoid keyboard popping up after add
+    if (!isTouchDevice()) titleInput.focus();
     showToast('Task added');
   }
   saveData();
@@ -974,6 +1024,9 @@ function updateSortButtons() {
   });
 }
 
+/* =====================================================
+   SORT HELPERS
+===================================================== */
 function compareByDeadline(a, b) {
   if (!a.dueDate && !b.dueDate) return (b.createdAt || 0) - (a.createdAt || 0);
   if (!a.dueDate) return 1;
@@ -996,6 +1049,9 @@ function sortTasks(list) {
   return arr;
 }
 
+/* =====================================================
+   TASK ROW
+===================================================== */
 function renderTaskRow(t, opts = {}) {
   const { showSnooze = false } = opts;
   const isCompleted = t.completed;
@@ -1016,6 +1072,9 @@ function renderTaskRow(t, opts = {}) {
   if (t.dueTime) metaParts.push(`<span>${escapeHtml(t.dueTime)}</span>`);
   metaParts.push(`<span class="inline-flex items-center gap-1"><i class="fa-solid ${typeIcon} text-[10px] opacity-70"></i>${escapeHtml(t.type)}</span>`);
   if (t.recurrence) metaParts.push(`<span class="inline-flex items-center gap-1"><i class="fa-solid fa-rotate text-[10px]"></i>${escapeHtml(formatRecurrenceLabel(t.recurrence))}</span>`);
+  if (isCompleted && t.recurrence) {
+    metaParts.push(`<span class="text-emerald-600 dark:text-emerald-400 font-semibold">Done today</span>`);
+  }
 
   const leftBorder = isOverdue ? 'border-l-2 border-l-rose-500' : 'border-l-2 border-l-transparent';
 
@@ -1025,7 +1084,7 @@ function renderTaskRow(t, opts = {}) {
         <i class="fa-solid fa-check"></i>
       </button>
       <div class="flex-1 min-w-0">
-        <p class="text-sm font-semibold text-zinc-900 dark:text-white ${isCompleted ? 'line-through opacity-50' : ''} break-words">${escapeHtml(t.title)}</p>
+        <p class="text-sm font-semibold text-zinc-900 dark:text-white ${isCompleted ? 'line-through opacity-60' : ''} break-words">${escapeHtml(t.title)}</p>
         <div class="flex items-center gap-2 text-[11px] text-zinc-400 dark:text-zinc-500 mt-0.5 flex-wrap">
           ${metaParts.join('<span class="opacity-40">·</span>')}
         </div>
@@ -1047,12 +1106,40 @@ function getVisibleTaskRows(id) {
     .filter(r => r.offsetParent !== null);
 }
 
-function renderToday() {
+/* =====================================================
+   TODAY
+===================================================== */
+function getTodayBuckets() {
   const today = todayStr();
-  const active = tasks.filter(t => !t.completed);
+  // Include recurring tasks that are completed today (still show)
+  const visible = tasks.filter(t => {
+    if (!t.dueDate) return false;
+    const completedToday = t.completed && t.completedAt &&
+      formatDate(new Date(t.completedAt)) === today;
+    // Non-recurring: hide if completed
+    if (!t.recurrence && t.completed) return false;
+    // Recurring: show if due today (regardless of completed status today)
+    if (t.recurrence) {
+      if (t.dueDate === today) return true;
+      if (completedToday) return true; // safety net if dueDate advanced
+      if (t.dueDate < today && !t.completed) return true;
+      return false;
+    }
+    // Non-recurring: due today or overdue and not completed
+    if (t.dueDate === today) return true;
+    if (t.dueDate < today && !t.completed) return true;
+    return false;
+  });
 
-  const overdue = active.filter(t => t.dueDate && t.dueDate < today);
-  const dueToday = active.filter(t => t.dueDate === today);
+  const overdue = visible.filter(t => t.dueDate < today && !t.completed);
+  const dueToday = visible.filter(t => t.dueDate === today || (t.recurrence && t.completed && t.completedAt && formatDate(new Date(t.completedAt)) === today && t.dueDate <= today));
+  return { overdue, dueToday };
+}
+
+function renderToday() {
+  normalizeRecurring();
+  const today = todayStr();
+  const { overdue, dueToday } = getTodayBuckets();
 
   const sortedOverdue = sortTasks(overdue);
   const sortedToday = sortTasks(dueToday);
@@ -1079,13 +1166,16 @@ function renderToday() {
     `;
   }
 
+  // Coming up: next 3 days
   const tomorrow = addDaysStr(today, 1);
   const dayAfter = addDaysStr(today, 2);
   const day3 = addDaysStr(today, 3);
 
-  const upcoming = active.filter(t =>
-    t.dueDate && (t.dueDate === tomorrow || t.dueDate === dayAfter || t.dueDate === day3)
-  );
+  const upcoming = tasks.filter(t => {
+    if (t.completed && !t.recurrence) return false;
+    if (!t.dueDate) return false;
+    return t.dueDate === tomorrow || t.dueDate === dayAfter || t.dueDate === day3;
+  });
   const sortedUpcoming = sortTasks(upcoming);
 
   if (sortedUpcoming.length > 0) {
@@ -1099,6 +1189,27 @@ function renderToday() {
     upcomingPreview.innerHTML = '';
   }
 }
+
+/* =====================================================
+   ALL VIEWS
+===================================================== */
+window.handleAllViewTap = function(v) {
+  if (allSubView === v) {
+    // Reset behavior when re-tapping the same sub-view
+    if (v === 'list') {
+      searchInput.value = '';
+      monthFilter.value = '';
+    } else if (v === 'calendar') {
+      const now = new Date();
+      calendarMonth = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
+      calendarSelectedDate = todayStr();
+    } else if (v === 'archive') {
+      archiveSearchInput.value = '';
+    }
+  }
+  setAllView(v);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
 
 window.setAllView = function(v) {
   allSubView = v;
@@ -1114,14 +1225,16 @@ window.setAllView = function(v) {
 };
 
 function renderAll() {
+  normalizeRecurring();
   setAllView(allSubView);
 }
 
 function renderList() {
+  normalizeRecurring();
   const query = (searchInput.value || '').trim().toLowerCase();
   const month = monthFilter.value;
 
-  let filtered = tasks.filter(t => !t.completed);
+  let filtered = tasks.filter(t => !t.completed || t.recurrence);
 
   if (month) filtered = filtered.filter(t => t.dueDate && t.dueDate.startsWith(month));
   if (query) {
@@ -1169,7 +1282,7 @@ function renderList() {
     { key: 'overdue', label: 'Overdue', color: 'text-rose-500' },
     { key: 'today', label: 'Today', color: 'text-zinc-800 dark:text-zinc-200' },
     { key: 'tomorrow', label: 'Tomorrow', color: 'text-zinc-800 dark:text-zinc-200' },
-    { key: 'week', label: 'This Week', color: 'text-zinc-800 dark:text-zinc-200' },
+    { key: 'week', label: 'Next 7 Days', color: 'text-zinc-800 dark:text-zinc-200' },
     { key: 'later', label: 'Later', color: 'text-zinc-800 dark:text-zinc-200' },
     { key: 'nodate', label: 'No Date', color: 'text-zinc-500 dark:text-zinc-500' }
   ];
@@ -1198,15 +1311,33 @@ clearFiltersBtn.addEventListener('click', () => {
   renderList();
 });
 
+/* =====================================================
+   CALENDAR
+===================================================== */
 window.shiftCalendarMonth = function(delta) {
   const [y, m] = calendarMonth.split('-').map(Number);
   const d = new Date(y, m - 1 + delta, 1);
-  calendarMonth = `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
-  calendarSelectedDate = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-01`;
+  const newMonth = `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+  const now = new Date();
+  const currentMonth = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
+
+  calendarMonth = newMonth;
+
+  // If landing back on the current month, select today
+  if (newMonth === currentMonth) {
+    calendarSelectedDate = todayStr();
+  } else {
+    // Preserve day-of-month (clamped to last day of target month)
+    const prevDay = calendarSelectedDate ? parseDate(calendarSelectedDate).getDate() : 1;
+    const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    const targetDay = Math.min(prevDay, lastDay);
+    calendarSelectedDate = `${newMonth}-${pad(targetDay)}`;
+  }
   renderCalendar();
 };
 
 function renderCalendar() {
+  normalizeRecurring();
   if (!calendarMonth) {
     const now = new Date();
     calendarMonth = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
@@ -1222,7 +1353,7 @@ function renderCalendar() {
   const prevMonthDays = new Date(year, month - 1, 0).getDate();
 
   const today = todayStr();
-  const active = tasks.filter(t => !t.completed);
+  const active = tasks.filter(t => !t.completed || t.recurrence);
 
   const cells = [];
   for (let i = startWeekday - 1; i >= 0; i--) {
@@ -1283,8 +1414,13 @@ function renderCalendar() {
   });
   calendarSelectedTitle.textContent = dateLabel;
 
-  const dayActive = sortTasks(active.filter(t => t.dueDate === calendarSelectedDate));
-  const dayCompleted = tasks.filter(t => t.completed && t.dueDate === calendarSelectedDate);
+  const dayActive = sortTasks(tasks.filter(t =>
+    t.dueDate === calendarSelectedDate && (!t.completed || t.recurrence)
+  ));
+  const dayCompleted = tasks.filter(t =>
+    t.completed && !t.recurrence && t.completedAt &&
+    formatDate(new Date(t.completedAt)) === calendarSelectedDate
+  );
 
   if (dayActive.length === 0 && dayCompleted.length === 0) {
     calendarDayTasks.innerHTML = `<p class="text-xs text-zinc-400 italic py-3 text-center">No tasks on this day.</p>`;
@@ -1312,9 +1448,12 @@ window.selectCalendarDay = function(date) {
   renderCalendar();
 };
 
+/* =====================================================
+   ARCHIVE
+===================================================== */
 function renderArchive() {
   const query = (archiveSearchInput.value || '').trim().toLowerCase();
-  let completed = tasks.filter(t => t.completed);
+  let completed = tasks.filter(t => t.completed && !t.recurrence);
   if (query) {
     completed = completed.filter(t =>
       (t.title && t.title.toLowerCase().includes(query)) ||
@@ -1356,44 +1495,41 @@ function renderArchive() {
 
 archiveSearchInput.addEventListener('input', renderArchive);
 
+/* =====================================================
+   TOGGLE COMPLETE
+===================================================== */
 window.toggleComplete = function(id) {
   const t = tasks.find(x => x.id === id);
   if (!t) return;
+  const today = todayStr();
 
   if (!t.completed) {
     if (t.recurrence) {
-      // RECURRING: advance in place, no fade
-      const oldDate = t.dueDate || todayStr();
+      // Recurring: mark done today, DON'T advance dueDate
       t.history = t.history || [];
-      t.history.push({ dueDate: oldDate, completedAt: new Date().toISOString() });
-
-      let next = advanceDate(todayStr(), t.recurrence);
-      let guard = 0;
-      while (next <= todayStr() && guard < 100) {
-        next = advanceDate(next, t.recurrence);
-        guard++;
-      }
-      t.dueDate = next;
+      t.history.push({ dueDate: t.dueDate || today, completedAt: new Date().toISOString() });
+      t.completed = true;
+      t.completedAt = new Date().toISOString();
       saveData();
 
-      const nextLabel = formatDateLabel(next);
+      // Compute next occurrence label (without changing dueDate yet)
+      let nextDate = advanceDate(t.dueDate || today, t.recurrence);
+      let guard = 0;
+      while (nextDate <= today && guard < 1000) {
+        nextDate = advanceDate(nextDate, t.recurrence);
+        guard++;
+      }
+      const nextLabel = formatDateLabel(nextDate);
 
-      // Pulse checkbox + swap date meta on visible rows
+      // Pulse checkbox on visible rows
       const rows = getVisibleTaskRows(id);
       rows.forEach(row => {
         const cb = row.querySelector('.checkbox');
-        if (cb) { cb.classList.add('pop'); setTimeout(() => cb.classList.remove('pop'), 300); }
-        const meta = row.querySelector('[data-date-meta]');
-        if (meta) {
-          meta.dataset.originalHtml = meta.innerHTML;
-          meta.innerHTML = `<span class="text-emerald-600 dark:text-emerald-400 font-semibold">Next: ${nextLabel}</span>`;
-          meta.dataset.swapped = '1';
-        }
+        if (cb) { cb.classList.add('done', 'pop'); setTimeout(() => cb.classList.remove('pop'), 300); }
       });
 
       showToast(`Completed · Next: ${nextLabel}`);
 
-      // Re-render after 2.5s to settle into new position
       setTimeout(() => {
         renderToday();
         if (currentTab === 'all') {
@@ -1401,9 +1537,9 @@ window.toggleComplete = function(id) {
           if (allSubView === 'calendar') renderCalendar();
           if (allSubView === 'archive') renderArchive();
         }
-      }, 2500);
+      }, 300);
     } else {
-      // NON-RECURRING: original fade-out behavior
+      // Non-recurring: fade out
       t.completed = true;
       t.completedAt = new Date().toISOString();
       saveData();
@@ -1418,9 +1554,6 @@ window.toggleComplete = function(id) {
         }, 500);
       });
 
-      const prevCompleted = false;
-      const prevCompletedAt = null;
-
       setTimeout(() => {
         renderToday();
         if (currentTab === 'all') {
@@ -1431,8 +1564,8 @@ window.toggleComplete = function(id) {
       }, 400);
 
       const undoFn = () => {
-        t.completed = prevCompleted;
-        t.completedAt = prevCompletedAt;
+        t.completed = false;
+        t.completedAt = null;
         saveData();
         renderToday();
         if (currentTab === 'all') {
@@ -1446,7 +1579,13 @@ window.toggleComplete = function(id) {
       showToast('Task completed', 'success', 'Undo', undoFn);
     }
   } else {
-    // Un-completing from archive
+    // Un-complete
+    if (t.recurrence && t.history && t.history.length > 0) {
+      const last = t.history[t.history.length - 1];
+      if (last && last.completedAt && formatDate(new Date(last.completedAt)) === today) {
+        t.history.pop();
+      }
+    }
     t.completed = false;
     t.completedAt = null;
     saveData();
@@ -1460,6 +1599,9 @@ window.toggleComplete = function(id) {
   }
 };
 
+/* =====================================================
+   SNOOZE
+===================================================== */
 let activePopover = null;
 function closeActivePopover() {
   if (activePopover) { activePopover.remove(); activePopover = null; snoozeOpenForId = null; }
@@ -1514,14 +1656,13 @@ window.snoozePick = function(id) {
 };
 
 /* =====================================================
-   DETAIL MODAL + HISTORY PANEL
+   DETAIL MODAL + HISTORY
 ===================================================== */
 window.openDetail = function(id) {
   const t = tasks.find(x => x.id === id);
   if (!t) return;
   detailId = id;
 
-  // Reset history panel each time
   historyPanel.classList.add('hidden');
   historyList.innerHTML = '';
 
@@ -1530,7 +1671,6 @@ window.openDetail = function(id) {
   document.getElementById('detailType').textContent = t.type;
   document.getElementById('detailTitle').textContent = t.title;
 
-  // Priority
   const pri = t.priority || 'none';
   const priEl = document.getElementById('detailPriority');
   if (pri === 'none') {
@@ -1539,7 +1679,6 @@ window.openDetail = function(id) {
     priEl.innerHTML = `<span class="inline-flex items-center gap-2"><span class="pri-mark ${PRIORITY_COLOR[pri]}" style="width:auto">${PRIORITY_MARKS[pri]}</span><span>${PRIORITY_LABEL[pri]}</span></span>`;
   }
 
-  // Date
   const dateRow = document.getElementById('detailDateRow');
   const dateEl = document.getElementById('detailDate');
   if (t.dueDate) {
@@ -1553,7 +1692,6 @@ window.openDetail = function(id) {
     dateRow.style.display = 'none';
   }
 
-  // Repeat
   const repeatRow = document.getElementById('detailRepeatRow');
   const repeatBtn = document.getElementById('detailRepeatBtn');
   if (t.recurrence) {
@@ -1562,13 +1700,11 @@ window.openDetail = function(id) {
     const count = history.length;
     let label = formatRecurrenceLabel(t.recurrence);
     if (count > 0) {
-      const sortedByCompleted = [...history].sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
-      const last = new Date(sortedByCompleted[0].completedAt);
+      const sorted = [...history].sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
+      const last = new Date(sorted[0].completedAt);
       const lastLabel = last.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       label += ` · Completed ${count}× · Last: ${lastLabel}`;
       repeatBtn.style.cursor = 'pointer';
-      repeatBtn.style.textDecoration = 'none';
-      repeatBtn.classList.remove('cursor-default');
       repeatBtn.title = 'Click to view history';
     } else {
       repeatBtn.style.cursor = 'default';
@@ -1580,7 +1716,6 @@ window.openDetail = function(id) {
     repeatBtn.textContent = '';
   }
 
-  // Notes
   const notesEl = document.getElementById('detailNotes');
   if (t.notes && t.notes.trim()) {
     notesEl.textContent = t.notes;
@@ -1614,7 +1749,6 @@ document.getElementById('detailDeleteBtn').addEventListener('click', () => {
   deleteConfirmModal.classList.remove('hidden');
 });
 
-/* History panel toggle */
 document.getElementById('detailRepeatBtn').addEventListener('click', () => {
   if (detailId === null) return;
   const t = tasks.find(x => x.id === detailId);
@@ -1647,12 +1781,11 @@ function renderHistoryPanel(t) {
   }).join('');
 }
 
-/* Delegate events inside historyList */
 historyList.addEventListener('click', (e) => {
   const dateInput = e.target.closest('.history-date-input');
   if (dateInput) {
     if (typeof dateInput.showPicker === 'function') {
-      try { dateInput.showPicker(); } catch (err) { /* ignore */ }
+      try { dateInput.showPicker(); } catch (err) {}
     }
     return;
   }
@@ -1664,26 +1797,21 @@ historyList.addEventListener('click', (e) => {
   const t = tasks.find(x => x.id === detailId);
   if (!t || !t.history) return;
 
-  // Sort the same way we render
   const sorted = [...t.history].sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
   const removed = sorted[idx];
-  // Find original index
   const origIdx = t.history.findIndex(h => h === removed);
   if (origIdx === -1) return;
 
   t.history.splice(origIdx, 1);
   saveData();
 
-  // Re-render history + detail modal (to update the count/last)
   if (t.history.length > 0) {
     renderHistoryPanel(t);
   } else {
     historyPanel.classList.add('hidden');
   }
-  // Update the repeat button label
   refreshDetailRepeatLabel(t);
 
-  // Toast with undo
   showToast('Completion removed', 'error', 'Undo', () => {
     t.history.splice(origIdx, 0, removed);
     saveData();
@@ -1738,7 +1866,7 @@ function refreshDetailRepeatLabel(t) {
 }
 
 /* =====================================================
-   DELETE CONFIRM
+   DELETE
 ===================================================== */
 document.getElementById('cancelDeleteBtn').addEventListener('click', () => {
   pendingDeleteId = null;
@@ -1823,6 +1951,7 @@ document.getElementById('confirmImportBtn').addEventListener('click', () => {
   tasks = pendingImportData;
   pendingImportData = null;
   saveData();
+  normalizeRecurring();
   renderToday();
   if (currentTab === 'all') renderAll();
   importConfirmModal.classList.add('hidden');
@@ -1843,7 +1972,7 @@ document.getElementById('confirmResetBtn').addEventListener('click', () => {
 });
 
 /* =====================================================
-   KEYBOARD SHORTCUT (N = new task)
+   KEYBOARD SHORTCUT
 ===================================================== */
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'n' && e.key !== 'N') return;
@@ -1853,6 +1982,18 @@ document.addEventListener('keydown', (e) => {
   e.preventDefault();
   if (currentTab !== 'today') switchTab('today');
   setTimeout(() => titleInput.focus(), 100);
+});
+
+/* =====================================================
+   VISIBILITY CHANGE — catch day rollover
+===================================================== */
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    normalizeRecurring();
+    if (currentTab === 'today') renderToday();
+    if (currentTab === 'all' && allSubView === 'list') renderList();
+    if (currentTab === 'all' && allSubView === 'calendar') renderCalendar();
+  }
 });
 
 /* =====================================================
@@ -1879,6 +2020,7 @@ window.addEventListener('load', () => {
   dateInput.value = todayStr();
 
   loadData();
+  normalizeRecurring();
 
   const now = new Date();
   calendarMonth = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
