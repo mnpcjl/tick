@@ -137,10 +137,19 @@ tailwind.config = {
   .dark .popover { background: #18181b; border-color: #27272a; }
 
   input[type="date"], input[type="time"] {
-    -webkit-appearance: none; appearance: none;
-    min-width: 0; width: 100%; box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
+    -webkit-min-logical-width: 0;
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    display: block;
+    line-height: 1.25rem;
+    min-height: 2.625rem;
   }
-  input[type="date"]::-webkit-date-and-time-value { text-align: left; }
+  input[type="date"]::-webkit-date-and-time-value,
+  input[type="time"]::-webkit-date-and-time-value { text-align: left; }
 
   .history-date-input {
     background: transparent; border: none; color: inherit; font-family: inherit;
@@ -623,7 +632,7 @@ let calendarSelectedDate = null;
 let snoozeOpenForId = null;
 let cameFromTab = null;
 let pendingImportData = null;
-let currentWeekday = null; // null when repeat isn't weekly/biweekly
+let currentWeekday = null;
 
 let storageUsable = true;
 function storageGet(k) { try { return localStorage.getItem(k); } catch (e) { storageUsable = false; return null; } }
@@ -741,7 +750,6 @@ function occursOn(task, dateStr) {
   return false;
 }
 
-/* Combined predicate used by calendar and day detail. */
 function taskOccursOn(task, dateStr) {
   if (!task.recurrence) {
     return !task.completed && task.dueDate === dateStr;
@@ -896,7 +904,6 @@ function syncWeekdayPickerVisibility() {
   const show = v === 'weekly' || v === 'biweekly';
   weekdayPickerRow.classList.toggle('hidden', !show);
   if (show) {
-    // Initialize currentWeekday from current dateInput if unset
     if (currentWeekday === null) {
       const dt = dateInput.value ? parseDate(dateInput.value) : new Date();
       currentWeekday = dt.getDay();
@@ -1028,7 +1035,6 @@ repeatSelect.addEventListener('change', () => {
     currentWeekday = null;
   }
   syncWeekdayPickerVisibility();
-  // If user just picked weekly/biweekly but no date was set, snap to today
   if ((v === 'weekly' || v === 'biweekly') && !dateInput.value) {
     dateInput.value = todayStr();
     currentWeekday = parseDate(todayStr()).getDay();
@@ -1072,7 +1078,6 @@ function setFormRecurrence(r) {
   else { repeatSelect.value = 'custom'; customInterval.value = interval; customUnit.value = freq; }
   customRepeatRow.classList.toggle('hidden', repeatSelect.value !== 'custom');
 
-  // Weekday picker
   if (repeatSelect.value === 'weekly' || repeatSelect.value === 'biweekly') {
     const anchor = dateInput.value ? parseDate(dateInput.value) : new Date();
     currentWeekday = anchor.getDay();
@@ -1145,15 +1150,12 @@ taskForm.addEventListener('submit', (e) => {
   let dueDate = dateInput.value || null;
   const recurrence = getRecurrenceFromForm();
 
-  // Auto-fill today's date if recurring but no date was picked
   if (recurrence && !dueDate) {
     dueDate = todayStr();
   }
 
-  // If weekly/biweekly, snap dueDate to the anchored weekday
   if (recurrence && (recurrence.freq === 'weekly') && currentWeekday !== null && dueDate) {
     const d = parseDate(dueDate);
-    // If the date doesn't match the chosen weekday, snap it forward
     if (d.getDay() !== currentWeekday) {
       let diff = currentWeekday - d.getDay();
       if (diff < 0) diff += 7;
@@ -1354,7 +1356,6 @@ function renderToday() {
     `;
   }
 
-  // Coming up preview — 3 days, using projection so daily tasks appear per-occurrence
   const day1 = addDaysStr(today, 1);
   const day2 = addDaysStr(today, 2);
   const day3 = addDaysStr(today, 3);
@@ -1365,7 +1366,6 @@ function renderToday() {
     const tasksOnDay = tasks.filter(t => {
       if (!t.recurrence && t.completed) return false;
       if (!t.dueDate) return false;
-      // Don't duplicate tasks already shown above in Today/Overdue
       if (!t.recurrence && t.dueDate === today) return false;
       return occursOn(t, d) || (!t.recurrence && t.dueDate === d);
     });
@@ -1375,7 +1375,6 @@ function renderToday() {
   });
 
   if (upcomingRows.length > 0) {
-    // Sort rows by date, then by priority
     upcomingRows.sort((a, b) => {
       if (a.date !== b.date) return a.date < b.date ? -1 : 1;
       const pa = PRIORITY_ORDER[a.task.priority] ?? 3;
@@ -1518,7 +1517,6 @@ clearFiltersBtn.addEventListener('click', () => {
    CALENDAR
 ===================================================== */
 function getCalendarGridRange(year, month) {
-  // month is 1-12
   const firstDay = new Date(year, month - 1, 1);
   const startWeekday = firstDay.getDay();
   const gridStart = new Date(firstDay);
@@ -1544,7 +1542,6 @@ window.shiftCalendarMonth = function(delta) {
 
   calendarMonth = newMonth;
 
-  // Preserve selection if still visible in new grid
   if (calendarSelectedDate && calendarSelectedDate >= gridStartStr && calendarSelectedDate <= gridEndStr) {
     // keep
   } else if (newMonth === currentMonth) {
@@ -1593,7 +1590,6 @@ function renderCalendar() {
 
   let gridHtml = '';
   cells.forEach(c => {
-    // Count tasks occurring on this day using projection
     const tasksOnDay = tasks.filter(t => taskOccursOn(t, c.date));
     const dots = tasksOnDay.slice(0, 3).map(t => {
       const recurring = t.recurrence ? 'ring' : '';
@@ -1633,7 +1629,6 @@ function renderCalendar() {
   });
   calendarSelectedTitle.textContent = dateLabel;
 
-  // Day detail: use projection
   const dayActive = sortTasks(tasks.filter(t => taskOccursOn(t, calendarSelectedDate)));
   const dayCompleted = tasks.filter(t => {
     if (taskOccursOn(t, calendarSelectedDate)) return false;
@@ -1647,7 +1642,6 @@ function renderCalendar() {
     return taskHasHistoryOn(t, calendarSelectedDate) && !taskOccursOn(t, calendarSelectedDate);
   });
 
-  // Merge completed
   const allCompleted = [...dayCompleted.filter(t => !t.recurrence), ...dayCompletedAlso];
 
   if (dayActive.length === 0 && allCompleted.length === 0) {
@@ -1672,7 +1666,6 @@ function renderCalendar() {
 }
 
 window.selectCalendarDay = function(date) {
-  // If the date belongs to a different month, navigate to that month
   const dateMonth = date.substring(0, 7);
   if (dateMonth !== calendarMonth) {
     calendarMonth = dateMonth;
@@ -1744,7 +1737,6 @@ window.toggleComplete = function(id) {
       t.completedAt = new Date().toISOString();
       saveData();
 
-      // Compute next occurrence for the toast
       let nextDate = advanceDate(t.dueDate || today, t.recurrence);
       let guard = 0;
       while (nextDate <= today && guard < 1000) {
