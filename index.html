@@ -1,0 +1,1565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Tick — Task Tracker</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tick">
+<link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230f172a'/><path d='M28 52 L44 68 L72 36' stroke='%23ffffff' stroke-width='9' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      fontFamily: { sans: ['Inter', 'sans-serif'] }
+    }
+  }
+};
+</script>
+
+<style>
+  body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 9999px; }
+  .dark ::-webkit-scrollbar-thumb { background: #3f3f46; }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type="number"] { -moz-appearance: textfield; }
+
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes pop { 0% { transform: scale(0.8); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
+  @keyframes completeOut {
+    0% { opacity: 1; transform: translateX(0); }
+    100% { opacity: 0; transform: translateX(20px); }
+  }
+
+  .toast-enter { animation: slideUp 0.25s ease-out forwards; }
+  .toast-exit { animation: fadeOut 0.25s ease-in forwards; }
+  .completing { animation: completeOut 0.4s ease-out forwards; }
+  .pop { animation: pop 0.25s ease-out; }
+
+  .pri { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid currentColor; flex-shrink: 0; }
+  .pri-high { background: currentColor; border-color: currentColor; }
+  .pri-medium { background: linear-gradient(90deg, currentColor 50%, transparent 50%); border-color: currentColor; }
+  .pri-low { background: transparent; border-color: currentColor; opacity: 0.45; }
+
+  .cal-cell { aspect-ratio: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 0.3rem; cursor: pointer; position: relative; transition: background 0.15s; border-radius: 0.5rem; }
+  .cal-cell:hover { background: rgba(0,0,0,0.04); }
+  .dark .cal-cell:hover { background: rgba(255,255,255,0.05); }
+  .cal-cell.other { opacity: 0.3; }
+  .cal-cell.selected { background: currentColor; }
+  .cal-cell.selected .cal-num { color: white; }
+  .dark .cal-cell.selected .cal-num { color: #09090b; }
+  .cal-cell.selected .cal-dot { background: white; }
+  .dark .cal-cell.selected .cal-dot { background: #09090b; }
+  .cal-num { font-size: 0.75rem; font-weight: 600; color: currentColor; line-height: 1; }
+  .dark .cal-num { color: #e4e4e7; }
+  .cal-cell.today .cal-num { color: white; background: #18181b; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .dark .cal-cell.today .cal-num { color: #09090b; background: #fafafa; }
+  .dark .cal-cell.today.selected .cal-num { background: transparent; color: #09090b; }
+  .cal-cell.selected.today .cal-num { background: transparent; color: white; }
+  .cal-dots { display: flex; gap: 2px; margin-top: 3px; justify-content: center; }
+  .cal-dot { width: 4px; height: 4px; border-radius: 50%; background: #18181b; }
+  .dark .cal-dot { background: #e4e4e7; }
+  .cal-dot.ring { background: transparent; border: 1.5px solid currentColor; }
+  .dark .cal-dot.ring { border-color: #e4e4e7; }
+
+  .checkbox {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 2px solid #a1a1aa; background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; cursor: pointer; transition: all 0.18s ease;
+    color: transparent;
+  }
+  .dark .checkbox { border-color: #52525b; }
+  .checkbox:hover { border-color: #18181b; }
+  .dark .checkbox:hover { border-color: #fafafa; }
+  .checkbox i { font-size: 10px; }
+  .checkbox.done { background: #18181b; border-color: #18181b; color: white; }
+  .dark .checkbox.done { background: #fafafa; border-color: #fafafa; color: #09090b; }
+
+  .popover {
+    position: absolute;
+    background: white;
+    border: 1px solid #e4e4e7;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+    padding: 0.3rem;
+    z-index: 40;
+    min-width: 130px;
+  }
+  .dark .popover { background: #18181b; border-color: #27272a; }
+
+  input[type="date"], input[type="time"] {
+    -webkit-appearance: none;
+    appearance: none;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  input[type="date"]::-webkit-date-and-time-value { text-align: left; }
+
+  .seg-btn { transition: all 0.15s; }
+  .seg-btn.active { background: white; color: #18181b; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .dark .seg-btn.active { background: #27272a; color: #fafafa; }
+</style>
+</head>
+
+<body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-100 min-h-screen transition-colors duration-200 pb-24 md:pb-8">
+
+<div id="app" class="max-w-3xl mx-auto px-4 py-6 md:py-8">
+
+  <header class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
+        <span class="w-9 h-9 md:w-10 md:h-10 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-xl flex items-center justify-center flex-shrink-0">
+          <i class="fa-solid fa-check text-base md:text-lg"></i>
+        </span>
+        Tick
+      </h1>
+      <p class="text-xs md:text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">Task Tracker</p>
+    </div>
+    <button id="themeToggleBtn" title="Toggle Theme" class="p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">
+      <i class="fa-solid fa-moon dark:hidden"></i>
+      <i class="fa-solid fa-sun hidden dark:block text-amber-400"></i>
+    </button>
+  </header>
+
+  <nav class="hidden md:flex gap-2 mb-6 bg-white dark:bg-zinc-900 p-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+    <button onclick="switchTab('today')" class="desktop-tab flex-1 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 tab-active bg-zinc-50 dark:bg-zinc-950" data-tab="today">
+      <i class="fa-solid fa-list-check"></i> Today
+    </button>
+    <button onclick="switchTab('all')" class="desktop-tab flex-1 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-white" data-tab="all">
+      <i class="fa-solid fa-layer-group"></i> All
+    </button>
+    <button onclick="switchTab('settings')" class="desktop-tab flex-1 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-white" data-tab="settings">
+      <i class="fa-solid fa-gear"></i> Settings
+    </button>
+  </nav>
+
+  <div id="storageWarning" class="hidden mb-6 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-200 text-sm flex items-start gap-3">
+    <i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
+    <p>Storage is unavailable. Entries won't be saved. Try opening this page in a normal browser tab.</p>
+  </div>
+
+  <!-- TODAY -->
+  <section id="today-view" class="tab-view">
+
+    <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-5 mb-6">
+      <h2 class="text-base font-bold text-zinc-800 dark:text-zinc-100 flex items-center gap-2 mb-4">
+        <i class="fa-solid fa-plus text-zinc-400" id="formHeaderIcon"></i>
+        <span id="formHeaderText">New Task</span>
+      </h2>
+
+      <form id="taskForm" onsubmit="return false;">
+        <input type="text" id="titleInput" placeholder="What needs to be done?" required autocomplete="off"
+          class="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-base font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+          <div>
+            <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Type</label>
+            <select id="typeSelect" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition"></select>
+          </div>
+          <div>
+            <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Priority</label>
+            <div class="flex gap-1 p-1 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl" id="priorityGroup">
+              <button type="button" data-priority="high" class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition">High</button>
+              <button type="button" data-priority="medium" class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition">Med</button>
+              <button type="button" data-priority="low" class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition">Low</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mt-3">
+          <div>
+            <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Due Date</label>
+            <input type="date" id="dateInput" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
+          </div>
+          <div>
+            <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Time <span class="normal-case font-normal">(optional)</span></label>
+            <input type="time" id="timeInput" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
+          </div>
+        </div>
+
+        <div class="mt-3">
+          <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Repeat</label>
+          <select id="repeatSelect" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
+            <option value="">Never</option>
+            <option value="daily">Daily</option>
+            <option value="every2days">Every 2 days</option>
+            <option value="weekly">Weekly</option>
+            <option value="every2weeks">Every 2 weeks</option>
+            <option value="monthly">Monthly</option>
+            <option value="yearly">Yearly</option>
+            <option value="weekdays">Weekdays (Mon–Fri)</option>
+            <option value="custom">Custom…</option>
+          </select>
+          <div id="customRepeatRow" class="hidden mt-2 flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300">
+            <span>Every</span>
+            <input type="number" id="customInterval" min="1" value="3" class="w-16 px-2 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100">
+            <select id="customUnit" class="px-2 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100">
+              <option value="daily">day(s)</option>
+              <option value="weekly">week(s)</option>
+              <option value="monthly">month(s)</option>
+              <option value="yearly">year(s)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mt-3">
+          <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Notes <span class="normal-case font-normal">(optional)</span></label>
+          <textarea id="notesInput" rows="2" placeholder="Add details…" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition resize-none"></textarea>
+        </div>
+
+        <div class="flex gap-3 mt-4">
+          <button type="submit" id="submitBtn" class="flex-1 py-3 rounded-xl bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 font-bold text-sm shadow-sm transition-all duration-200 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-plus"></i> Add Task
+          </button>
+          <button type="button" id="cancelEditBtn" class="hidden px-5 py-3 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 font-bold text-sm transition">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xs uppercase font-semibold tracking-wider text-zinc-400">Your Tasks</h2>
+      <div class="inline-flex bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-0.5 text-xs" id="todaySortGroup">
+        <button onclick="setSortPref('deadline')" data-sort="deadline" class="sort-btn px-3 py-1 rounded-md font-semibold transition">Deadline</button>
+        <button onclick="setSortPref('priority')" data-sort="priority" class="sort-btn px-3 py-1 rounded-md font-semibold transition">Priority</button>
+      </div>
+    </div>
+
+    <div id="overdueSection" class="hidden mb-6">
+      <h3 class="text-[10px] uppercase font-bold tracking-wider text-rose-500 mb-2 flex items-center gap-1.5">
+        <i class="fa-solid fa-circle-exclamation"></i> Overdue
+      </h3>
+      <div id="overdueList" class="space-y-2"></div>
+    </div>
+
+    <div id="todaySection" class="mb-6">
+      <div id="todayList" class="space-y-2"></div>
+    </div>
+
+    <div id="upcomingPreview"></div>
+  </section>
+
+  <!-- ALL -->
+  <section id="all-view" class="tab-view hidden">
+
+    <div class="flex justify-center mb-6">
+      <div class="inline-flex bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-1" id="allViewGroup">
+        <button onclick="setAllView('list')" data-view="list" class="seg-btn px-5 py-2 rounded-lg text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-white active">List</button>
+        <button onclick="setAllView('calendar')" data-view="calendar" class="seg-btn px-5 py-2 rounded-lg text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-white">Calendar</button>
+        <button onclick="setAllView('archive')" data-view="archive" class="seg-btn px-5 py-2 rounded-lg text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-white">Archive</button>
+      </div>
+    </div>
+
+    <div id="all-list-view">
+      <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-5">
+        <div class="flex flex-col sm:flex-row gap-2 mb-5">
+          <input type="text" id="searchInput" placeholder="Search tasks…"
+            class="text-xs px-3 py-2 bg-zinc-100 dark:bg-zinc-800 border-0 rounded-xl text-zinc-700 dark:text-zinc-200 font-medium focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 w-full sm:flex-1">
+          <div class="flex items-center gap-2">
+            <input type="month" id="monthFilter"
+              class="text-xs px-3 py-2 bg-zinc-100 dark:bg-zinc-800 border-0 rounded-xl text-zinc-700 dark:text-zinc-200 font-medium focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 flex-1 sm:flex-none">
+            <div class="inline-flex bg-zinc-100 dark:bg-zinc-800 rounded-lg p-0.5 text-xs" id="listSortGroup">
+              <button onclick="setSortPref('deadline')" data-sort="deadline" class="sort-btn px-2.5 py-1.5 rounded-md font-semibold transition">Deadline</button>
+              <button onclick="setSortPref('priority')" data-sort="priority" class="sort-btn px-2.5 py-1.5 rounded-md font-semibold transition">Priority</button>
+            </div>
+            <button id="clearFiltersBtn" title="Reset filters" class="p-2 text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 flex-shrink-0">
+              <i class="fa-solid fa-rotate-left"></i>
+            </button>
+          </div>
+        </div>
+
+        <div id="listContent" class="space-y-5"></div>
+        <div id="listEmpty" class="hidden py-12 text-center">
+          <div class="w-12 h-12 mx-auto mb-3 text-zinc-300 dark:text-zinc-600 flex items-center justify-center rounded-full bg-zinc-50 dark:bg-zinc-950">
+            <i class="fa-solid fa-clipboard-list text-xl"></i>
+          </div>
+          <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">No tasks found</p>
+          <p class="text-xs text-zinc-400 mt-1">Add a task from the Today tab to get started.</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="all-calendar-view" class="hidden">
+      <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-5">
+        <div class="flex justify-between items-center mb-4">
+          <button onclick="shiftCalendarMonth(-1)" class="w-9 h-9 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center text-zinc-600 dark:text-zinc-300 transition">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+          <h3 id="calendarTitle" class="text-base font-bold text-zinc-800 dark:text-zinc-100"></h3>
+          <button onclick="shiftCalendarMonth(1)" class="w-9 h-9 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center text-zinc-600 dark:text-zinc-300 transition">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-7 mb-2">
+          <div class="text-center text-[10px] font-bold uppercase tracking-wider text-zinc-400">Sun</div>
+          <div class="text-center text-[10px] font-bold uppercase tracking-wider text-zinc-400">Mon</div>
+          <div class="text-center text-[10px] font-bold uppercase tracking-wider text-zinc-400">Tue</div>
+          <div class="text-center text-[10px] font-bold uppercase tracking-wider text-zinc-400">Wed</div>
+          <div class="text-center text-[10px] font-bold uppercase tracking-wider text-zinc-400">Thu</div>
+          <div class="text-center text-[10px] font-bold uppercase tracking-wider text-zinc-400">Fri</div>
+          <div class="text-center text-[10px] font-bold uppercase tracking-wider text-zinc-400">Sat</div>
+        </div>
+
+        <div id="calendarGrid" class="grid grid-cols-7 gap-1"></div>
+
+        <div class="mt-6 pt-5 border-t border-zinc-100 dark:border-zinc-800">
+          <h4 id="calendarSelectedTitle" class="text-xs uppercase font-bold tracking-wider text-zinc-400 mb-3"></h4>
+          <div id="calendarDayTasks" class="space-y-2"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="all-archive-view" class="hidden">
+      <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-5">
+        <div class="mb-4">
+          <input type="text" id="archiveSearchInput" placeholder="Search completed tasks…"
+            class="text-xs px-3 py-2 bg-zinc-100 dark:bg-zinc-800 border-0 rounded-xl text-zinc-700 dark:text-zinc-200 font-medium focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 w-full">
+        </div>
+        <div id="archiveContent" class="space-y-5"></div>
+        <div id="archiveEmpty" class="hidden py-12 text-center">
+          <div class="w-12 h-12 mx-auto mb-3 text-zinc-300 dark:text-zinc-600 flex items-center justify-center rounded-full bg-zinc-50 dark:bg-zinc-950">
+            <i class="fa-solid fa-box-archive text-xl"></i>
+          </div>
+          <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Nothing archived yet</p>
+          <p class="text-xs text-zinc-400 mt-1">Completed tasks appear here.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section id="settings-view" class="tab-view hidden">
+    <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-5">
+      <h3 class="text-base font-bold text-zinc-800 dark:text-zinc-100 flex items-center gap-2 mb-6">
+        <i class="fa-solid fa-gear text-zinc-400"></i> Settings
+      </h3>
+
+      <div class="space-y-6">
+        <div>
+          <p class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2">Appearance</p>
+          <button id="themeToggleBtnSettings" class="w-full px-4 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition text-sm font-semibold flex items-center justify-center gap-2">
+            <i class="fa-solid fa-moon dark:hidden"></i>
+            <i class="fa-solid fa-sun hidden dark:block text-amber-400"></i>
+            <span class="dark:hidden">Dark Mode</span>
+            <span class="hidden dark:inline">Light Mode</span>
+          </button>
+        </div>
+
+        <div>
+          <p class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2">Export</p>
+          <button id="exportBtn" class="w-full px-4 py-3 rounded-xl bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 font-semibold text-sm transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-download"></i> Download JSON Backup
+          </button>
+        </div>
+
+        <div>
+          <p class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2">Import</p>
+          <label for="importFileInput" class="w-full px-4 py-3 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-100 font-semibold text-sm transition flex items-center justify-center gap-2 cursor-pointer">
+            <i class="fa-solid fa-upload"></i> Restore from Backup
+            <input type="file" id="importFileInput" accept=".json" class="hidden">
+          </label>
+        </div>
+
+        <div>
+          <p class="text-[10px] uppercase font-bold tracking-wider text-rose-500 mb-2">Danger Zone</p>
+          <button id="resetBtn" class="w-full px-4 py-3 rounded-xl border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-semibold text-sm transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-trash-can"></i> Clear All Data
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="mt-8 text-center text-xs text-zinc-400 dark:text-zinc-600 py-4">
+    Tick • Stored locally in your browser • Private & Safe
+  </footer>
+</div>
+
+<nav class="fixed bottom-0 left-0 right-0 bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 md:hidden flex justify-around py-2 z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+  <button onclick="switchTab('today')" class="mobile-tab flex flex-col items-center gap-1 p-2 text-zinc-900 dark:text-white" data-tab="today">
+    <i class="fa-solid fa-list-check text-lg"></i>
+    <span class="text-[10px] font-medium">Today</span>
+  </button>
+  <button onclick="switchTab('all')" class="mobile-tab flex flex-col items-center gap-1 p-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200" data-tab="all">
+    <i class="fa-solid fa-layer-group text-lg"></i>
+    <span class="text-[10px] font-medium">All</span>
+  </button>
+  <button onclick="switchTab('settings')" class="mobile-tab flex flex-col items-center gap-1 p-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200" data-tab="settings">
+    <i class="fa-solid fa-gear text-lg"></i>
+    <span class="text-[10px] font-medium">Settings</span>
+  </button>
+</nav>
+
+<div id="toastContainer" class="fixed bottom-24 md:bottom-10 left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center gap-2 pointer-events-none w-full px-4"></div>
+
+<div id="confirmModal" class="hidden fixed inset-0 bg-zinc-950/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-zinc-900 rounded-2xl max-w-sm w-full p-6 shadow-xl border border-zinc-100 dark:border-zinc-800">
+    <h3 class="text-lg font-bold text-zinc-900 dark:text-white mb-2">Clear All Data?</h3>
+    <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-6">This will permanently delete all tasks and their history. Export a backup first if you want to keep them.</p>
+    <div class="flex gap-3 justify-end">
+      <button id="cancelResetBtn" class="px-4 py-2 text-sm font-semibold text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-xl transition">Cancel</button>
+      <button id="confirmResetBtn" class="px-4 py-2 text-sm font-semibold text-white bg-rose-500 hover:bg-rose-600 rounded-xl transition">Clear All</button>
+    </div>
+  </div>
+</div>
+
+<div id="detailModal" class="hidden fixed inset-0 bg-zinc-950/50 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-zinc-900 rounded-2xl max-w-md w-full p-6 shadow-xl border border-zinc-100 dark:border-zinc-800 max-h-[85vh] overflow-y-auto">
+    <div class="flex items-start justify-between mb-4">
+      <div class="flex items-start gap-3 min-w-0 flex-1">
+        <div id="detailIcon" class="w-11 h-11 rounded-xl flex items-center justify-center text-base font-bold flex-shrink-0 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300"></div>
+        <div class="min-w-0 flex-1">
+          <p id="detailType" class="text-[10px] uppercase font-bold tracking-wider text-zinc-400"></p>
+          <p id="detailTitle" class="text-lg font-extrabold tracking-tight leading-tight text-zinc-900 dark:text-white break-words"></p>
+        </div>
+      </div>
+      <button id="closeDetailBtn" class="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition flex-shrink-0">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+    </div>
+
+    <div class="space-y-3 py-4 border-t border-b border-zinc-100 dark:border-zinc-800">
+      <div class="flex justify-between gap-4">
+        <span class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 flex-shrink-0">Priority</span>
+        <span id="detailPriority" class="text-sm font-semibold text-zinc-800 dark:text-zinc-100 text-right"></span>
+      </div>
+      <div class="flex justify-between gap-4" id="detailDateRow">
+        <span class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 flex-shrink-0">Due</span>
+        <span id="detailDate" class="text-sm font-semibold text-zinc-800 dark:text-zinc-100 text-right"></span>
+      </div>
+      <div class="flex justify-between gap-4" id="detailRepeatRow">
+        <span class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 flex-shrink-0">Repeats</span>
+        <span id="detailRepeat" class="text-sm font-semibold text-zinc-800 dark:text-zinc-100 text-right"></span>
+      </div>
+      <div class="pt-2 border-t border-zinc-100 dark:border-zinc-800">
+        <span class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 block mb-2">Notes</span>
+        <p id="detailNotes" class="text-sm text-zinc-700 dark:text-zinc-200 leading-relaxed break-words"></p>
+      </div>
+    </div>
+
+    <div class="flex gap-3 mt-5">
+      <button id="detailEditBtn" class="flex-1 py-2.5 rounded-xl bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 font-bold text-sm transition flex items-center justify-center gap-2">
+        <i class="fa-solid fa-pen"></i> Edit
+      </button>
+      <button id="detailDeleteBtn" class="flex-1 py-2.5 rounded-xl border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-bold text-sm transition flex items-center justify-center gap-2">
+        <i class="fa-solid fa-trash-can"></i> Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="deleteConfirmModal" class="hidden fixed inset-0 bg-zinc-950/50 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-zinc-900 rounded-2xl max-w-sm w-full p-6 shadow-xl border border-zinc-100 dark:border-zinc-800">
+    <h3 class="text-lg font-bold text-zinc-900 dark:text-white mb-2">Delete this task?</h3>
+    <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-6">This action cannot be undone.</p>
+    <div class="flex gap-3 justify-end">
+      <button id="cancelDeleteBtn" class="px-4 py-2 text-sm font-semibold text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-xl transition">Cancel</button>
+      <button id="confirmDeleteBtn" class="px-4 py-2 text-sm font-semibold text-white bg-rose-500 hover:bg-rose-600 rounded-xl transition">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CATEGORIES = [
+  { name: 'Academic',       icon: 'fa-graduation-cap' },
+  { name: 'Occupational',   icon: 'fa-briefcase' },
+  { name: 'Administrative', icon: 'fa-file-lines' },
+  { name: 'Entertainment',  icon: 'fa-gamepad' },
+  { name: 'Workout',        icon: 'fa-dumbbell' },
+  { name: 'Music',          icon: 'fa-music' },
+  { name: 'Chores',         icon: 'fa-broom' },
+  { name: 'Social',         icon: 'fa-user-group' },
+  { name: 'Health',         icon: 'fa-heart-pulse' },
+  { name: 'Others',         icon: 'fa-circle' }
+];
+
+const PRIORITY_LABEL = { high: 'High', medium: 'Medium', low: 'Low' };
+const PRIORITY_ORDER = { high: 0, medium: 1, low: 2 };
+
+const STORAGE_KEY_TASKS = 'todo_tasks_v1';
+const STORAGE_KEY_THEME = 'todo_theme';
+const STORAGE_KEY_SORT = 'todo_sort_pref';
+
+let tasks = [];
+let currentTab = 'today';
+let sortPref = 'deadline';
+let editingId = null;
+let detailId = null;
+let pendingDeleteId = null;
+let currentFormType = 'Academic';
+let currentFormPriority = 'medium';
+let allSubView = 'list';
+let calendarMonth = '';
+let calendarSelectedDate = null;
+let snoozeOpenForId = null;
+
+let storageUsable = true;
+function storageGet(k) { try { return localStorage.getItem(k); } catch (e) { storageUsable = false; return null; } }
+function storageSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { storageUsable = false; return false; } }
+function testStorage() { try { const p='__probe__'; localStorage.setItem(p,'1'); localStorage.removeItem(p); return true; } catch (e) { return false; } }
+
+function pad(n) { return String(n).padStart(2, '0'); }
+function formatDate(d) { return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function parseDate(str) { const [y,m,d] = str.split('-').map(Number); return new Date(y, m-1, d); }
+function todayStr() { return formatDate(new Date()); }
+function addDaysStr(dateStr, n) { const d = parseDate(dateStr); d.setDate(d.getDate() + n); return formatDate(d); }
+function addMonthsStr(dateStr, n) {
+  const d = parseDate(dateStr);
+  const day = d.getDate();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + n);
+  const lastDay = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+  d.setDate(Math.min(day, lastDay));
+  return formatDate(d);
+}
+function addYearsStr(dateStr, n) {
+  const d = parseDate(dateStr);
+  const day = d.getDate();
+  d.setDate(1);
+  d.setFullYear(d.getFullYear() + n);
+  const lastDay = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+  d.setDate(Math.min(day, lastDay));
+  return formatDate(d);
+}
+
+function advanceDate(fromDate, recurrence) {
+  if (!recurrence) return fromDate;
+  const { freq, interval } = recurrence;
+  if (freq === 'daily') return addDaysStr(fromDate, interval);
+  if (freq === 'weekly') return addDaysStr(fromDate, interval * 7);
+  if (freq === 'monthly') return addMonthsStr(fromDate, interval);
+  if (freq === 'yearly') return addYearsStr(fromDate, interval);
+  if (freq === 'weekdays') {
+    let next = addDaysStr(fromDate, 1);
+    for (let i = 0; i < 10; i++) {
+      const day = parseDate(next).getDay();
+      if (day !== 0 && day !== 6) return next;
+      next = addDaysStr(next, 1);
+    }
+    return next;
+  }
+  return addDaysStr(fromDate, 1);
+}
+
+function formatRecurrenceLabel(r) {
+  if (!r) return '';
+  const { freq, interval } = r;
+  if (freq === 'weekdays') return 'Every weekday';
+  const unit = { daily: 'day', weekly: 'week', monthly: 'month', yearly: 'year' }[freq] || 'day';
+  if (interval === 1) {
+    if (freq === 'daily') return 'Every day';
+    if (freq === 'weekly') return 'Every week';
+    if (freq === 'monthly') return 'Every month';
+    if (freq === 'yearly') return 'Every year';
+  }
+  return `Every ${interval} ${unit}s`;
+}
+
+function formatDateLabel(dateStr) {
+  if (!dateStr) return '';
+  const today = todayStr();
+  const tomorrow = addDaysStr(today, 1);
+  const yesterday = addDaysStr(today, -1);
+  if (dateStr === today) return 'Today';
+  if (dateStr === tomorrow) return 'Tomorrow';
+  if (dateStr === yesterday) return 'Yesterday';
+  const d = parseDate(dateStr);
+  const now = new Date();
+  if (d.getFullYear() === now.getFullYear()) {
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function getTypeIcon(type) {
+  const cat = CATEGORIES.find(c => c.name === type);
+  return cat ? cat.icon : 'fa-circle';
+}
+
+function escapeHtml(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+function showToast(message, type = 'success', actionLabel = null, actionFn = null) {
+  const toast = document.createElement('div');
+  const isSuccess = type === 'success';
+  toast.className = `${isSuccess ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900' : 'bg-rose-500 text-white'} px-5 py-3 rounded-xl shadow-lg font-semibold text-sm toast-enter flex items-center gap-2 pointer-events-auto`;
+  const icon = isSuccess ? 'fa-circle-check' : 'fa-circle-exclamation';
+  toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${escapeHtml(message)}</span>`;
+  if (actionLabel && actionFn) {
+    const btn = document.createElement('button');
+    btn.className = 'ml-2 px-2.5 py-1 rounded-md bg-white/20 dark:bg-zinc-900/20 hover:bg-white/30 dark:hover:bg-zinc-900/30 text-xs font-bold transition';
+    btn.textContent = actionLabel;
+    btn.onclick = () => {
+      actionFn();
+      toast.classList.remove('toast-enter');
+      toast.classList.add('toast-exit');
+      setTimeout(() => toast.remove(), 250);
+    };
+    toast.appendChild(btn);
+  }
+  toastContainer.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.remove('toast-enter');
+    toast.classList.add('toast-exit');
+    setTimeout(() => toast.remove(), 300);
+  }, actionLabel ? 5000 : 2500);
+}
+
+const toastContainer = document.getElementById('toastContainer');
+const storageWarning = document.getElementById('storageWarning');
+const taskForm = document.getElementById('taskForm');
+const titleInput = document.getElementById('titleInput');
+const typeSelect = document.getElementById('typeSelect');
+const priorityGroup = document.getElementById('priorityGroup');
+const dateInput = document.getElementById('dateInput');
+const timeInput = document.getElementById('timeInput');
+const repeatSelect = document.getElementById('repeatSelect');
+const customRepeatRow = document.getElementById('customRepeatRow');
+const customInterval = document.getElementById('customInterval');
+const customUnit = document.getElementById('customUnit');
+const notesInput = document.getElementById('notesInput');
+const submitBtn = document.getElementById('submitBtn');
+const cancelEditBtn = document.getElementById('cancelEditBtn');
+const formHeaderIcon = document.getElementById('formHeaderIcon');
+const formHeaderText = document.getElementById('formHeaderText');
+
+const overdueSection = document.getElementById('overdueSection');
+const overdueList = document.getElementById('overdueList');
+const todayList = document.getElementById('todayList');
+const upcomingPreview = document.getElementById('upcomingPreview');
+
+const searchInput = document.getElementById('searchInput');
+const monthFilter = document.getElementById('monthFilter');
+const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+const listContent = document.getElementById('listContent');
+const listEmpty = document.getElementById('listEmpty');
+
+const calendarTitle = document.getElementById('calendarTitle');
+const calendarGrid = document.getElementById('calendarGrid');
+const calendarSelectedTitle = document.getElementById('calendarSelectedTitle');
+const calendarDayTasks = document.getElementById('calendarDayTasks');
+
+const archiveSearchInput = document.getElementById('archiveSearchInput');
+const archiveContent = document.getElementById('archiveContent');
+const archiveEmpty = document.getElementById('archiveEmpty');
+
+const detailModal = document.getElementById('detailModal');
+const deleteConfirmModal = document.getElementById('deleteConfirmModal');
+const confirmModal = document.getElementById('confirmModal');
+
+window.switchTab = function(tabId) {
+  currentTab = tabId;
+  document.querySelectorAll('.tab-view').forEach(v => v.classList.add('hidden'));
+  const target = document.getElementById(tabId + '-view');
+  if (target) target.classList.remove('hidden');
+
+  document.querySelectorAll('.desktop-tab').forEach(btn => {
+    if (btn.dataset.tab === tabId) {
+      btn.className = "desktop-tab flex-1 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 tab-active bg-zinc-50 dark:bg-zinc-950";
+    } else {
+      btn.className = "desktop-tab flex-1 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-white";
+    }
+  });
+  document.querySelectorAll('.mobile-tab').forEach(btn => {
+    if (btn.dataset.tab === tabId) {
+      btn.className = "mobile-tab flex flex-col items-center gap-1 p-2 text-zinc-900 dark:text-white";
+    } else {
+      btn.className = "mobile-tab flex flex-col items-center gap-1 p-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200";
+    }
+  });
+
+  if (tabId === 'all') renderAll();
+  if (tabId === 'today') renderToday();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+function loadData() {
+  const raw = storageGet(STORAGE_KEY_TASKS);
+  if (!raw) { tasks = []; return; }
+  try {
+    const parsed = JSON.parse(raw);
+    tasks = Array.isArray(parsed) ? parsed : [];
+  } catch (e) { tasks = []; }
+}
+function saveData() {
+  const ok = storageSet(STORAGE_KEY_TASKS, JSON.stringify(tasks));
+  if (!ok) storageWarning.classList.remove('hidden');
+  return ok;
+}
+
+function populateTypeSelect() {
+  typeSelect.innerHTML = '';
+  CATEGORIES.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.name;
+    opt.textContent = c.name;
+    typeSelect.appendChild(opt);
+  });
+  typeSelect.value = currentFormType;
+}
+
+function setFormPriority(p) {
+  currentFormPriority = p;
+  priorityGroup.querySelectorAll('button').forEach(b => {
+    const on = b.dataset.priority === p;
+    b.className = `flex-1 py-1.5 rounded-lg text-xs font-semibold transition ${on ? 'bg-white dark:bg-zinc-800 shadow-sm text-zinc-900 dark:text-white' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'}`;
+  });
+}
+
+priorityGroup.addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-priority]');
+  if (!btn) return;
+  setFormPriority(btn.dataset.priority);
+});
+
+repeatSelect.addEventListener('change', () => {
+  customRepeatRow.classList.toggle('hidden', repeatSelect.value !== 'custom');
+});
+
+function getRecurrenceFromForm() {
+  const v = repeatSelect.value;
+  if (!v) return null;
+  if (v === 'daily') return { freq: 'daily', interval: 1 };
+  if (v === 'every2days') return { freq: 'daily', interval: 2 };
+  if (v === 'weekly') return { freq: 'weekly', interval: 1 };
+  if (v === 'every2weeks') return { freq: 'weekly', interval: 2 };
+  if (v === 'monthly') return { freq: 'monthly', interval: 1 };
+  if (v === 'yearly') return { freq: 'yearly', interval: 1 };
+  if (v === 'weekdays') return { freq: 'weekdays', interval: 1 };
+  if (v === 'custom') {
+    const n = Math.max(1, parseInt(customInterval.value) || 1);
+    return { freq: customUnit.value, interval: n };
+  }
+  return null;
+}
+
+function setFormRecurrence(r) {
+  if (!r) { repeatSelect.value = ''; customRepeatRow.classList.add('hidden'); return; }
+  const { freq, interval } = r;
+  if (freq === 'daily' && interval === 1) repeatSelect.value = 'daily';
+  else if (freq === 'daily' && interval === 2) repeatSelect.value = 'every2days';
+  else if (freq === 'weekly' && interval === 1) repeatSelect.value = 'weekly';
+  else if (freq === 'weekly' && interval === 2) repeatSelect.value = 'every2weeks';
+  else if (freq === 'monthly' && interval === 1) repeatSelect.value = 'monthly';
+  else if (freq === 'yearly' && interval === 1) repeatSelect.value = 'yearly';
+  else if (freq === 'weekdays') repeatSelect.value = 'weekdays';
+  else { repeatSelect.value = 'custom'; customInterval.value = interval; customUnit.value = freq; }
+  customRepeatRow.classList.toggle('hidden', repeatSelect.value !== 'custom');
+}
+
+function resetForm() {
+  editingId = null;
+  titleInput.value = '';
+  notesInput.value = '';
+  timeInput.value = '';
+  dateInput.value = todayStr();
+  setFormRecurrence(null);
+  setFormPriority('medium');
+  currentFormType = 'Academic';
+  typeSelect.value = currentFormType;
+  formHeaderIcon.className = 'fa-solid fa-plus text-zinc-400';
+  formHeaderText.textContent = 'New Task';
+  submitBtn.innerHTML = '<i class="fa-solid fa-plus"></i> Add Task';
+  submitBtn.className = 'flex-1 py-3 rounded-xl bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 font-bold text-sm shadow-sm transition-all duration-200 flex items-center justify-center gap-2';
+  cancelEditBtn.classList.add('hidden');
+}
+
+window.startEdit = function(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  closeDetail();
+  switchTab('today');
+  editingId = id;
+  titleInput.value = t.title;
+  currentFormType = t.type;
+  typeSelect.value = t.type;
+  setFormPriority(t.priority || 'medium');
+  dateInput.value = t.dueDate || '';
+  timeInput.value = t.dueTime || '';
+  setFormRecurrence(t.recurrence);
+  notesInput.value = t.notes || '';
+  formHeaderIcon.className = 'fa-solid fa-pen text-blue-500';
+  formHeaderText.textContent = 'Edit Task';
+  submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> Update Task';
+  submitBtn.className = 'flex-1 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-bold text-sm shadow-sm transition-all duration-200 flex items-center justify-center gap-2';
+  cancelEditBtn.classList.remove('hidden');
+  setTimeout(() => {
+    document.getElementById('formHeaderText').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    titleInput.focus();
+  }, 150);
+};
+
+cancelEditBtn.addEventListener('click', resetForm);
+
+taskForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const title = titleInput.value.trim();
+  if (!title) { titleInput.focus(); return; }
+
+  const taskData = {
+    title,
+    notes: notesInput.value.trim(),
+    type: typeSelect.value,
+    priority: currentFormPriority,
+    dueDate: dateInput.value || null,
+    dueTime: timeInput.value || null,
+    recurrence: getRecurrenceFromForm()
+  };
+
+  if (editingId !== null) {
+    const idx = tasks.findIndex(t => t.id === editingId);
+    if (idx !== -1) {
+      tasks[idx] = { ...tasks[idx], ...taskData };
+    }
+    showToast('Task updated');
+    resetForm();
+  } else {
+    const newTask = {
+      id: Date.now(),
+      ...taskData,
+      completed: false,
+      completedAt: null,
+      history: [],
+      createdAt: Date.now()
+    };
+    tasks.unshift(newTask);
+    titleInput.value = '';
+    notesInput.value = '';
+    timeInput.value = '';
+    setFormRecurrence(null);
+    titleInput.focus();
+    showToast('Task added');
+  }
+  saveData();
+  if (currentTab === 'all') renderAll();
+  renderToday();
+});
+
+window.setSortPref = function(pref) {
+  sortPref = pref;
+  storageSet(STORAGE_KEY_SORT, pref);
+  updateSortButtons();
+  renderToday();
+  if (currentTab === 'all' && allSubView === 'list') renderList();
+};
+function updateSortButtons() {
+  document.querySelectorAll('.sort-btn').forEach(b => {
+    const on = b.dataset.sort === sortPref;
+    b.className = `sort-btn px-2.5 py-1.5 rounded-md font-semibold transition ${on ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'}`;
+  });
+}
+
+function compareByDeadline(a, b) {
+  if (!a.dueDate && !b.dueDate) return (b.createdAt || 0) - (a.createdAt || 0);
+  if (!a.dueDate) return 1;
+  if (!b.dueDate) return -1;
+  if (a.dueDate !== b.dueDate) return a.dueDate < b.dueDate ? -1 : 1;
+  if (a.dueTime && b.dueTime && a.dueTime !== b.dueTime) return a.dueTime < b.dueTime ? -1 : 1;
+  if (a.dueTime && !b.dueTime) return -1;
+  if (!a.dueTime && b.dueTime) return 1;
+  return (PRIORITY_ORDER[a.priority] ?? 1) - (PRIORITY_ORDER[b.priority] ?? 1);
+}
+function compareByPriority(a, b) {
+  const pa = PRIORITY_ORDER[a.priority] ?? 1;
+  const pb = PRIORITY_ORDER[b.priority] ?? 1;
+  if (pa !== pb) return pa - pb;
+  return compareByDeadline(a, b);
+}
+function sortTasks(list) {
+  const arr = [...list];
+  arr.sort(sortPref === 'priority' ? compareByPriority : compareByDeadline);
+  return arr;
+}
+
+function renderTaskRow(t, opts = {}) {
+  const { showSnooze = false } = opts;
+  const isCompleted = t.completed;
+  const today = todayStr();
+  const isOverdue = !isCompleted && t.dueDate && t.dueDate < today;
+  const typeIcon = getTypeIcon(t.type);
+
+  const metaParts = [];
+  if (t.dueDate) {
+    if (isOverdue) {
+      const days = Math.round((parseDate(today) - parseDate(t.dueDate)) / 86400000);
+      metaParts.push(`<span class="text-rose-500 font-semibold">${days}d overdue</span>`);
+    } else {
+      metaParts.push(`<span>${formatDateLabel(t.dueDate)}</span>`);
+    }
+  }
+  if (t.dueTime) metaParts.push(`<span>${escapeHtml(t.dueTime)}</span>`);
+  metaParts.push(`<span class="inline-flex items-center gap-1"><i class="fa-solid ${typeIcon} text-[10px] opacity-70"></i>${escapeHtml(t.type)}</span>`);
+  if (t.recurrence) metaParts.push(`<span class="inline-flex items-center gap-1"><i class="fa-solid fa-rotate text-[10px]"></i>${escapeHtml(formatRecurrenceLabel(t.recurrence))}</span>`);
+
+  const leftBorder = isOverdue ? 'border-l-2 border-l-rose-500' : 'border-l-2 border-l-transparent';
+
+  return `
+    <div class="task-row flex items-center gap-3 p-3 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 ${leftBorder} hover:border-zinc-300 dark:hover:border-zinc-700 transition cursor-pointer" data-task-id="${t.id}" onclick="openDetail(${t.id})">
+      <button class="checkbox ${isCompleted ? 'done' : ''}" data-check-id="${t.id}" onclick="event.stopPropagation(); toggleComplete(${t.id})">
+        <i class="fa-solid fa-check"></i>
+      </button>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-semibold text-zinc-900 dark:text-white ${isCompleted ? 'line-through opacity-50' : ''} break-words">${escapeHtml(t.title)}</p>
+        <div class="flex items-center gap-2 text-[11px] text-zinc-400 dark:text-zinc-500 mt-0.5 flex-wrap">
+          ${metaParts.join('<span class="opacity-40">·</span>')}
+        </div>
+      </div>
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <span class="pri pri-${t.priority || 'medium'} text-zinc-900 dark:text-zinc-100"></span>
+        ${showSnooze && isOverdue ? `
+          <button class="p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800" data-snooze-btn="${t.id}" onclick="event.stopPropagation(); openSnooze(event, ${t.id})">
+            <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+          </button>
+        ` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function renderToday() {
+  const today = todayStr();
+  const active = tasks.filter(t => !t.completed);
+
+  const overdue = active.filter(t => t.dueDate && t.dueDate < today);
+  const dueToday = active.filter(t => t.dueDate === today);
+
+  const sortedOverdue = sortTasks(overdue);
+  const sortedToday = sortTasks(dueToday);
+
+  if (sortedOverdue.length > 0) {
+    overdueSection.classList.remove('hidden');
+    overdueList.innerHTML = sortedOverdue.map(t => renderTaskRow(t, { showSnooze: true })).join('');
+  } else {
+    overdueSection.classList.add('hidden');
+    overdueList.innerHTML = '';
+  }
+
+  if (sortedToday.length > 0) {
+    todayList.innerHTML = sortedToday.map(t => renderTaskRow(t, { showSnooze: true })).join('');
+  } else {
+    todayList.innerHTML = `
+      <div class="py-10 text-center">
+        <div class="w-12 h-12 mx-auto mb-3 text-zinc-300 dark:text-zinc-700 flex items-center justify-center rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+          <i class="fa-solid fa-mug-hot text-lg"></i>
+        </div>
+        <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Nothing due today.</p>
+        <p class="text-xs text-zinc-400 mt-1">Enjoy the quiet.</p>
+      </div>
+    `;
+  }
+
+  const tomorrow = addDaysStr(today, 1);
+  const dayAfter = addDaysStr(today, 2);
+  const day3 = addDaysStr(today, 3);
+
+  const upcoming = active.filter(t =>
+    t.dueDate && (t.dueDate === tomorrow || t.dueDate === dayAfter || t.dueDate === day3)
+  );
+  const sortedUpcoming = sortTasks(upcoming);
+
+  if (sortedUpcoming.length > 0) {
+    upcomingPreview.innerHTML = `
+      <h3 class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2">Coming up</h3>
+      <div class="space-y-2">
+        ${sortedUpcoming.map(t => renderTaskRow(t)).join('')}
+      </div>
+    `;
+  } else {
+    upcomingPreview.innerHTML = '';
+  }
+}
+
+window.setAllView = function(v) {
+  allSubView = v;
+  document.querySelectorAll('#allViewGroup .seg-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.view === v);
+  });
+  document.getElementById('all-list-view').classList.toggle('hidden', v !== 'list');
+  document.getElementById('all-calendar-view').classList.toggle('hidden', v !== 'calendar');
+  document.getElementById('all-archive-view').classList.toggle('hidden', v !== 'archive');
+  if (v === 'list') renderList();
+  if (v === 'calendar') renderCalendar();
+  if (v === 'archive') renderArchive();
+};
+
+function renderAll() {
+  setAllView(allSubView);
+}
+
+function renderList() {
+  const query = (searchInput.value || '').trim().toLowerCase();
+  const month = monthFilter.value;
+
+  let filtered = tasks.filter(t => !t.completed);
+
+  if (month) filtered = filtered.filter(t => t.dueDate && t.dueDate.startsWith(month));
+  if (query) {
+    filtered = filtered.filter(t =>
+      (t.title && t.title.toLowerCase().includes(query)) ||
+      (t.notes && t.notes.toLowerCase().includes(query)) ||
+      (t.type && t.type.toLowerCase().includes(query))
+    );
+  }
+
+  if (filtered.length === 0) {
+    listContent.innerHTML = '';
+    listEmpty.classList.remove('hidden');
+    return;
+  }
+  listEmpty.classList.add('hidden');
+
+  const today = todayStr();
+  const tomorrow = addDaysStr(today, 1);
+  const weekEnd = addDaysStr(today, 7);
+
+  const groups = { overdue: [], today: [], tomorrow: [], week: [], later: [], nodate: [] };
+
+  filtered.forEach(t => {
+    if (!t.dueDate) groups.nodate.push(t);
+    else if (t.dueDate < today) groups.overdue.push(t);
+    else if (t.dueDate === today) groups.today.push(t);
+    else if (t.dueDate === tomorrow) groups.tomorrow.push(t);
+    else if (t.dueDate <= weekEnd) groups.week.push(t);
+    else groups.later.push(t);
+  });
+
+  if (sortPref === 'priority') {
+    const sorted = sortTasks(filtered);
+    listContent.innerHTML = `
+      <div>
+        <h4 class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2">All Active Tasks</h4>
+        <div class="space-y-2">${sorted.map(t => renderTaskRow(t)).join('')}</div>
+      </div>
+    `;
+    return;
+  }
+
+  const sections = [
+    { key: 'overdue', label: 'Overdue', color: 'text-rose-500' },
+    { key: 'today', label: 'Today', color: 'text-zinc-800 dark:text-zinc-200' },
+    { key: 'tomorrow', label: 'Tomorrow', color: 'text-zinc-800 dark:text-zinc-200' },
+    { key: 'week', label: 'This Week', color: 'text-zinc-800 dark:text-zinc-200' },
+    { key: 'later', label: 'Later', color: 'text-zinc-800 dark:text-zinc-200' },
+    { key: 'nodate', label: 'No Date', color: 'text-zinc-500 dark:text-zinc-500' }
+  ];
+
+  let html = '';
+  sections.forEach(s => {
+    const arr = groups[s.key];
+    if (!arr || arr.length === 0) return;
+    const sorted = sortTasks(arr);
+    html += `
+      <div>
+        <h4 class="text-[10px] uppercase font-bold tracking-wider ${s.color} mb-2">${s.label}</h4>
+        <div class="space-y-2">${sorted.map(t => renderTaskRow(t)).join('')}</div>
+      </div>
+    `;
+  });
+
+  listContent.innerHTML = html;
+}
+
+searchInput.addEventListener('input', renderList);
+monthFilter.addEventListener('change', renderList);
+clearFiltersBtn.addEventListener('click', () => {
+  searchInput.value = '';
+  monthFilter.value = '';
+  renderList();
+});
+
+window.shiftCalendarMonth = function(delta) {
+  const [y, m] = calendarMonth.split('-').map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  calendarMonth = `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+  renderCalendar();
+};
+
+function renderCalendar() {
+  if (!calendarMonth) {
+    const now = new Date();
+    calendarMonth = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
+  }
+
+  const [year, month] = calendarMonth.split('-').map(Number);
+  const monthName = new Date(year, month - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  calendarTitle.textContent = monthName;
+
+  const firstDay = new Date(year, month - 1, 1);
+  const startWeekday = firstDay.getDay();
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const prevMonthDays = new Date(year, month - 1, 0).getDate();
+
+  const today = todayStr();
+  const active = tasks.filter(t => !t.completed);
+
+  const cells = [];
+  for (let i = startWeekday - 1; i >= 0; i--) {
+    const d = prevMonthDays - i;
+    const prevMonth = month === 1 ? 12 : month - 1;
+    const prevYear = month === 1 ? year - 1 : year;
+    cells.push({ day: d, date: `${prevYear}-${pad(prevMonth)}-${pad(d)}`, other: true });
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    cells.push({ day: d, date: `${year}-${pad(month)}-${pad(d)}`, other: false });
+  }
+  let nextDay = 1;
+  const nextMonth = month === 12 ? 1 : month + 1;
+  const nextYear = month === 12 ? year + 1 : year;
+  while (cells.length < 42) {
+    cells.push({ day: nextDay, date: `${nextYear}-${pad(nextMonth)}-${pad(nextDay)}`, other: true });
+    nextDay++;
+  }
+
+  let gridHtml = '';
+  cells.forEach(c => {
+    const tasksOnDay = active.filter(t => t.dueDate === c.date);
+    const dots = tasksOnDay.slice(0, 3).map(t => {
+      const recurring = t.recurrence ? 'ring' : '';
+      return `<span class="cal-dot ${recurring}"></span>`;
+    }).join('');
+    const moreIndicator = tasksOnDay.length > 3 ? `<span class="text-[8px] text-zinc-400 mt-0.5">+${tasksOnDay.length - 3}</span>` : '';
+
+    const cls = [
+      'cal-cell',
+      c.other ? 'other' : '',
+      c.date === today ? 'today' : '',
+      c.date === calendarSelectedDate ? 'selected' : ''
+    ].filter(Boolean).join(' ');
+
+    gridHtml += `
+      <div class="${cls}" data-date="${c.date}" onclick="selectCalendarDay('${c.date}')">
+        <span class="cal-num">${c.day}</span>
+        <div class="cal-dots">${dots}</div>
+        ${moreIndicator}
+      </div>
+    `;
+  });
+
+  calendarGrid.innerHTML = gridHtml;
+
+  if (!calendarSelectedDate) {
+    if (today.startsWith(calendarMonth)) {
+      calendarSelectedDate = today;
+    } else {
+      calendarSelectedDate = `${year}-${pad(month)}-01`;
+    }
+    return renderCalendar();
+  }
+
+  const dateLabel = parseDate(calendarSelectedDate).toLocaleDateString('en-US', {
+    weekday: 'long', month: 'long', day: 'numeric'
+  });
+  calendarSelectedTitle.textContent = dateLabel;
+
+  const dayTasks = sortTasks(active.filter(t => t.dueDate === calendarSelectedDate));
+  if (dayTasks.length === 0) {
+    calendarDayTasks.innerHTML = `
+      <p class="text-xs text-zinc-400 italic py-3 text-center">No tasks on this day.</p>
+    `;
+  } else {
+    calendarDayTasks.innerHTML = dayTasks.map(t => renderTaskRow(t)).join('');
+  }
+}
+
+window.selectCalendarDay = function(date) {
+  calendarSelectedDate = date;
+  renderCalendar();
+};
+
+function renderArchive() {
+  const query = (archiveSearchInput.value || '').trim().toLowerCase();
+  let completed = tasks.filter(t => t.completed);
+  if (query) {
+    completed = completed.filter(t =>
+      (t.title && t.title.toLowerCase().includes(query)) ||
+      (t.notes && t.notes.toLowerCase().includes(query)) ||
+      (t.type && t.type.toLowerCase().includes(query))
+    );
+  }
+
+  if (completed.length === 0) {
+    archiveContent.innerHTML = '';
+    archiveEmpty.classList.remove('hidden');
+    return;
+  }
+  archiveEmpty.classList.add('hidden');
+
+  const groups = {};
+  completed.forEach(t => {
+    const dt = t.completedAt ? new Date(t.completedAt) : new Date(t.createdAt || Date.now());
+    const key = `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}`;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(t);
+  });
+
+  const sortedKeys = Object.keys(groups).sort().reverse();
+  let html = '';
+  sortedKeys.forEach(k => {
+    const [y, m] = k.split('-').map(Number);
+    const label = new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    const arr = groups[k].sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
+    html += `
+      <div>
+        <h4 class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2">${label}</h4>
+        <div class="space-y-2">${arr.map(t => renderTaskRow(t)).join('')}</div>
+      </div>
+    `;
+  });
+  archiveContent.innerHTML = html;
+}
+
+archiveSearchInput.addEventListener('input', renderArchive);
+
+window.toggleComplete = function(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+
+  const row = document.querySelector(`.task-row[data-task-id="${id}"]`);
+
+  if (!t.completed) {
+    if (t.recurrence) {
+      const oldDate = t.dueDate || todayStr();
+      t.history = t.history || [];
+      t.history.push({ dueDate: oldDate, completedAt: new Date().toISOString() });
+
+      let next = todayStr();
+      next = advanceDate(next, t.recurrence);
+      let guard = 0;
+      while (next <= todayStr() && guard < 100) {
+        next = advanceDate(next, t.recurrence);
+        guard++;
+      }
+      t.dueDate = next;
+    } else {
+      t.completed = true;
+      t.completedAt = new Date().toISOString();
+    }
+
+    if (row) {
+      const cb = row.querySelector('.checkbox');
+      if (cb) { cb.classList.add('done', 'pop'); }
+      setTimeout(() => { if (row.parentNode) row.classList.add('completing'); }, 100);
+      setTimeout(() => {
+        if (row.parentNode) row.classList.remove('completing');
+      }, 500);
+    }
+
+    saveData();
+    const wasRecurring = !!t.recurrence;
+    const prevState = wasRecurring ? null : { completed: false, completedAt: null };
+    const prevHistory = wasRecurring ? [...(t.history || [])] : null;
+    const prevDue = wasRecurring ? (t.history[t.history.length - 1].dueDate) : null;
+
+    setTimeout(() => {
+      renderToday();
+      if (currentTab === 'all') {
+        if (allSubView === 'list') renderList();
+        if (allSubView === 'calendar') renderCalendar();
+        if (allSubView === 'archive') renderArchive();
+      }
+    }, 400);
+
+    const undoFn = () => {
+      if (wasRecurring) {
+        t.history = prevHistory;
+        t.dueDate = prevDue;
+      } else {
+        t.completed = false;
+        t.completedAt = null;
+      }
+      saveData();
+      renderToday();
+      if (currentTab === 'all') {
+        if (allSubView === 'list') renderList();
+        if (allSubView === 'calendar') renderCalendar();
+        if (allSubView === 'archive') renderArchive();
+      }
+      showToast('Undone');
+    };
+
+    showToast(wasRecurring ? 'Completed · next scheduled' : 'Task completed', 'success', 'Undo', undoFn);
+  } else {
+    t.completed = false;
+    t.completedAt = null;
+    saveData();
+    if (currentTab === 'all' && allSubView === 'archive') renderArchive();
+    if (currentTab === 'all' && allSubView === 'list') renderList();
+    if (currentTab === 'today') renderToday();
+    showToast('Moved back to active');
+  }
+};
+
+let activePopover = null;
+function closeActivePopover() {
+  if (activePopover) { activePopover.remove(); activePopover = null; snoozeOpenForId = null; }
+}
+document.addEventListener('click', (e) => {
+  if (activePopover && !e.target.closest('.popover') && !e.target.closest('[data-snooze-btn]')) {
+    closeActivePopover();
+  }
+});
+
+window.openSnooze = function(e, id) {
+  e.stopPropagation();
+  if (snoozeOpenForId === id) { closeActivePopover(); return; }
+  closeActivePopover();
+
+  const btn = e.currentTarget;
+  const rect = btn.getBoundingClientRect();
+
+  const pop = document.createElement('div');
+  pop.className = 'popover';
+  pop.style.top = (rect.bottom + 6 + window.scrollY) + 'px';
+  pop.style.left = Math.max(8, rect.right - 140 + window.scrollX) + 'px';
+
+  pop.innerHTML = `
+    <button class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition" onclick="snoozeTask(${id}, 1)">+1 day</button>
+    <button class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition" onclick="snoozeTask(${id}, 7)">+1 week</button>
+    <button class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition" onclick="snoozePick(${id})">Pick date…</button>
+  `;
+  document.body.appendChild(pop);
+  activePopover = pop;
+  snoozeOpenForId = id;
+};
+
+window.snoozeTask = function(id, days) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  const base = t.dueDate && t.dueDate > todayStr() ? t.dueDate : todayStr();
+  t.dueDate = addDaysStr(base, days);
+  saveData();
+  closeActivePopover();
+  renderToday();
+  if (currentTab === 'all' && allSubView === 'list') renderList();
+  if (currentTab === 'all' && allSubView === 'calendar') renderCalendar();
+  showToast(`Snoozed ${days} day${days > 1 ? 's' : ''}`);
+};
+
+window.snoozePick = function(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  closeActivePopover();
+  startEdit(id);
+};
+
+window.openDetail = function(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  detailId = id;
+
+  const typeIcon = getTypeIcon(t.type);
+  document.getElementById('detailIcon').innerHTML = `<i class="fa-solid ${typeIcon}"></i>`;
+  document.getElementById('detailType').textContent = t.type;
+  document.getElementById('detailTitle').textContent = t.title;
+
+  const priEl = document.getElementById('detailPriority');
+  priEl.innerHTML = `<span class="inline-flex items-center gap-2"><span class="pri pri-${t.priority} text-zinc-800 dark:text-zinc-200"></span>${PRIORITY_LABEL[t.priority] || 'Medium'}</span>`;
+
+  const dateRow = document.getElementById('detailDateRow');
+  const dateEl = document.getElementById('detailDate');
+  if (t.dueDate) {
+    dateRow.style.display = 'flex';
+    let dateStr = parseDate(t.dueDate).toLocaleDateString('en-US', {
+      weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
+    });
+    if (t.dueTime) dateStr += ` · ${t.dueTime}`;
+    dateEl.textContent = dateStr;
+  } else {
+    dateRow.style.display = 'none';
+  }
+
+  const repeatRow = document.getElementById('detailRepeatRow');
+  const repeatEl = document.getElementById('detailRepeat');
+  if (t.recurrence) {
+    repeatRow.style.display = 'flex';
+    let label = formatRecurrenceLabel(t.recurrence);
+    const count = (t.history || []).length;
+    if (count > 0) label += ` · Completed ${count}×`;
+    repeatEl.textContent = label;
+  } else {
+    repeatRow.style.display = 'none';
+  }
+
+  const notesEl = document.getElementById('detailNotes');
+  if (t.notes && t.notes.trim()) {
+    notesEl.textContent = t.notes;
+    notesEl.className = 'text-sm text-zinc-700 dark:text-zinc-200 leading-relaxed break-words';
+  } else {
+    notesEl.textContent = 'No notes added.';
+    notesEl.className = 'text-sm text-zinc-400 dark:text-zinc-500 italic leading-relaxed';
+  }
+
+  detailModal.classList.remove('hidden');
+};
+
+window.closeDetail = function() {
+  detailId = null;
+  detailModal.classList.add('hidden');
+};
+
+document.getElementById('closeDetailBtn').addEventListener('click', closeDetail);
+detailModal.addEventListener('click', (e) => { if (e.target === detailModal) closeDetail(); });
+
+document.getElementById('detailEditBtn').addEventListener('click', () => {
+  if (detailId !== null) startEdit(detailId);
+});
+
+document.getElementById('detailDeleteBtn').addEventListener('click', () => {
+  if (detailId === null) return;
+  pendingDeleteId = detailId;
+  closeDetail();
+  deleteConfirmModal.classList.remove('hidden');
+});
+
+document.getElementById('cancelDeleteBtn').addEventListener('click', () => {
+  pendingDeleteId = null;
+  deleteConfirmModal.classList.add('hidden');
+});
+
+document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+  if (pendingDeleteId === null) return;
+  if (editingId === pendingDeleteId) resetForm();
+  tasks = tasks.filter(t => t.id !== pendingDeleteId);
+  saveData();
+  pendingDeleteId = null;
+  deleteConfirmModal.classList.add('hidden');
+  renderToday();
+  if (currentTab === 'all') {
+    if (allSubView === 'list') renderList();
+    if (allSubView === 'calendar') renderCalendar();
+    if (allSubView === 'archive') renderArchive();
+  }
+  showToast('Task deleted', 'error');
+});
+
+function toggleTheme() {
+  document.documentElement.classList.toggle('dark');
+  const isDark = document.documentElement.classList.contains('dark');
+  storageSet(STORAGE_KEY_THEME, isDark ? 'dark' : 'light');
+  if (currentTab === 'all' && allSubView === 'calendar') renderCalendar();
+}
+document.getElementById('themeToggleBtn').addEventListener('click', toggleTheme);
+document.getElementById('themeToggleBtnSettings').addEventListener('click', toggleTheme);
+
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const dataStr = JSON.stringify(tasks, null, 2);
+  const blob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const today = todayStr();
+  a.href = url;
+  a.download = `tick_backup_${today}.json`;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+  showToast('Backup exported');
+});
+
+document.getElementById('importFileInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const imported = JSON.parse(ev.target.result);
+      if (!Array.isArray(imported)) throw new Error('Not an array');
+      tasks = imported;
+      saveData();
+      renderToday();
+      if (currentTab === 'all') renderAll();
+      showToast('Backup restored');
+    } catch (err) {
+      alert('Invalid backup file: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => confirmModal.classList.remove('hidden'));
+document.getElementById('cancelResetBtn').addEventListener('click', () => confirmModal.classList.add('hidden'));
+document.getElementById('confirmResetBtn').addEventListener('click', () => {
+  tasks = [];
+  saveData();
+  resetForm();
+  renderToday();
+  if (currentTab === 'all') renderAll();
+  confirmModal.classList.add('hidden');
+  showToast('All data cleared', 'error');
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'n' && e.key !== 'N') return;
+  const tgt = e.target;
+  if (tgt && (tgt.tagName === 'INPUT' || tgt.tagName === 'TEXTAREA' || tgt.tagName === 'SELECT' || tgt.isContentEditable)) return;
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  e.preventDefault();
+  if (currentTab !== 'today') switchTab('today');
+  setTimeout(() => titleInput.focus(), 100);
+});
+
+window.addEventListener('load', () => {
+  if (!testStorage()) {
+    storageUsable = false;
+    storageWarning.classList.remove('hidden');
+  }
+
+  const savedTheme = storageGet(STORAGE_KEY_THEME);
+  if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
+
+  const savedSort = storageGet(STORAGE_KEY_SORT);
+  if (savedSort === 'priority' || savedSort === 'deadline') sortPref = savedSort;
+
+  populateTypeSelect();
+  setFormPriority('medium');
+  dateInput.value = todayStr();
+
+  loadData();
+
+  const now = new Date();
+  calendarMonth = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
+
+  updateSortButtons();
+  setAllView('list');
+  renderToday();
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+      .then(() => console.log('SW registered'))
+      .catch(err => console.log('SW registration failed', err));
+  }
+});
+</script>
+</body>
+</html>
