@@ -63,7 +63,7 @@ tailwind.config = {
   .pri-none { background: transparent; border-color: transparent; opacity: 0; }
 
   /* ============================================
-     CALENDAR — full rewrite for clean hover/select
+     CALENDAR — filled today marker, border-based hover
   ============================================ */
   .cal-cell {
     aspect-ratio: 1 / 1;
@@ -71,14 +71,17 @@ tailwind.config = {
     padding-top: 0.3rem;
     cursor: pointer;
     position: relative;
-    transition: background 0.15s ease;
     border-radius: 0.5rem;
+    border: 1.5px solid transparent;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease, background 0.15s ease;
   }
-  .cal-cell:hover { background: #f4f4f5; }
-  .dark .cal-cell:hover { background: #27272a; }
+  /* Hover = subtle outline, NOT a background wash. Keeps today circle and dots visually separate. */
+  .cal-cell:hover { border-color: #d4d4d8; }
+  .dark .cal-cell:hover { border-color: #3f3f46; }
   .cal-cell.other { opacity: 0.3; }
 
-  /* Day number: all get identical 22x22 slot so layout never shifts */
+  /* Day number */
   .cal-num {
     font-size: 0.75rem; font-weight: 600;
     color: #18181b; line-height: 1;
@@ -86,28 +89,28 @@ tailwind.config = {
     display: inline-flex; align-items: center; justify-content: center;
     border-radius: 50%;
     box-sizing: border-box;
-    border: 1.5px solid transparent;
-    transition: border-color 0.15s ease, color 0.15s ease;
   }
   .dark .cal-num { color: #e4e4e7; }
 
-  /* Today = thin ring outline */
-  .cal-cell.today .cal-num { border-color: #a1a1aa; }
-  .dark .cal-cell.today .cal-num { border-color: #52525b; }
+  /* Today = filled dark circle with white text */
+  .cal-cell.today .cal-num { background: #18181b; color: #ffffff; }
+  .dark .cal-cell.today .cal-num { background: #fafafa; color: #09090b; }
 
-  /* Selected cell: explicit solid background, high-specificity overrides */
+  /* Selected cell — dark background, no hover hijack */
   .cal-cell.selected,
-  .cal-cell.selected:hover { background: #18181b; }
+  .cal-cell.selected:hover { background: #18181b; border-color: transparent; }
   .dark .cal-cell.selected,
-  .dark .cal-cell.selected:hover { background: #fafafa; }
+  .dark .cal-cell.selected:hover { background: #fafafa; border-color: transparent; }
 
   .cal-cell.selected .cal-num { color: #ffffff; }
   .dark .cal-cell.selected .cal-num { color: #09090b; }
-  .cal-cell.selected.today .cal-num { border-color: #ffffff; }
-  .dark .cal-cell.selected.today .cal-num { border-color: #09090b; }
 
-  /* Dots */
-  .cal-dots { display: flex; gap: 2px; margin-top: 3px; justify-content: center; }
+  /* Today AND selected — invert today's filled circle so it stands out on the dark bg */
+  .cal-cell.selected.today .cal-num { background: #ffffff; color: #18181b; }
+  .dark .cal-cell.selected.today .cal-num { background: #09090b; color: #fafafa; }
+
+  /* Dots — extra gap above so number and dots never read as one shape */
+  .cal-dots { display: flex; gap: 2px; margin-top: 5px; justify-content: center; }
   .cal-dot { width: 4px; height: 4px; border-radius: 50%; background: #18181b; }
   .dark .cal-dot { background: #e4e4e7; }
   .cal-dot.ring { background: transparent; border: 1.5px solid #18181b; }
@@ -841,10 +844,8 @@ window.startEdit = function(id) {
   submitBtn.className = 'flex-1 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-bold text-sm shadow-sm transition-all duration-200 flex items-center justify-center gap-2';
   cancelEditBtn.classList.remove('hidden');
 
-  // Single scroll: switchTab only if needed, then focus without scroll conflict
   if (currentTab !== 'today') {
     switchTab('today');
-    // switchTab already fires one smooth scroll to top. Focus without triggering another scroll.
     setTimeout(() => { titleInput.focus({ preventScroll: true }); }, 350);
   } else {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1135,7 +1136,6 @@ window.shiftCalendarMonth = function(delta) {
   const [y, m] = calendarMonth.split('-').map(Number);
   const d = new Date(y, m - 1 + delta, 1);
   calendarMonth = `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
-  // Reset selection to the 1st of the new month
   calendarSelectedDate = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-01`;
   renderCalendar();
 };
