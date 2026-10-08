@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tick-v6';
+const CACHE_NAME = 'tick-v7';
 const ASSETS_TO_CACHE = [
     '/',
     '/index.html',
