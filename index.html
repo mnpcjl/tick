@@ -167,6 +167,26 @@ tailwind.config = {
     z-index: 50;
   }
   .dark .mobile-bottom-nav { background: #18181b; border-top-color: #27272a; }
+
+  /* Weekday picker */
+  .weekday-btn {
+    width: 2rem; height: 2rem;
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: all 0.15s ease;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .weekday-btn.inactive {
+    background: #f4f4f5; color: #52525b;
+  }
+  .dark .weekday-btn.inactive { background: #27272a; color: #a1a1aa; }
+  .weekday-btn.inactive:hover { background: #e4e4e7; }
+  .dark .weekday-btn.inactive:hover { background: #3f3f46; }
+  .weekday-btn.active {
+    background: #18181b; color: #ffffff;
+  }
+  .dark .weekday-btn.active { background: #fafafa; color: #09090b; }
 </style>
 </head>
 
@@ -260,6 +280,20 @@ tailwind.config = {
             <option value="yearly">Yearly</option>
             <option value="custom">Custom…</option>
           </select>
+          <div id="weekdayPickerRow" class="hidden mt-2">
+            <div class="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400 mb-1.5">
+              <span>On which day?</span>
+            </div>
+            <div class="flex gap-1.5" id="weekdayPicker">
+              <button type="button" class="weekday-btn inactive" data-weekday="0">S</button>
+              <button type="button" class="weekday-btn inactive" data-weekday="1">M</button>
+              <button type="button" class="weekday-btn inactive" data-weekday="2">T</button>
+              <button type="button" class="weekday-btn inactive" data-weekday="3">W</button>
+              <button type="button" class="weekday-btn inactive" data-weekday="4">T</button>
+              <button type="button" class="weekday-btn inactive" data-weekday="5">F</button>
+              <button type="button" class="weekday-btn inactive" data-weekday="6">S</button>
+            </div>
+          </div>
           <div id="customRepeatRow" class="hidden mt-2 flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300">
             <span>Every</span>
             <input type="number" id="customInterval" min="1" value="3" class="w-16 px-2 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100">
@@ -559,7 +593,6 @@ const CATEGORIES = [
   { name: 'Music',          icon: 'fa-music' },
   { name: 'Chores',         icon: 'fa-broom' },
   { name: 'Social',         icon: 'fa-user-group' },
-  { name: 'Health',         icon: 'fa-heart-pulse' },
   { name: 'Others',         icon: 'fa-circle' }
 ];
 
@@ -590,6 +623,7 @@ let calendarSelectedDate = null;
 let snoozeOpenForId = null;
 let cameFromTab = null;
 let pendingImportData = null;
+let currentWeekday = null; // null when repeat isn't weekly/biweekly
 
 let storageUsable = true;
 function storageGet(k) { try { return localStorage.getItem(k); } catch (e) { storageUsable = false; return null; } }
@@ -618,6 +652,9 @@ function addYearsStr(dateStr, n) {
   const lastDay = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
   d.setDate(Math.min(day, lastDay));
   return formatDate(d);
+}
+function daysBetween(a, b) {
+  return Math.round((parseDate(b) - parseDate(a)) / 86400000);
 }
 
 function advanceDate(fromDate, recurrence) {
@@ -648,7 +685,6 @@ function advanceDate(fromDate, recurrence) {
   return addDaysStr(fromDate, 1);
 }
 
-/* Advance dueDate past today (strictly > today when not the current period) */
 function advanceDuePast(fromDate, recurrence, today) {
   let d = fromDate;
   let guard = 0;
@@ -659,15 +695,79 @@ function advanceDuePast(fromDate, recurrence, today) {
   return d;
 }
 
+/* =====================================================
+   RECURRENCE PROJECTION
+   Given a task with a recurrence, does it occur on dateStr?
+   Requires dateStr >= task.dueDate (the anchor).
+===================================================== */
+function occursOn(task, dateStr) {
+  if (!task.recurrence || !task.dueDate) return false;
+  if (dateStr < task.dueDate) return false;
+  const r = task.recurrence;
+  const anchor = parseDate(task.dueDate);
+  const d = parseDate(dateStr);
+  const diffDays = daysBetween(task.dueDate, dateStr);
+
+  if (r.freq === 'daily') {
+    return diffDays % r.interval === 0;
+  }
+  if (r.freq === 'weekly') {
+    const weeksDiff = Math.floor(diffDays / 7);
+    if (weeksDiff % r.interval !== 0) return false;
+    return d.getDay() === anchor.getDay();
+  }
+  if (r.freq === 'weekdays') {
+    const day = d.getDay();
+    return day !== 0 && day !== 6;
+  }
+  if (r.freq === 'weekends') {
+    const day = d.getDay();
+    return day === 0 || day === 6;
+  }
+  if (r.freq === 'monthly') {
+    const targetDay = anchor.getDate();
+    const lastDayOfMonth = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+    const effectiveDay = Math.min(targetDay, lastDayOfMonth);
+    if (d.getDate() !== effectiveDay) return false;
+    const monthsDiff = (d.getFullYear() - anchor.getFullYear()) * 12 + (d.getMonth() - anchor.getMonth());
+    return monthsDiff >= 0 && monthsDiff % r.interval === 0;
+  }
+  if (r.freq === 'yearly') {
+    if (d.getMonth() !== anchor.getMonth()) return false;
+    if (d.getDate() !== anchor.getDate()) return false;
+    const yearsDiff = d.getFullYear() - anchor.getFullYear();
+    return yearsDiff >= 0 && yearsDiff % r.interval === 0;
+  }
+  return false;
+}
+
+/* Combined predicate used by calendar and day detail. */
+function taskOccursOn(task, dateStr) {
+  if (!task.recurrence) {
+    return !task.completed && task.dueDate === dateStr;
+  }
+  return occursOn(task, dateStr);
+}
+
+function taskCompletedOn(task, dateStr) {
+  return !!(task.completedAt && formatDate(new Date(task.completedAt)) === dateStr);
+}
+
+function taskHasHistoryOn(task, dateStr) {
+  const history = task.history || [];
+  return history.some(h => formatDate(new Date(h.completedAt)) === dateStr);
+}
+
 function formatRecurrenceLabel(r) {
   if (!r) return '';
   const { freq, interval } = r;
   if (freq === 'weekdays') return 'Every weekday';
   if (freq === 'weekends') return 'Every weekend';
+  if (freq === 'weekly' && interval === 1) return 'Every week';
+  if (freq === 'weekly' && interval === 2) return 'Every 2 weeks';
   const unit = { daily: 'day', weekly: 'week', monthly: 'month', yearly: 'year' }[freq] || 'day';
   if (interval === 1) {
     if (freq === 'daily') return 'Every day';
-    if (freq === 'weekly') return 'Every week';
     if (freq === 'monthly') return 'Every month';
     if (freq === 'yearly') return 'Every year';
   }
@@ -736,6 +836,8 @@ const prioritySelect = document.getElementById('prioritySelect');
 const dateInput = document.getElementById('dateInput');
 const timeInput = document.getElementById('timeInput');
 const repeatSelect = document.getElementById('repeatSelect');
+const weekdayPickerRow = document.getElementById('weekdayPickerRow');
+const weekdayPicker = document.getElementById('weekdayPicker');
 const customRepeatRow = document.getElementById('customRepeatRow');
 const customInterval = document.getElementById('customInterval');
 const customUnit = document.getElementById('customUnit');
@@ -779,6 +881,58 @@ const historyList = document.getElementById('historyList');
 const isTouchDevice = () => window.matchMedia('(hover: none)').matches || window.innerWidth < 768;
 
 /* =====================================================
+   WEEKDAY PICKER
+===================================================== */
+function renderWeekdayPicker() {
+  weekdayPicker.querySelectorAll('.weekday-btn').forEach(b => {
+    const wd = parseInt(b.dataset.weekday, 10);
+    const active = currentWeekday === wd;
+    b.className = `weekday-btn ${active ? 'active' : 'inactive'}`;
+  });
+}
+
+function syncWeekdayPickerVisibility() {
+  const v = repeatSelect.value;
+  const show = v === 'weekly' || v === 'biweekly';
+  weekdayPickerRow.classList.toggle('hidden', !show);
+  if (show) {
+    // Initialize currentWeekday from current dateInput if unset
+    if (currentWeekday === null) {
+      const dt = dateInput.value ? parseDate(dateInput.value) : new Date();
+      currentWeekday = dt.getDay();
+    }
+    renderWeekdayPicker();
+  }
+}
+
+function snapDateToWeekday(wd) {
+  const today = parseDate(todayStr());
+  let diff = wd - today.getDay();
+  if (diff < 0) diff += 7;
+  const target = new Date(today);
+  target.setDate(target.getDate() + diff);
+  dateInput.value = formatDate(target);
+}
+
+weekdayPicker.addEventListener('click', (e) => {
+  const btn = e.target.closest('.weekday-btn');
+  if (!btn) return;
+  const wd = parseInt(btn.dataset.weekday, 10);
+  currentWeekday = wd;
+  snapDateToWeekday(wd);
+  renderWeekdayPicker();
+});
+
+dateInput.addEventListener('change', () => {
+  if (repeatSelect.value === 'weekly' || repeatSelect.value === 'biweekly') {
+    if (dateInput.value) {
+      currentWeekday = parseDate(dateInput.value).getDay();
+      renderWeekdayPicker();
+    }
+  }
+});
+
+/* =====================================================
    NORMALIZE RECURRING TASKS (day-rollover)
 ===================================================== */
 function normalizeRecurring() {
@@ -789,15 +943,13 @@ function normalizeRecurring() {
     const completedToday = t.completed && t.completedAt &&
       formatDate(new Date(t.completedAt)) === today;
 
-    if (completedToday) return; // still shows as done today
+    if (completedToday) return;
 
-    // Reset completion for a new period
     if (t.completed) {
       t.completed = false;
       t.completedAt = null;
       changed = true;
     }
-    // Advance dueDate forward if it's in the past
     if (!t.dueDate) {
       t.dueDate = today;
       changed = true;
@@ -870,7 +1022,18 @@ function populateTypeSelect() {
 }
 
 repeatSelect.addEventListener('change', () => {
-  customRepeatRow.classList.toggle('hidden', repeatSelect.value !== 'custom');
+  const v = repeatSelect.value;
+  customRepeatRow.classList.toggle('hidden', v !== 'custom');
+  if (v !== 'weekly' && v !== 'biweekly') {
+    currentWeekday = null;
+  }
+  syncWeekdayPickerVisibility();
+  // If user just picked weekly/biweekly but no date was set, snap to today
+  if ((v === 'weekly' || v === 'biweekly') && !dateInput.value) {
+    dateInput.value = todayStr();
+    currentWeekday = parseDate(todayStr()).getDay();
+    renderWeekdayPicker();
+  }
 });
 
 function getRecurrenceFromForm() {
@@ -891,7 +1054,13 @@ function getRecurrenceFromForm() {
 }
 
 function setFormRecurrence(r) {
-  if (!r) { repeatSelect.value = ''; customRepeatRow.classList.add('hidden'); return; }
+  if (!r) {
+    repeatSelect.value = '';
+    customRepeatRow.classList.add('hidden');
+    currentWeekday = null;
+    weekdayPickerRow.classList.add('hidden');
+    return;
+  }
   const { freq, interval } = r;
   if (freq === 'daily' && interval === 1) repeatSelect.value = 'daily';
   else if (freq === 'weekdays') repeatSelect.value = 'weekdays';
@@ -902,6 +1071,17 @@ function setFormRecurrence(r) {
   else if (freq === 'yearly' && interval === 1) repeatSelect.value = 'yearly';
   else { repeatSelect.value = 'custom'; customInterval.value = interval; customUnit.value = freq; }
   customRepeatRow.classList.toggle('hidden', repeatSelect.value !== 'custom');
+
+  // Weekday picker
+  if (repeatSelect.value === 'weekly' || repeatSelect.value === 'biweekly') {
+    const anchor = dateInput.value ? parseDate(dateInput.value) : new Date();
+    currentWeekday = anchor.getDay();
+    weekdayPickerRow.classList.remove('hidden');
+    renderWeekdayPicker();
+  } else {
+    currentWeekday = null;
+    weekdayPickerRow.classList.add('hidden');
+  }
 }
 
 function resetForm() {
@@ -938,8 +1118,8 @@ window.startEdit = function(id) {
   prioritySelect.value = t.priority || 'none';
   dateInput.value = t.dueDate || '';
   timeInput.value = t.dueTime || '';
-  setFormRecurrence(t.recurrence);
   notesInput.value = t.notes || '';
+  setFormRecurrence(t.recurrence);
   formHeaderIcon.className = 'fa-solid fa-pen text-blue-500';
   formHeaderText.textContent = 'Edit Task';
   submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> Update Task';
@@ -968,6 +1148,18 @@ taskForm.addEventListener('submit', (e) => {
   // Auto-fill today's date if recurring but no date was picked
   if (recurrence && !dueDate) {
     dueDate = todayStr();
+  }
+
+  // If weekly/biweekly, snap dueDate to the anchored weekday
+  if (recurrence && (recurrence.freq === 'weekly') && currentWeekday !== null && dueDate) {
+    const d = parseDate(dueDate);
+    // If the date doesn't match the chosen weekday, snap it forward
+    if (d.getDay() !== currentWeekday) {
+      let diff = currentWeekday - d.getDay();
+      if (diff < 0) diff += 7;
+      d.setDate(d.getDate() + diff);
+      dueDate = formatDate(d);
+    }
   }
 
   const taskData = {
@@ -1001,7 +1193,6 @@ taskForm.addEventListener('submit', (e) => {
     notesInput.value = '';
     timeInput.value = '';
     setFormRecurrence(null);
-    // Skip auto-focus on mobile to avoid keyboard popping up after add
     if (!isTouchDevice()) titleInput.focus();
     showToast('Task added');
   }
@@ -1053,26 +1244,27 @@ function sortTasks(list) {
    TASK ROW
 ===================================================== */
 function renderTaskRow(t, opts = {}) {
-  const { showSnooze = false } = opts;
+  const { showSnooze = false, forDate = null } = opts;
   const isCompleted = t.completed;
   const today = todayStr();
-  const isOverdue = !isCompleted && t.dueDate && t.dueDate < today;
+  const displayDate = forDate || t.dueDate;
+  const isOverdue = !isCompleted && displayDate && displayDate < today && (!forDate || forDate === today);
   const typeIcon = getTypeIcon(t.type);
   const pri = t.priority || 'none';
 
   const metaParts = [];
-  if (t.dueDate) {
+  if (displayDate) {
     if (isOverdue) {
-      const days = Math.round((parseDate(today) - parseDate(t.dueDate)) / 86400000);
+      const days = daysBetween(displayDate, today);
       metaParts.push(`<span data-date-meta class="text-rose-500 font-semibold">${days}d overdue</span>`);
     } else {
-      metaParts.push(`<span data-date-meta>${formatDateLabel(t.dueDate)}</span>`);
+      metaParts.push(`<span data-date-meta>${formatDateLabel(displayDate)}</span>`);
     }
   }
   if (t.dueTime) metaParts.push(`<span>${escapeHtml(t.dueTime)}</span>`);
   metaParts.push(`<span class="inline-flex items-center gap-1"><i class="fa-solid ${typeIcon} text-[10px] opacity-70"></i>${escapeHtml(t.type)}</span>`);
   if (t.recurrence) metaParts.push(`<span class="inline-flex items-center gap-1"><i class="fa-solid fa-rotate text-[10px]"></i>${escapeHtml(formatRecurrenceLabel(t.recurrence))}</span>`);
-  if (isCompleted && t.recurrence) {
+  if (isCompleted && t.recurrence && (!forDate || forDate === today)) {
     metaParts.push(`<span class="text-emerald-600 dark:text-emerald-400 font-semibold">Done today</span>`);
   }
 
@@ -1111,21 +1303,17 @@ function getVisibleTaskRows(id) {
 ===================================================== */
 function getTodayBuckets() {
   const today = todayStr();
-  // Include recurring tasks that are completed today (still show)
   const visible = tasks.filter(t => {
     if (!t.dueDate) return false;
     const completedToday = t.completed && t.completedAt &&
       formatDate(new Date(t.completedAt)) === today;
-    // Non-recurring: hide if completed
     if (!t.recurrence && t.completed) return false;
-    // Recurring: show if due today (regardless of completed status today)
     if (t.recurrence) {
       if (t.dueDate === today) return true;
-      if (completedToday) return true; // safety net if dueDate advanced
+      if (completedToday) return true;
       if (t.dueDate < today && !t.completed) return true;
       return false;
     }
-    // Non-recurring: due today or overdue and not completed
     if (t.dueDate === today) return true;
     if (t.dueDate < today && !t.completed) return true;
     return false;
@@ -1166,23 +1354,39 @@ function renderToday() {
     `;
   }
 
-  // Coming up: next 3 days
-  const tomorrow = addDaysStr(today, 1);
-  const dayAfter = addDaysStr(today, 2);
+  // Coming up preview — 3 days, using projection so daily tasks appear per-occurrence
+  const day1 = addDaysStr(today, 1);
+  const day2 = addDaysStr(today, 2);
   const day3 = addDaysStr(today, 3);
+  const targetDays = [day1, day2, day3];
 
-  const upcoming = tasks.filter(t => {
-    if (t.completed && !t.recurrence) return false;
-    if (!t.dueDate) return false;
-    return t.dueDate === tomorrow || t.dueDate === dayAfter || t.dueDate === day3;
+  const upcomingRows = [];
+  targetDays.forEach(d => {
+    const tasksOnDay = tasks.filter(t => {
+      if (!t.recurrence && t.completed) return false;
+      if (!t.dueDate) return false;
+      // Don't duplicate tasks already shown above in Today/Overdue
+      if (!t.recurrence && t.dueDate === today) return false;
+      return occursOn(t, d) || (!t.recurrence && t.dueDate === d);
+    });
+    tasksOnDay.forEach(t => {
+      upcomingRows.push({ task: t, date: d });
+    });
   });
-  const sortedUpcoming = sortTasks(upcoming);
 
-  if (sortedUpcoming.length > 0) {
+  if (upcomingRows.length > 0) {
+    // Sort rows by date, then by priority
+    upcomingRows.sort((a, b) => {
+      if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+      const pa = PRIORITY_ORDER[a.task.priority] ?? 3;
+      const pb = PRIORITY_ORDER[b.task.priority] ?? 3;
+      if (pa !== pb) return pa - pb;
+      return 0;
+    });
     upcomingPreview.innerHTML = `
       <h3 class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2">Coming up</h3>
       <div class="space-y-2">
-        ${sortedUpcoming.map(t => renderTaskRow(t)).join('')}
+        ${upcomingRows.map(r => renderTaskRow(r.task, { forDate: r.date })).join('')}
       </div>
     `;
   } else {
@@ -1195,7 +1399,6 @@ function renderToday() {
 ===================================================== */
 window.handleAllViewTap = function(v) {
   if (allSubView === v) {
-    // Reset behavior when re-tapping the same sub-view
     if (v === 'list') {
       searchInput.value = '';
       monthFilter.value = '';
@@ -1254,16 +1457,16 @@ function renderList() {
 
   const today = todayStr();
   const tomorrow = addDaysStr(today, 1);
-  const weekEnd = addDaysStr(today, 7);
+  const soonEnd = addDaysStr(today, 7);
 
-  const groups = { overdue: [], today: [], tomorrow: [], week: [], later: [], nodate: [] };
+  const groups = { overdue: [], today: [], tomorrow: [], soon: [], later: [], nodate: [] };
 
   filtered.forEach(t => {
     if (!t.dueDate) groups.nodate.push(t);
     else if (t.dueDate < today) groups.overdue.push(t);
     else if (t.dueDate === today) groups.today.push(t);
     else if (t.dueDate === tomorrow) groups.tomorrow.push(t);
-    else if (t.dueDate <= weekEnd) groups.week.push(t);
+    else if (t.dueDate <= soonEnd) groups.soon.push(t);
     else groups.later.push(t);
   });
 
@@ -1282,7 +1485,7 @@ function renderList() {
     { key: 'overdue', label: 'Overdue', color: 'text-rose-500' },
     { key: 'today', label: 'Today', color: 'text-zinc-800 dark:text-zinc-200' },
     { key: 'tomorrow', label: 'Tomorrow', color: 'text-zinc-800 dark:text-zinc-200' },
-    { key: 'week', label: 'Next 7 Days', color: 'text-zinc-800 dark:text-zinc-200' },
+    { key: 'soon', label: 'Soon', color: 'text-zinc-800 dark:text-zinc-200' },
     { key: 'later', label: 'Later', color: 'text-zinc-800 dark:text-zinc-200' },
     { key: 'nodate', label: 'No Date', color: 'text-zinc-500 dark:text-zinc-500' }
   ];
@@ -1314,24 +1517,40 @@ clearFiltersBtn.addEventListener('click', () => {
 /* =====================================================
    CALENDAR
 ===================================================== */
+function getCalendarGridRange(year, month) {
+  // month is 1-12
+  const firstDay = new Date(year, month - 1, 1);
+  const startWeekday = firstDay.getDay();
+  const gridStart = new Date(firstDay);
+  gridStart.setDate(gridStart.getDate() - startWeekday);
+  const gridEnd = new Date(gridStart);
+  gridEnd.setDate(gridEnd.getDate() + 41);
+  return { gridStart, gridEnd, startWeekday };
+}
+
 window.shiftCalendarMonth = function(delta) {
   const [y, m] = calendarMonth.split('-').map(Number);
-  const d = new Date(y, m - 1 + delta, 1);
-  const newMonth = `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+  const targetMonth = m - 1 + delta;
+  const targetYear = y + Math.floor(targetMonth / 12);
+  const targetMonthNum = ((targetMonth % 12) + 12) % 12 + 1;
+  const newMonth = `${targetYear}-${pad(targetMonthNum)}`;
+
+  const { gridStart, gridEnd } = getCalendarGridRange(targetYear, targetMonthNum);
+  const gridStartStr = formatDate(gridStart);
+  const gridEndStr = formatDate(gridEnd);
+
   const now = new Date();
   const currentMonth = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
 
   calendarMonth = newMonth;
 
-  // If landing back on the current month, select today
-  if (newMonth === currentMonth) {
+  // Preserve selection if still visible in new grid
+  if (calendarSelectedDate && calendarSelectedDate >= gridStartStr && calendarSelectedDate <= gridEndStr) {
+    // keep
+  } else if (newMonth === currentMonth) {
     calendarSelectedDate = todayStr();
   } else {
-    // Preserve day-of-month (clamped to last day of target month)
-    const prevDay = calendarSelectedDate ? parseDate(calendarSelectedDate).getDate() : 1;
-    const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-    const targetDay = Math.min(prevDay, lastDay);
-    calendarSelectedDate = `${newMonth}-${pad(targetDay)}`;
+    calendarSelectedDate = `${newMonth}-01`;
   }
   renderCalendar();
 };
@@ -1353,7 +1572,6 @@ function renderCalendar() {
   const prevMonthDays = new Date(year, month - 1, 0).getDate();
 
   const today = todayStr();
-  const active = tasks.filter(t => !t.completed || t.recurrence);
 
   const cells = [];
   for (let i = startWeekday - 1; i >= 0; i--) {
@@ -1375,7 +1593,8 @@ function renderCalendar() {
 
   let gridHtml = '';
   cells.forEach(c => {
-    const tasksOnDay = active.filter(t => t.dueDate === c.date);
+    // Count tasks occurring on this day using projection
+    const tasksOnDay = tasks.filter(t => taskOccursOn(t, c.date));
     const dots = tasksOnDay.slice(0, 3).map(t => {
       const recurring = t.recurrence ? 'ring' : '';
       return `<span class="cal-dot ${recurring}"></span>`;
@@ -1414,29 +1633,38 @@ function renderCalendar() {
   });
   calendarSelectedTitle.textContent = dateLabel;
 
-  const dayActive = sortTasks(tasks.filter(t =>
-    t.dueDate === calendarSelectedDate && (!t.completed || t.recurrence)
-  ));
-  const dayCompleted = tasks.filter(t =>
-    t.completed && !t.recurrence && t.completedAt &&
-    formatDate(new Date(t.completedAt)) === calendarSelectedDate
-  );
+  // Day detail: use projection
+  const dayActive = sortTasks(tasks.filter(t => taskOccursOn(t, calendarSelectedDate)));
+  const dayCompleted = tasks.filter(t => {
+    if (taskOccursOn(t, calendarSelectedDate)) return false;
+    if (!t.recurrence) {
+      return t.completed && t.completedAt && formatDate(new Date(t.completedAt)) === calendarSelectedDate;
+    }
+    return taskHasHistoryOn(t, calendarSelectedDate) && !taskCompletedOn(t, calendarSelectedDate);
+  });
+  const dayCompletedAlso = tasks.filter(t => {
+    if (!t.recurrence) return false;
+    return taskHasHistoryOn(t, calendarSelectedDate) && !taskOccursOn(t, calendarSelectedDate);
+  });
 
-  if (dayActive.length === 0 && dayCompleted.length === 0) {
+  // Merge completed
+  const allCompleted = [...dayCompleted.filter(t => !t.recurrence), ...dayCompletedAlso];
+
+  if (dayActive.length === 0 && allCompleted.length === 0) {
     calendarDayTasks.innerHTML = `<p class="text-xs text-zinc-400 italic py-3 text-center">No tasks on this day.</p>`;
     return;
   }
 
   let html = '';
   if (dayActive.length > 0) {
-    html += `<div class="space-y-2">${dayActive.map(t => renderTaskRow(t)).join('')}</div>`;
+    html += `<div class="space-y-2">${dayActive.map(t => renderTaskRow(t, { forDate: calendarSelectedDate })).join('')}</div>`;
   }
-  if (dayCompleted.length > 0) {
+  if (allCompleted.length > 0) {
     const divider = dayActive.length > 0 ? 'mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800' : '';
     html += `
       <div class="${divider}">
         <div class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2">Completed</div>
-        <div class="space-y-2">${dayCompleted.map(t => renderTaskRow(t)).join('')}</div>
+        <div class="space-y-2">${allCompleted.map(t => renderTaskRow(t, { forDate: calendarSelectedDate })).join('')}</div>
       </div>
     `;
   }
@@ -1444,6 +1672,11 @@ function renderCalendar() {
 }
 
 window.selectCalendarDay = function(date) {
+  // If the date belongs to a different month, navigate to that month
+  const dateMonth = date.substring(0, 7);
+  if (dateMonth !== calendarMonth) {
+    calendarMonth = dateMonth;
+  }
   calendarSelectedDate = date;
   renderCalendar();
 };
@@ -1505,14 +1738,13 @@ window.toggleComplete = function(id) {
 
   if (!t.completed) {
     if (t.recurrence) {
-      // Recurring: mark done today, DON'T advance dueDate
       t.history = t.history || [];
       t.history.push({ dueDate: t.dueDate || today, completedAt: new Date().toISOString() });
       t.completed = true;
       t.completedAt = new Date().toISOString();
       saveData();
 
-      // Compute next occurrence label (without changing dueDate yet)
+      // Compute next occurrence for the toast
       let nextDate = advanceDate(t.dueDate || today, t.recurrence);
       let guard = 0;
       while (nextDate <= today && guard < 1000) {
@@ -1521,7 +1753,6 @@ window.toggleComplete = function(id) {
       }
       const nextLabel = formatDateLabel(nextDate);
 
-      // Pulse checkbox on visible rows
       const rows = getVisibleTaskRows(id);
       rows.forEach(row => {
         const cb = row.querySelector('.checkbox');
@@ -1539,7 +1770,6 @@ window.toggleComplete = function(id) {
         }
       }, 300);
     } else {
-      // Non-recurring: fade out
       t.completed = true;
       t.completedAt = new Date().toISOString();
       saveData();
@@ -1579,7 +1809,6 @@ window.toggleComplete = function(id) {
       showToast('Task completed', 'success', 'Undo', undoFn);
     }
   } else {
-    // Un-complete
     if (t.recurrence && t.history && t.history.length > 0) {
       const last = t.history[t.history.length - 1];
       if (last && last.completedAt && formatDate(new Date(last.completedAt)) === today) {
