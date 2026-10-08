@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tick-v1';
+const CACHE_NAME = 'tick-v2';
 const ASSETS_TO_CACHE = [
     '/',
     '/index.html',
@@ -29,14 +29,10 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-    // Don't cache non-GET requests
     if (event.request.method !== 'GET') return;
     event.respondWith(
         caches.match(event.request).then((response) => {
-            return response || fetch(event.request).then((fetchRes) => {
-                // Optionally cache new same-origin assets
-                return fetchRes;
-            }).catch(() => caches.match('/index.html'));
+            return response || fetch(event.request).catch(() => caches.match('/index.html'));
         })
     );
 });
