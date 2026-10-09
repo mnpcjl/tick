@@ -196,6 +196,18 @@ tailwind.config = {
     background: #18181b; color: #ffffff;
   }
   .dark .weekday-btn.active { background: #fafafa; color: #09090b; }
+
+  /* Monochrome focus ring — matches the app's palette instead of introducing a foreign hue */
+  :focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      scroll-behavior: auto !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 </style>
 </head>
 
@@ -305,7 +317,7 @@ tailwind.config = {
           </div>
           <div id="customRepeatRow" class="hidden mt-2 flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300">
             <span>Every</span>
-            <input type="number" id="customInterval" min="1" value="3" class="w-16 px-2 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100">
+            <input type="number" id="customInterval" min="1" max="3650" value="3" class="w-16 px-2 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100">
             <select id="customUnit" class="px-2 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100">
               <option value="daily">day(s)</option>
               <option value="weekly">week(s)</option>
@@ -505,7 +517,7 @@ tailwind.config = {
   </button>
 </nav>
 
-<div id="toastContainer" class="fixed bottom-24 md:bottom-10 left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center gap-2 pointer-events-none w-full px-4"></div>
+<div id="toastContainer" role="status" aria-live="polite" aria-atomic="true" class="fixed bottom-24 md:bottom-10 left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center gap-2 pointer-events-none w-full px-4"></div>
 
 <div id="confirmModal" class="hidden fixed inset-0 bg-zinc-950/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
   <div class="bg-white dark:bg-zinc-900 rounded-2xl max-w-sm w-full p-6 shadow-xl border border-zinc-100 dark:border-zinc-800">
@@ -757,13 +769,25 @@ function taskOccursOn(task, dateStr) {
   return occursOn(task, dateStr);
 }
 
-function taskCompletedOn(task, dateStr) {
-  return !!(task.completedAt && formatDate(new Date(task.completedAt)) === dateStr);
+/* =====================================================
+   DATE-AWARE COMPLETION
+   Whether a task counts as "completed" on a specific calendar day.
+   For recurring tasks, this is per-occurrence (history lookup).
+   For non-recurring tasks, this is whether the single completion fell on that day.
+===================================================== */
+function isTaskCompletedOn(task, dateStr) {
+  if (!dateStr) return !!task.completed;
+  if (task.recurrence) {
+    if (task.history && task.history.some(h => h.completedAt && formatDate(new Date(h.completedAt)) === dateStr)) return true;
+    if (task.completed && task.completedAt && formatDate(new Date(task.completedAt)) === dateStr) return true;
+    return false;
+  }
+  return !!(task.completed && task.completedAt && formatDate(new Date(task.completedAt)) === dateStr);
 }
 
 function taskHasHistoryOn(task, dateStr) {
   const history = task.history || [];
-  return history.some(h => formatDate(new Date(h.completedAt)) === dateStr);
+  return history.some(h => h.completedAt && formatDate(new Date(h.completedAt)) === dateStr);
 }
 
 function formatRecurrenceLabel(r) {
@@ -807,6 +831,73 @@ function escapeHtml(str) {
   return String(str == null ? '' : str)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+function isValidDateString(value) {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = parseDate(value);
+  return Number.isFinite(date.getTime()) && formatDate(date) === value;
+}
+
+/* =====================================================
+   IMPORT-ONLY SANITIZER
+   Used exclusively on file import. Never called during normal load,
+   so a bug here can never silently destroy live data.
+===================================================== */
+function sanitizeTasks(input) {
+  if (!Array.isArray(input)) return [];
+  const usedIds = new Set();
+  let nextId = Date.now();
+  const safeTimestamp = value => {
+    const parsed = typeof value === 'number' ? value : Date.parse(value);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  };
+
+  return input.slice(0, 10000).filter(item => item && typeof item === 'object' && !Array.isArray(item)).map(item => {
+    let id = Number.isSafeInteger(item.id) && item.id > 0 ? item.id : null;
+    if (id === null || usedIds.has(id)) {
+      while (usedIds.has(nextId)) nextId++;
+      id = nextId++;
+    }
+    usedIds.add(id);
+
+    const rawRecurrence = item.recurrence;
+    let recurrence = null;
+    if (rawRecurrence && typeof rawRecurrence === 'object') {
+      const validFrequencies = ['daily', 'weekly', 'monthly', 'yearly', 'weekdays', 'weekends'];
+      const freq = validFrequencies.includes(rawRecurrence.freq) ? rawRecurrence.freq : null;
+      const interval = Math.min(3650, Math.max(1, Math.floor(Number(rawRecurrence.interval) || 1)));
+      if (freq) recurrence = { freq, interval: (freq === 'weekdays' || freq === 'weekends') ? 1 : interval };
+    }
+
+    const history = Array.isArray(item.history) ? item.history.slice(-5000).flatMap(entry => {
+      if (!entry || typeof entry !== 'object') return [];
+      const completedAt = safeTimestamp(entry.completedAt);
+      return completedAt ? [{
+        dueDate: isValidDateString(entry.dueDate) ? entry.dueDate : null,
+        completedAt: new Date(completedAt).toISOString()
+      }] : [];
+    }) : [];
+    const completedAtMs = safeTimestamp(item.completedAt);
+    const createdAt = safeTimestamp(item.createdAt);
+    const validType = CATEGORIES.some(category => category.name === item.type) ? item.type : 'Others';
+    const validPriority = Object.prototype.hasOwnProperty.call(PRIORITY_ORDER, item.priority) ? item.priority : 'none';
+
+    return {
+      id,
+      title: String(item.title == null ? '' : item.title).trim().slice(0, 200),
+      notes: String(item.notes == null ? '' : item.notes).slice(0, 10000),
+      type: validType,
+      priority: validPriority,
+      dueDate: isValidDateString(item.dueDate) ? item.dueDate : null,
+      dueTime: typeof item.dueTime === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(item.dueTime) ? item.dueTime : null,
+      recurrence,
+      completed: item.completed === true && !!completedAtMs,
+      completedAt: completedAtMs ? new Date(completedAtMs).toISOString() : null,
+      history,
+      createdAt: createdAt || Date.now()
+    };
+  }).filter(task => task.title.length > 0);
 }
 
 function showToast(message, type = 'success', actionLabel = null, actionFn = null) {
@@ -913,10 +1004,10 @@ function syncWeekdayPickerVisibility() {
 }
 
 function snapDateToWeekday(wd) {
-  const today = parseDate(todayStr());
-  let diff = wd - today.getDay();
+  // Snap from the currently selected due date, not from today.
+  const target = parseDate(isValidDateString(dateInput.value) ? dateInput.value : todayStr());
+  let diff = wd - target.getDay();
   if (diff < 0) diff += 7;
-  const target = new Date(today);
   target.setDate(target.getDate() + diff);
   dateInput.value = formatDate(target);
 }
@@ -972,6 +1063,7 @@ function normalizeRecurring() {
    TABS
 ===================================================== */
 window.switchTab = function(tabId) {
+  if (!['today', 'all', 'settings'].includes(tabId)) return;
   currentTab = tabId;
   document.querySelectorAll('.tab-view').forEach(v => v.classList.add('hidden'));
   const target = document.getElementById(tabId + '-view');
@@ -1005,13 +1097,27 @@ function loadData() {
   if (!raw) { tasks = []; return; }
   try {
     const parsed = JSON.parse(raw);
-    tasks = Array.isArray(parsed) ? parsed : [];
-  } catch (e) { tasks = []; }
+    if (!Array.isArray(parsed)) { tasks = []; return; }
+    // Non-destructive load: preserve parsed data as-is. Sanitization only happens
+    // on import, so a bug in the sanitizer can never silently destroy live data.
+    tasks = parsed;
+  } catch (e) {
+    // Parse failure: archive the corrupt payload before starting clean, so nothing is lost.
+    try { storageSet(STORAGE_KEY_TASKS + '_corrupt_' + Date.now(), raw); } catch (e2) {}
+    tasks = [];
+    storageWarning.classList.remove('hidden');
+  }
 }
 function saveData() {
   const ok = storageSet(STORAGE_KEY_TASKS, JSON.stringify(tasks));
   if (!ok) storageWarning.classList.remove('hidden');
   return ok;
+}
+
+function createTaskId() {
+  let id = Date.now();
+  while (tasks.some(task => task.id === id)) id++;
+  return id;
 }
 
 /* =====================================================
@@ -1053,7 +1159,7 @@ function getRecurrenceFromForm() {
   if (v === 'monthly') return { freq: 'monthly', interval: 1 };
   if (v === 'yearly') return { freq: 'yearly', interval: 1 };
   if (v === 'custom') {
-    const n = Math.max(1, parseInt(customInterval.value) || 1);
+    const n = Math.min(3650, Math.max(1, parseInt(customInterval.value, 10) || 1));
     return { freq: customUnit.value, interval: n };
   }
   return null;
@@ -1144,10 +1250,10 @@ cancelEditBtn.addEventListener('click', resetForm);
 
 taskForm.addEventListener('submit', (e) => {
   e.preventDefault();
-  const title = titleInput.value.trim();
+  const title = titleInput.value.trim().slice(0, 200);
   if (!title) { titleInput.focus(); return; }
 
-  let dueDate = dateInput.value || null;
+  let dueDate = isValidDateString(dateInput.value) ? dateInput.value : null;
   const recurrence = getRecurrenceFromForm();
 
   if (recurrence && !dueDate) {
@@ -1183,7 +1289,7 @@ taskForm.addEventListener('submit', (e) => {
     resetForm();
   } else {
     const newTask = {
-      id: Date.now(),
+      id: createTaskId(),
       ...taskData,
       completed: false,
       completedAt: null,
@@ -1204,6 +1310,7 @@ taskForm.addEventListener('submit', (e) => {
 });
 
 window.setSortPref = function(pref) {
+  if (pref !== 'deadline' && pref !== 'priority') return;
   sortPref = pref;
   storageSet(STORAGE_KEY_SORT, pref);
   updateSortButtons();
@@ -1244,10 +1351,13 @@ function sortTasks(list) {
 
 /* =====================================================
    TASK ROW
+   - isCompleted is date-aware when forDate is provided (Calendar + Coming up).
+   - The row is clickable but not focusable; the checkbox is the sole interactive control.
+     This avoids nesting a button inside another interactive element.
 ===================================================== */
 function renderTaskRow(t, opts = {}) {
   const { showSnooze = false, forDate = null } = opts;
-  const isCompleted = t.completed;
+  const isCompleted = (forDate != null) ? isTaskCompletedOn(t, forDate) : !!t.completed;
   const today = todayStr();
   const displayDate = forDate || t.dueDate;
   const isOverdue = !isCompleted && displayDate && displayDate < today && (!forDate || forDate === today);
@@ -1266,7 +1376,7 @@ function renderTaskRow(t, opts = {}) {
   if (t.dueTime) metaParts.push(`<span>${escapeHtml(t.dueTime)}</span>`);
   metaParts.push(`<span class="inline-flex items-center gap-1"><i class="fa-solid ${typeIcon} text-[10px] opacity-70"></i>${escapeHtml(t.type)}</span>`);
   if (t.recurrence) metaParts.push(`<span class="inline-flex items-center gap-1"><i class="fa-solid fa-rotate text-[10px]"></i>${escapeHtml(formatRecurrenceLabel(t.recurrence))}</span>`);
-  if (isCompleted && t.recurrence && (!forDate || forDate === today)) {
+  if (isCompleted && t.recurrence && displayDate === today) {
     metaParts.push(`<span class="text-emerald-600 dark:text-emerald-400 font-semibold">Done today</span>`);
   }
 
@@ -1274,8 +1384,8 @@ function renderTaskRow(t, opts = {}) {
 
   return `
     <div class="task-row flex items-center gap-3 p-3 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 ${leftBorder} hover:border-zinc-300 dark:hover:border-zinc-700 transition cursor-pointer" data-task-id="${t.id}" onclick="openDetail(${t.id})">
-      <button class="checkbox ${isCompleted ? 'done' : ''}" data-check-id="${t.id}" onclick="event.stopPropagation(); toggleComplete(${t.id})">
-        <i class="fa-solid fa-check"></i>
+      <button class="checkbox ${isCompleted ? 'done' : ''}" type="button" aria-label="${isCompleted ? 'Mark active' : 'Complete'}: ${escapeHtml(t.title)}" data-check-id="${t.id}" onclick="event.stopPropagation(); toggleComplete(${t.id})">
+        <i class="fa-solid fa-check" aria-hidden="true"></i>
       </button>
       <div class="flex-1 min-w-0">
         <p class="text-sm font-semibold text-zinc-900 dark:text-white ${isCompleted ? 'line-through opacity-60' : ''} break-words">${escapeHtml(t.title)}</p>
@@ -1286,7 +1396,7 @@ function renderTaskRow(t, opts = {}) {
       <div class="flex items-center gap-2 flex-shrink-0">
         <span class="pri-mark ${PRIORITY_COLOR[pri]}">${PRIORITY_MARKS[pri]}</span>
         ${showSnooze && isOverdue ? `
-          <button class="p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800" data-snooze-btn="${t.id}" onclick="event.stopPropagation(); openSnooze(event, ${t.id})">
+          <button type="button" class="p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800" data-snooze-btn="${t.id}" onclick="event.stopPropagation(); openSnooze(event, ${t.id})">
             <i class="fa-solid fa-clock-rotate-left text-xs"></i>
           </button>
         ` : ''}
@@ -1635,7 +1745,7 @@ function renderCalendar() {
     if (!t.recurrence) {
       return t.completed && t.completedAt && formatDate(new Date(t.completedAt)) === calendarSelectedDate;
     }
-    return taskHasHistoryOn(t, calendarSelectedDate) && !taskCompletedOn(t, calendarSelectedDate);
+    return taskHasHistoryOn(t, calendarSelectedDate) && !isTaskCompletedOn(t, calendarSelectedDate);
   });
   const dayCompletedAlso = tasks.filter(t => {
     if (!t.recurrence) return false;
@@ -1732,9 +1842,10 @@ window.toggleComplete = function(id) {
   if (!t.completed) {
     if (t.recurrence) {
       t.history = t.history || [];
-      t.history.push({ dueDate: t.dueDate || today, completedAt: new Date().toISOString() });
+      const completedAt = new Date().toISOString();
+      t.history.push({ dueDate: t.dueDate || today, completedAt });
       t.completed = true;
-      t.completedAt = new Date().toISOString();
+      t.completedAt = completedAt;
       saveData();
 
       let nextDate = advanceDate(t.dueDate || today, t.recurrence);
@@ -1847,9 +1958,9 @@ window.openSnooze = function(e, id) {
   pop.style.left = Math.max(8, rect.right - 140 + window.scrollX) + 'px';
 
   pop.innerHTML = `
-    <button class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition" onclick="snoozeTask(${id}, 1)">+1 day</button>
-    <button class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition" onclick="snoozeTask(${id}, 7)">+1 week</button>
-    <button class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition" onclick="snoozePick(${id})">Pick date…</button>
+    <button type="button" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition" onclick="snoozeTask(${id}, 1)">+1 day</button>
+    <button type="button" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition" onclick="snoozeTask(${id}, 7)">+1 week</button>
+    <button type="button" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition" onclick="snoozePick(${id})">Pick date…</button>
   `;
   document.body.appendChild(pop);
   activePopover = pop;
@@ -1994,7 +2105,7 @@ function renderHistoryPanel(t) {
     return `
       <div class="flex items-center justify-between gap-2 py-0.5 pl-1 pr-0.5 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition">
         <input type="date" class="history-date-input" data-history-index="${idx}" value="${dateVal}">
-        <button class="history-delete-btn p-1.5 text-zinc-400 hover:text-rose-500 transition flex-shrink-0" data-history-index="${idx}" title="Remove">
+        <button type="button" class="history-delete-btn p-1.5 text-zinc-400 hover:text-rose-500 transition flex-shrink-0" data-history-index="${idx}" title="Remove">
           <i class="fa-solid fa-xmark text-xs"></i>
         </button>
       </div>
@@ -2058,14 +2169,15 @@ historyList.addEventListener('change', (e) => {
   const entry = sorted[idx];
   if (!entry) return;
 
+  if (!isValidDateString(input.value)) return;
   const newDate = parseDate(input.value);
   if (isNaN(newDate.getTime())) return;
 
   const old = new Date(entry.completedAt);
-  old.setFullYear(newDate.getFullYear());
-  old.setMonth(newDate.getMonth());
-  old.setDate(newDate.getDate());
-  entry.completedAt = old.toISOString();
+  // Construct the selected calendar date directly to avoid month-end rollover (e.g. Jan 31 → Mar 3).
+  const updated = new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate(),
+    old.getHours(), old.getMinutes(), old.getSeconds(), old.getMilliseconds());
+  entry.completedAt = updated.toISOString();
   saveData();
 
   refreshDetailRepeatLabel(t);
@@ -2143,21 +2255,27 @@ document.getElementById('exportBtn').addEventListener('click', () => {
 document.getElementById('importFileInput').addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (!file) return;
+  if (file.size > 5 * 1024 * 1024) {
+    showToast('Backup file is too large (5 MB maximum)', 'error');
+    e.target.value = '';
+    return;
+  }
   const reader = new FileReader();
   reader.onload = (ev) => {
     try {
-      const imported = JSON.parse(ev.target.result);
-      if (!Array.isArray(imported)) throw new Error('Not an array');
-      pendingImportData = imported;
-      const incoming = imported.length;
+      const parsed = JSON.parse(ev.target.result);
+      if (!Array.isArray(parsed) || parsed.length > 10000) throw new Error('Backup must contain at most 10,000 tasks');
+      pendingImportData = sanitizeTasks(parsed);
+      const incoming = pendingImportData.length;
       const current = tasks.length;
       document.getElementById('importConfirmText').textContent =
-        `You currently have ${current} task${current === 1 ? '' : 's'}. This backup contains ${incoming} task${incoming === 1 ? '' : 's'}. All current tasks will be permanently replaced.`;
+        `You currently have ${current} task${current === 1 ? '' : 's'}. This backup contains ${incoming} valid task${incoming === 1 ? '' : 's'}. All current tasks will be permanently replaced.`;
       importConfirmModal.classList.remove('hidden');
     } catch (err) {
-      alert('Invalid backup file: ' + err.message);
+      showToast('Invalid backup file. Choose a valid Tick JSON backup.', 'error');
     }
   };
+  reader.onerror = () => showToast('Could not read that backup file.', 'error');
   reader.readAsText(file);
   e.target.value = '';
 });
