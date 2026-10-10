@@ -58,6 +58,7 @@ tailwind.config = {
     width: 1.75rem;
     flex-shrink: 0;
     letter-spacing: -0.5px;
+    transition: opacity 0.15s ease;
   }
   .pri-mark-high { color: #dc2626; }
   .dark .pri-mark-high { color: #f87171; }
@@ -66,6 +67,9 @@ tailwind.config = {
   .pri-mark-low { color: #ca8a04; }
   .dark .pri-mark-low { color: #facc15; }
   .pri-mark-none { visibility: hidden; }
+
+  /* Completed tasks show a faded priority mark so the historical hue is preserved but visually quiet. */
+  .pri-mark.completed { opacity: 0.4; }
 
   .cal-cell {
     aspect-ratio: 1 / 1;
@@ -258,7 +262,7 @@ tailwind.config = {
       </h2>
 
       <form id="taskForm" onsubmit="return false;">
-        <input type="text" id="titleInput" placeholder="What needs to be done?" required autocomplete="off"
+        <input type="text" id="titleInput" placeholder="What needs to be done?" required autocomplete="off" maxlength="200"
           class="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-base font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
@@ -329,7 +333,7 @@ tailwind.config = {
 
         <div class="mt-3">
           <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Notes <span class="normal-case font-normal">(optional)</span></label>
-          <textarea id="notesInput" rows="2" placeholder="Add details…" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition resize-none"></textarea>
+          <textarea id="notesInput" rows="2" maxlength="10000" placeholder="Add details…" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition resize-none"></textarea>
         </div>
 
         <div class="flex gap-3 mt-4">
@@ -520,8 +524,8 @@ tailwind.config = {
 <div id="toastContainer" role="status" aria-live="polite" aria-atomic="true" class="fixed bottom-24 md:bottom-10 left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center gap-2 pointer-events-none w-full px-4"></div>
 
 <div id="confirmModal" class="hidden fixed inset-0 bg-zinc-950/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-  <div class="bg-white dark:bg-zinc-900 rounded-2xl max-w-sm w-full p-6 shadow-xl border border-zinc-100 dark:border-zinc-800">
-    <h3 class="text-lg font-bold text-zinc-900 dark:text-white mb-2">Clear All Data?</h3>
+  <div role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle" class="bg-white dark:bg-zinc-900 rounded-2xl max-w-sm w-full p-6 shadow-xl border border-zinc-100 dark:border-zinc-800">
+    <h3 id="confirmModalTitle" class="text-lg font-bold text-zinc-900 dark:text-white mb-2">Clear All Data?</h3>
     <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-6">This will permanently delete all tasks and their history. Export a backup first if you want to keep them.</p>
     <div class="flex gap-3 justify-end">
       <button id="cancelResetBtn" class="px-4 py-2 text-sm font-semibold text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-xl transition">Cancel</button>
@@ -531,8 +535,8 @@ tailwind.config = {
 </div>
 
 <div id="importConfirmModal" class="hidden fixed inset-0 bg-zinc-950/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-  <div class="bg-white dark:bg-zinc-900 rounded-2xl max-w-sm w-full p-6 shadow-xl border border-zinc-100 dark:border-zinc-800">
-    <h3 class="text-lg font-bold text-zinc-900 dark:text-white mb-2">Replace All Tasks?</h3>
+  <div role="dialog" aria-modal="true" aria-labelledby="importModalTitle" class="bg-white dark:bg-zinc-900 rounded-2xl max-w-sm w-full p-6 shadow-xl border border-zinc-100 dark:border-zinc-800">
+    <h3 id="importModalTitle" class="text-lg font-bold text-zinc-900 dark:text-white mb-2">Replace All Tasks?</h3>
     <p id="importConfirmText" class="text-sm text-zinc-500 dark:text-zinc-400 mb-6">This will replace all your current tasks with the imported data.</p>
     <div class="flex gap-3 justify-end">
       <button id="cancelImportBtn" class="px-4 py-2 text-sm font-semibold text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-xl transition">Cancel</button>
@@ -542,7 +546,7 @@ tailwind.config = {
 </div>
 
 <div id="detailModal" class="hidden fixed inset-0 bg-zinc-950/50 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
-  <div class="bg-white dark:bg-zinc-900 rounded-2xl max-w-md w-full p-6 shadow-xl border border-zinc-100 dark:border-zinc-800 max-h-[85vh] overflow-y-auto">
+  <div role="dialog" aria-modal="true" aria-labelledby="detailTitle" class="bg-white dark:bg-zinc-900 rounded-2xl max-w-md w-full p-6 shadow-xl border border-zinc-100 dark:border-zinc-800 max-h-[85vh] overflow-y-auto">
     <div class="flex items-start justify-between mb-4">
       <div class="flex items-start gap-3 min-w-0 flex-1">
         <div id="detailIcon" class="w-11 h-11 rounded-xl flex items-center justify-center text-base font-bold flex-shrink-0 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300"></div>
@@ -578,7 +582,7 @@ tailwind.config = {
       </div>
       <div class="pt-2 border-t border-zinc-100 dark:border-zinc-800">
         <span class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 block mb-2">Notes</span>
-        <p id="detailNotes" class="text-sm text-zinc-700 dark:text-zinc-200 leading-relaxed break-words"></p>
+        <p id="detailNotes" class="text-sm text-zinc-700 dark:text-zinc-200 leading-relaxed break-words whitespace-pre-wrap"></p>
       </div>
     </div>
 
@@ -594,8 +598,8 @@ tailwind.config = {
 </div>
 
 <div id="deleteConfirmModal" class="hidden fixed inset-0 bg-zinc-950/50 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
-  <div class="bg-white dark:bg-zinc-900 rounded-2xl max-w-sm w-full p-6 shadow-xl border border-zinc-100 dark:border-zinc-800">
-    <h3 class="text-lg font-bold text-zinc-900 dark:text-white mb-2">Delete this task?</h3>
+  <div role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle" class="bg-white dark:bg-zinc-900 rounded-2xl max-w-sm w-full p-6 shadow-xl border border-zinc-100 dark:border-zinc-800">
+    <h3 id="deleteModalTitle" class="text-lg font-bold text-zinc-900 dark:text-white mb-2">Delete this task?</h3>
     <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-6">This action cannot be undone.</p>
     <div class="flex gap-3 justify-end">
       <button id="cancelDeleteBtn" class="px-4 py-2 text-sm font-semibold text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-xl transition">Cancel</button>
@@ -1352,8 +1356,11 @@ function sortTasks(list) {
 /* =====================================================
    TASK ROW
    - isCompleted is date-aware when forDate is provided (Calendar + Coming up).
-   - The row is clickable but not focusable; the checkbox is the sole interactive control.
-     This avoids nesting a button inside another interactive element.
+   - Rows are focusable via Tab (tabindex="0") for keyboard users.
+     We do NOT add role="button" — screen readers treat the checkbox as the
+     actionable control, and the row-level Enter/Space handler opens details.
+   - Completed tasks show a faded priority mark so history stays readable
+     but visually quiet.
 ===================================================== */
 function renderTaskRow(t, opts = {}) {
   const { showSnooze = false, forDate = null } = opts;
@@ -1363,6 +1370,7 @@ function renderTaskRow(t, opts = {}) {
   const isOverdue = !isCompleted && displayDate && displayDate < today && (!forDate || forDate === today);
   const typeIcon = getTypeIcon(t.type);
   const pri = t.priority || 'none';
+  const priClass = isCompleted ? `${PRIORITY_COLOR[pri]} completed` : PRIORITY_COLOR[pri];
 
   const metaParts = [];
   if (displayDate) {
@@ -1383,7 +1391,7 @@ function renderTaskRow(t, opts = {}) {
   const leftBorder = isOverdue ? 'border-l-2 border-l-rose-500' : 'border-l-2 border-l-transparent';
 
   return `
-    <div class="task-row flex items-center gap-3 p-3 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 ${leftBorder} hover:border-zinc-300 dark:hover:border-zinc-700 transition cursor-pointer" data-task-id="${t.id}" onclick="openDetail(${t.id})">
+    <div class="task-row flex items-center gap-3 p-3 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 ${leftBorder} hover:border-zinc-300 dark:hover:border-zinc-700 transition cursor-pointer" data-task-id="${t.id}" tabindex="0" onclick="openDetail(${t.id})" onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();openDetail(${t.id})}">
       <button class="checkbox ${isCompleted ? 'done' : ''}" type="button" aria-label="${isCompleted ? 'Mark active' : 'Complete'}: ${escapeHtml(t.title)}" data-check-id="${t.id}" onclick="event.stopPropagation(); toggleComplete(${t.id})">
         <i class="fa-solid fa-check" aria-hidden="true"></i>
       </button>
@@ -1394,7 +1402,7 @@ function renderTaskRow(t, opts = {}) {
         </div>
       </div>
       <div class="flex items-center gap-2 flex-shrink-0">
-        <span class="pri-mark ${PRIORITY_COLOR[pri]}">${PRIORITY_MARKS[pri]}</span>
+        <span class="pri-mark ${priClass}">${PRIORITY_MARKS[pri]}</span>
         ${showSnooze && isOverdue ? `
           <button type="button" class="p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800" data-snooze-btn="${t.id}" onclick="event.stopPropagation(); openSnooze(event, ${t.id})">
             <i class="fa-solid fa-clock-rotate-left text-xs"></i>
@@ -2008,7 +2016,8 @@ window.openDetail = function(id) {
   if (pri === 'none') {
     priEl.innerHTML = '<span class="text-zinc-400 dark:text-zinc-500">None</span>';
   } else {
-    priEl.innerHTML = `<span class="inline-flex items-center gap-2"><span class="pri-mark ${PRIORITY_COLOR[pri]}" style="width:auto">${PRIORITY_MARKS[pri]}</span><span>${PRIORITY_LABEL[pri]}</span></span>`;
+    const priClass = t.completed ? `${PRIORITY_COLOR[pri]} completed` : PRIORITY_COLOR[pri];
+    priEl.innerHTML = `<span class="inline-flex items-center gap-2"><span class="pri-mark ${priClass}" style="width:auto">${PRIORITY_MARKS[pri]}</span><span>${PRIORITY_LABEL[pri]}</span></span>`;
   }
 
   const dateRow = document.getElementById('detailDateRow');
@@ -2051,10 +2060,10 @@ window.openDetail = function(id) {
   const notesEl = document.getElementById('detailNotes');
   if (t.notes && t.notes.trim()) {
     notesEl.textContent = t.notes;
-    notesEl.className = 'text-sm text-zinc-700 dark:text-zinc-200 leading-relaxed break-words';
+    notesEl.className = 'text-sm text-zinc-700 dark:text-zinc-200 leading-relaxed break-words whitespace-pre-wrap';
   } else {
     notesEl.textContent = 'No notes added.';
-    notesEl.className = 'text-sm text-zinc-400 dark:text-zinc-500 italic leading-relaxed';
+    notesEl.className = 'text-sm text-zinc-400 dark:text-zinc-500 italic leading-relaxed whitespace-pre-wrap';
   }
 
   detailModal.classList.remove('hidden');
@@ -2311,9 +2320,32 @@ document.getElementById('confirmResetBtn').addEventListener('click', () => {
 });
 
 /* =====================================================
-   KEYBOARD SHORTCUT
+   KEYBOARD SHORTCUTS
+   - N: jump to Today tab and focus the new-task input
+   - Escape: dismiss the topmost open modal
 ===================================================== */
 document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (!deleteConfirmModal.classList.contains('hidden')) {
+      pendingDeleteId = null;
+      deleteConfirmModal.classList.add('hidden');
+      return;
+    }
+    if (!detailModal.classList.contains('hidden')) {
+      closeDetail();
+      return;
+    }
+    if (!importConfirmModal.classList.contains('hidden')) {
+      pendingImportData = null;
+      importConfirmModal.classList.add('hidden');
+      return;
+    }
+    if (!confirmModal.classList.contains('hidden')) {
+      confirmModal.classList.add('hidden');
+      return;
+    }
+  }
+
   if (e.key !== 'n' && e.key !== 'N') return;
   const tgt = e.target;
   if (tgt && (tgt.tagName === 'INPUT' || tgt.tagName === 'TEXTAREA' || tgt.tagName === 'SELECT' || tgt.isContentEditable)) return;
