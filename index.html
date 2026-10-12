@@ -29,7 +29,7 @@ tailwind.config = {
 </script>
 
 <style>
-  html, body { min-height: 100dvh; }
+  html, body { height: 100dvh; }
   body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -67,8 +67,6 @@ tailwind.config = {
   .pri-mark-low { color: #ca8a04; }
   .dark .pri-mark-low { color: #facc15; }
   .pri-mark-none { visibility: hidden; }
-
-  /* Completed tasks show a faded priority mark so the historical hue is preserved but visually quiet. */
   .pri-mark.completed { opacity: 0.4; }
 
   .cal-cell {
@@ -169,19 +167,17 @@ tailwind.config = {
   .seg-btn.active { background: white; color: #18181b; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
   .dark .seg-btn.active { background: #27272a; color: #fafafa; }
 
-  /* Sticky bottom nav with safe area */
+  /* Bottom nav is a real flex sibling of the scroll container — no viewport-relative positioning. */
   .mobile-bottom-nav {
-    position: sticky;
-    bottom: 0;
     padding-bottom: env(safe-area-inset-bottom, 0);
     background: white;
     border-top: 1px solid #e4e4e7;
     box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.05);
     z-index: 50;
+    flex-shrink: 0;
   }
   .dark .mobile-bottom-nav { background: #18181b; border-top-color: #27272a; }
 
-  /* Weekday picker */
   .weekday-btn {
     width: 2rem; height: 2rem;
     border-radius: 0.5rem;
@@ -201,7 +197,6 @@ tailwind.config = {
   }
   .dark .weekday-btn.active { background: #fafafa; color: #09090b; }
 
-  /* Monochrome focus ring — matches the app's palette instead of introducing a foreign hue */
   :focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 
   @media (prefers-reduced-motion: reduce) {
@@ -215,9 +210,9 @@ tailwind.config = {
 </style>
 </head>
 
-<body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-100 min-h-[100dvh] flex flex-col transition-colors duration-200">
+<body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-100 h-[100dvh] overflow-hidden flex flex-col transition-colors duration-200">
 
-<div id="app" class="max-w-3xl mx-auto px-4 py-6 md:py-8 w-full flex-1">
+<div id="app" class="max-w-3xl mx-auto px-4 py-6 md:py-8 w-full flex-1 overflow-y-auto">
 
   <header class="flex justify-between items-center mb-6">
     <div>
@@ -302,6 +297,8 @@ tailwind.config = {
             <option value="weekly">Weekly</option>
             <option value="biweekly">Biweekly</option>
             <option value="monthly">Monthly</option>
+            <option value="quarterly">Quarterly</option>
+            <option value="halfyearly">Half-yearly</option>
             <option value="yearly">Yearly</option>
             <option value="custom">Custom…</option>
           </select>
@@ -477,6 +474,14 @@ tailwind.config = {
         </div>
 
         <div>
+          <p class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2">Recurring</p>
+          <button id="recurringTasksBtn" class="w-full px-4 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition text-sm font-semibold flex items-center justify-between gap-2">
+            <span class="flex items-center gap-2"><i class="fa-solid fa-rotate"></i> Recurring Tasks</span>
+            <span id="recurringTasksCount" class="text-xs text-zinc-500 dark:text-zinc-400">None</span>
+          </button>
+        </div>
+
+        <div>
           <p class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2">Export</p>
           <button id="exportBtn" class="w-full px-4 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition text-sm font-semibold flex items-center justify-center gap-2">
             <i class="fa-solid fa-download"></i> Download JSON Backup
@@ -542,6 +547,20 @@ tailwind.config = {
       <button id="cancelImportBtn" class="px-4 py-2 text-sm font-semibold text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-xl transition">Cancel</button>
       <button id="confirmImportBtn" class="px-4 py-2 text-sm font-semibold text-white bg-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 hover:bg-black dark:hover:bg-white rounded-xl transition">Replace</button>
     </div>
+  </div>
+</div>
+
+<div id="recurringModal" class="hidden fixed inset-0 bg-zinc-950/50 backdrop-blur-sm z-[68] flex items-center justify-center p-4">
+  <div role="dialog" aria-modal="true" aria-labelledby="recurringModalTitle" class="bg-white dark:bg-zinc-900 rounded-2xl max-w-md w-full p-6 shadow-xl border border-zinc-100 dark:border-zinc-800 max-h-[85vh] overflow-y-auto">
+    <div class="flex items-start justify-between mb-4">
+      <h3 id="recurringModalTitle" class="text-lg font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+        <i class="fa-solid fa-rotate text-zinc-400"></i> Recurring Tasks
+      </h3>
+      <button id="closeRecurringBtn" class="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+    </div>
+    <div id="recurringList" class="space-y-2"></div>
   </div>
 </div>
 
@@ -634,6 +653,7 @@ const PRIORITY_ORDER = { high: 0, medium: 1, low: 2, none: 3 };
 const STORAGE_KEY_TASKS = 'todo_tasks_v1';
 const STORAGE_KEY_THEME = 'todo_theme';
 const STORAGE_KEY_SORT = 'todo_sort_pref';
+const MAX_VISIBLE_TOASTS = 3;
 
 let tasks = [];
 let currentTab = 'today';
@@ -722,8 +742,6 @@ function advanceDuePast(fromDate, recurrence, today) {
 
 /* =====================================================
    RECURRENCE PROJECTION
-   Given a task with a recurrence, does it occur on dateStr?
-   Requires dateStr >= task.dueDate (the anchor).
 ===================================================== */
 function occursOn(task, dateStr) {
   if (!task.recurrence || !task.dueDate) return false;
@@ -773,12 +791,6 @@ function taskOccursOn(task, dateStr) {
   return occursOn(task, dateStr);
 }
 
-/* =====================================================
-   DATE-AWARE COMPLETION
-   Whether a task counts as "completed" on a specific calendar day.
-   For recurring tasks, this is per-occurrence (history lookup).
-   For non-recurring tasks, this is whether the single completion fell on that day.
-===================================================== */
 function isTaskCompletedOn(task, dateStr) {
   if (!dateStr) return !!task.completed;
   if (task.recurrence) {
@@ -801,6 +813,8 @@ function formatRecurrenceLabel(r) {
   if (freq === 'weekends') return 'Every weekend';
   if (freq === 'weekly' && interval === 1) return 'Every week';
   if (freq === 'weekly' && interval === 2) return 'Every 2 weeks';
+  if (freq === 'monthly' && interval === 3) return 'Every quarter';
+  if (freq === 'monthly' && interval === 6) return 'Every 6 months';
   const unit = { daily: 'day', weekly: 'week', monthly: 'month', yearly: 'year' }[freq] || 'day';
   if (interval === 1) {
     if (freq === 'daily') return 'Every day';
@@ -826,6 +840,20 @@ function formatDateLabel(dateStr) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+/* Weekday-prefixed date label used in the Recurring Tasks panel. */
+function formatPanelDate(dateStr) {
+  if (!dateStr) return '';
+  const today = todayStr();
+  if (dateStr === today) return 'Today';
+  if (dateStr === addDaysStr(today, 1)) return 'Tomorrow';
+  const d = parseDate(dateStr);
+  const now = new Date();
+  if (d.getFullYear() === now.getFullYear()) {
+    return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  }
+  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+}
+
 function getTypeIcon(type) {
   const cat = CATEGORIES.find(c => c.name === type);
   return cat ? cat.icon : 'fa-circle';
@@ -845,8 +873,6 @@ function isValidDateString(value) {
 
 /* =====================================================
    IMPORT-ONLY SANITIZER
-   Used exclusively on file import. Never called during normal load,
-   so a bug here can never silently destroy live data.
 ===================================================== */
 function sanitizeTasks(input) {
   if (!Array.isArray(input)) return [];
@@ -905,6 +931,10 @@ function sanitizeTasks(input) {
 }
 
 function showToast(message, type = 'success', actionLabel = null, actionFn = null) {
+  while (toastContainer.children.length >= MAX_VISIBLE_TOASTS) {
+    toastContainer.removeChild(toastContainer.firstChild);
+  }
+
   const toast = document.createElement('div');
   const isSuccess = type === 'success';
   toast.className = `${isSuccess ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900' : 'bg-rose-500 text-white'} px-5 py-3 rounded-xl shadow-lg font-semibold text-sm toast-enter flex items-center gap-2 pointer-events-auto`;
@@ -930,6 +960,7 @@ function showToast(message, type = 'success', actionLabel = null, actionFn = nul
   }, actionLabel ? 5000 : 2500);
 }
 
+const appEl = document.getElementById('app');
 const toastContainer = document.getElementById('toastContainer');
 const storageWarning = document.getElementById('storageWarning');
 const taskForm = document.getElementById('taskForm');
@@ -974,13 +1005,14 @@ const detailModal = document.getElementById('detailModal');
 const deleteConfirmModal = document.getElementById('deleteConfirmModal');
 const confirmModal = document.getElementById('confirmModal');
 const importConfirmModal = document.getElementById('importConfirmModal');
+const recurringModal = document.getElementById('recurringModal');
+const recurringList = document.getElementById('recurringList');
+const recurringTasksBtn = document.getElementById('recurringTasksBtn');
+const recurringTasksCount = document.getElementById('recurringTasksCount');
 
 const historyPanel = document.getElementById('historyPanel');
 const historyList = document.getElementById('historyList');
 
-/* =====================================================
-   STICKY NAV SHORTCUT PREVENTION (iOS keyboard)
-===================================================== */
 const isTouchDevice = () => window.matchMedia('(hover: none)').matches || window.innerWidth < 768;
 
 /* =====================================================
@@ -1008,7 +1040,6 @@ function syncWeekdayPickerVisibility() {
 }
 
 function snapDateToWeekday(wd) {
-  // Snap from the currently selected due date, not from today.
   const target = parseDate(isValidDateString(dateInput.value) ? dateInput.value : todayStr());
   let diff = wd - target.getDay();
   if (diff < 0) diff += 7;
@@ -1090,7 +1121,7 @@ window.switchTab = function(tabId) {
 
   if (tabId === 'all') renderAll();
   if (tabId === 'today') renderToday();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  appEl.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 /* =====================================================
@@ -1102,11 +1133,8 @@ function loadData() {
   try {
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) { tasks = []; return; }
-    // Non-destructive load: preserve parsed data as-is. Sanitization only happens
-    // on import, so a bug in the sanitizer can never silently destroy live data.
     tasks = parsed;
   } catch (e) {
-    // Parse failure: archive the corrupt payload before starting clean, so nothing is lost.
     try { storageSet(STORAGE_KEY_TASKS + '_corrupt_' + Date.now(), raw); } catch (e2) {}
     tasks = [];
     storageWarning.classList.remove('hidden');
@@ -1161,6 +1189,8 @@ function getRecurrenceFromForm() {
   if (v === 'weekly') return { freq: 'weekly', interval: 1 };
   if (v === 'biweekly') return { freq: 'weekly', interval: 2 };
   if (v === 'monthly') return { freq: 'monthly', interval: 1 };
+  if (v === 'quarterly') return { freq: 'monthly', interval: 3 };
+  if (v === 'halfyearly') return { freq: 'monthly', interval: 6 };
   if (v === 'yearly') return { freq: 'yearly', interval: 1 };
   if (v === 'custom') {
     const n = Math.min(3650, Math.max(1, parseInt(customInterval.value, 10) || 1));
@@ -1184,6 +1214,8 @@ function setFormRecurrence(r) {
   else if (freq === 'weekly' && interval === 1) repeatSelect.value = 'weekly';
   else if (freq === 'weekly' && interval === 2) repeatSelect.value = 'biweekly';
   else if (freq === 'monthly' && interval === 1) repeatSelect.value = 'monthly';
+  else if (freq === 'monthly' && interval === 3) repeatSelect.value = 'quarterly';
+  else if (freq === 'monthly' && interval === 6) repeatSelect.value = 'halfyearly';
   else if (freq === 'yearly' && interval === 1) repeatSelect.value = 'yearly';
   else { repeatSelect.value = 'custom'; customInterval.value = interval; customUnit.value = freq; }
   customRepeatRow.classList.toggle('hidden', repeatSelect.value !== 'custom');
@@ -1245,7 +1277,7 @@ window.startEdit = function(id) {
     switchTab('today');
     setTimeout(() => { if (!isTouchDevice()) titleInput.focus({ preventScroll: true }); }, 350);
   } else {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    appEl.scrollTo({ top: 0, behavior: 'smooth' });
     setTimeout(() => { if (!isTouchDevice()) titleInput.focus({ preventScroll: true }); }, 350);
   }
 };
@@ -1355,12 +1387,6 @@ function sortTasks(list) {
 
 /* =====================================================
    TASK ROW
-   - isCompleted is date-aware when forDate is provided (Calendar + Coming up).
-   - Rows are focusable via Tab (tabindex="0") for keyboard users.
-     We do NOT add role="button" — screen readers treat the checkbox as the
-     actionable control, and the row-level Enter/Space handler opens details.
-   - Completed tasks show a faded priority mark so history stays readable
-     but visually quiet.
 ===================================================== */
 function renderTaskRow(t, opts = {}) {
   const { showSnooze = false, forDate = null } = opts;
@@ -1509,6 +1535,8 @@ function renderToday() {
   } else {
     upcomingPreview.innerHTML = '';
   }
+
+  updateRecurringCount();
 }
 
 /* =====================================================
@@ -1528,7 +1556,7 @@ window.handleAllViewTap = function(v) {
     }
   }
   setAllView(v);
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  appEl.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 window.setAllView = function(v) {
@@ -1558,11 +1586,17 @@ function renderList() {
 
   if (month) filtered = filtered.filter(t => t.dueDate && t.dueDate.startsWith(month));
   if (query) {
-    filtered = filtered.filter(t =>
-      (t.title && t.title.toLowerCase().includes(query)) ||
-      (t.notes && t.notes.toLowerCase().includes(query)) ||
-      (t.type && t.type.toLowerCase().includes(query))
-    );
+    filtered = filtered.filter(t => {
+      if (t.title && t.title.toLowerCase().includes(query)) return true;
+      if (t.notes && t.notes.toLowerCase().includes(query)) return true;
+      if (t.type && t.type.toLowerCase().includes(query)) return true;
+      if (t.dueDate) {
+        if (t.dueDate.includes(query)) return true;
+        const formatted = parseDate(t.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toLowerCase();
+        if (formatted.includes(query)) return true;
+      }
+      return false;
+    });
   }
 
   if (filtered.length === 0) {
@@ -1840,6 +1874,95 @@ function renderArchive() {
 archiveSearchInput.addEventListener('input', renderArchive);
 
 /* =====================================================
+   RECURRING TASKS PANEL
+===================================================== */
+function updateRecurringCount() {
+  const count = tasks.filter(t => t.recurrence).length;
+  if (count === 0) recurringTasksCount.textContent = 'None';
+  else if (count === 1) recurringTasksCount.textContent = '1 active';
+  else recurringTasksCount.textContent = count + ' active';
+}
+
+function getNextOccurrenceDate(task) {
+  const today = todayStr();
+  if (!task.recurrence) return task.dueDate || today;
+  const completedToday = task.completed && task.completedAt && formatDate(new Date(task.completedAt)) === today;
+  if (completedToday) {
+    let next = advanceDate(task.dueDate || today, task.recurrence);
+    let guard = 0;
+    while (next <= today && guard < 1000) {
+      next = advanceDate(next, task.recurrence);
+      guard++;
+    }
+    return next;
+  }
+  return task.dueDate || today;
+}
+
+function renderRecurringPanel() {
+  const recurring = tasks.filter(t => t.recurrence);
+  if (recurring.length === 0) {
+    recurringList.innerHTML = `<p class="text-sm text-zinc-500 dark:text-zinc-400 italic text-center py-4">No recurring tasks yet. Create one by setting "Repeat" when you add a task.</p>`;
+    return;
+  }
+  const sorted = [...recurring].sort((a, b) => {
+    const aNext = getNextOccurrenceDate(a);
+    const bNext = getNextOccurrenceDate(b);
+    if (aNext !== bNext) return aNext < bNext ? -1 : 1;
+    return 0;
+  });
+  recurringList.innerHTML = sorted.map(t => {
+    const icon = getTypeIcon(t.type);
+    const nextDate = getNextOccurrenceDate(t);
+    const nextLabel = formatPanelDate(nextDate);
+    const pattern = formatRecurrenceLabel(t.recurrence);
+    return `
+      <div class="flex items-center justify-between gap-3 p-3 bg-zinc-50 dark:bg-zinc-950/60 rounded-xl border border-zinc-100 dark:border-zinc-800/50 hover:border-zinc-300 dark:hover:border-zinc-700 transition cursor-pointer" onclick="openRecurringTaskDetail(${t.id})">
+        <div class="flex items-center gap-3 min-w-0 flex-1">
+          <div class="w-9 h-9 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 flex items-center justify-center text-sm flex-shrink-0">
+            <i class="fa-solid ${icon}"></i>
+          </div>
+          <div class="min-w-0">
+            <p class="text-sm font-bold text-zinc-800 dark:text-zinc-100 truncate">${escapeHtml(t.title)}</p>
+            <div class="flex items-center gap-2 text-xs text-zinc-400 mt-0.5 flex-wrap">
+              <span class="inline-flex items-center gap-1"><i class="fa-solid fa-rotate text-[10px]"></i>${escapeHtml(pattern)}</span>
+              <span>·</span>
+              <span>Next: ${escapeHtml(nextLabel)}</span>
+            </div>
+          </div>
+        </div>
+        <button type="button" class="p-1.5 text-zinc-400 hover:text-rose-500 transition flex-shrink-0" onclick="event.stopPropagation(); promptDeleteRecurring(${t.id})" title="Delete task">
+          <i class="fa-solid fa-trash-can text-sm"></i>
+        </button>
+      </div>
+    `;
+  }).join('');
+}
+
+window.openRecurringTaskDetail = function(id) {
+  recurringModal.classList.add('hidden');
+  openDetail(id);
+};
+
+window.promptDeleteRecurring = function(id) {
+  pendingDeleteId = id;
+  deleteConfirmModal.classList.remove('hidden');
+};
+
+recurringTasksBtn.addEventListener('click', () => {
+  renderRecurringPanel();
+  recurringModal.classList.remove('hidden');
+});
+
+document.getElementById('closeRecurringBtn').addEventListener('click', () => {
+  recurringModal.classList.add('hidden');
+});
+
+recurringModal.addEventListener('click', (e) => {
+  if (e.target === recurringModal) recurringModal.classList.add('hidden');
+});
+
+/* =====================================================
    TOGGLE COMPLETE
 ===================================================== */
 window.toggleComplete = function(id) {
@@ -2035,10 +2158,11 @@ window.openDetail = function(id) {
 
   const repeatRow = document.getElementById('detailRepeatRow');
   const repeatBtn = document.getElementById('detailRepeatBtn');
+  const history = t.history || [];
+  const count = history.length;
+
   if (t.recurrence) {
     repeatRow.style.display = 'flex';
-    const history = t.history || [];
-    const count = history.length;
     let label = formatRecurrenceLabel(t.recurrence);
     if (count > 0) {
       const sorted = [...history].sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
@@ -2052,9 +2176,20 @@ window.openDetail = function(id) {
       repeatBtn.title = '';
     }
     repeatBtn.textContent = label;
+  } else if (count > 0) {
+    // Task used to be recurring — history preserved and still viewable.
+    repeatRow.style.display = 'flex';
+    const sorted = [...history].sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
+    const last = new Date(sorted[0].completedAt);
+    const lastLabel = last.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    repeatBtn.textContent = `Previously recurring · Completed ${count}× · Last: ${lastLabel}`;
+    repeatBtn.style.cursor = 'pointer';
+    repeatBtn.title = 'Click to view history';
   } else {
     repeatRow.style.display = 'none';
     repeatBtn.textContent = '';
+    repeatBtn.style.cursor = 'default';
+    repeatBtn.title = '';
   }
 
   const notesEl = document.getElementById('detailNotes');
@@ -2093,7 +2228,7 @@ document.getElementById('detailDeleteBtn').addEventListener('click', () => {
 document.getElementById('detailRepeatBtn').addEventListener('click', () => {
   if (detailId === null) return;
   const t = tasks.find(x => x.id === detailId);
-  if (!t || !t.recurrence || !(t.history && t.history.length > 0)) return;
+  if (!t || !(t.history && t.history.length > 0)) return;
   if (historyPanel.classList.contains('hidden')) {
     renderHistoryPanel(t);
     historyPanel.classList.remove('hidden');
@@ -2183,7 +2318,6 @@ historyList.addEventListener('change', (e) => {
   if (isNaN(newDate.getTime())) return;
 
   const old = new Date(entry.completedAt);
-  // Construct the selected calendar date directly to avoid month-end rollover (e.g. Jan 31 → Mar 3).
   const updated = new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate(),
     old.getHours(), old.getMinutes(), old.getSeconds(), old.getMilliseconds());
   entry.completedAt = updated.toISOString();
@@ -2194,17 +2328,25 @@ historyList.addEventListener('change', (e) => {
 });
 
 function refreshDetailRepeatLabel(t) {
-  if (!t.recurrence) return;
+  const repeatBtn = document.getElementById('detailRepeatBtn');
   const history = t.history || [];
   const count = history.length;
-  let label = formatRecurrenceLabel(t.recurrence);
-  if (count > 0) {
+
+  if (t.recurrence) {
+    let label = formatRecurrenceLabel(t.recurrence);
+    if (count > 0) {
+      const sorted = [...history].sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
+      const last = new Date(sorted[0].completedAt);
+      const lastLabel = last.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      label += ` · Completed ${count}× · Last: ${lastLabel}`;
+    }
+    repeatBtn.textContent = label;
+  } else if (count > 0) {
     const sorted = [...history].sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
     const last = new Date(sorted[0].completedAt);
     const lastLabel = last.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    label += ` · Completed ${count}× · Last: ${lastLabel}`;
+    repeatBtn.textContent = `Previously recurring · Completed ${count}× · Last: ${lastLabel}`;
   }
-  document.getElementById('detailRepeatBtn').textContent = label;
 }
 
 /* =====================================================
@@ -2227,6 +2369,9 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
     if (allSubView === 'list') renderList();
     if (allSubView === 'calendar') renderCalendar();
     if (allSubView === 'archive') renderArchive();
+  }
+  if (!recurringModal.classList.contains('hidden')) {
+    renderRecurringPanel();
   }
   showToast('Task deleted', 'error');
 });
@@ -2321,8 +2466,6 @@ document.getElementById('confirmResetBtn').addEventListener('click', () => {
 
 /* =====================================================
    KEYBOARD SHORTCUTS
-   - N: jump to Today tab and focus the new-task input
-   - Escape: dismiss the topmost open modal
 ===================================================== */
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
@@ -2333,6 +2476,10 @@ document.addEventListener('keydown', (e) => {
     }
     if (!detailModal.classList.contains('hidden')) {
       closeDetail();
+      return;
+    }
+    if (!recurringModal.classList.contains('hidden')) {
+      recurringModal.classList.add('hidden');
       return;
     }
     if (!importConfirmModal.classList.contains('hidden')) {
