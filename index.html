@@ -167,7 +167,6 @@ tailwind.config = {
   .seg-btn.active { background: white; color: #18181b; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
   .dark .seg-btn.active { background: #27272a; color: #fafafa; }
 
-  /* Bottom nav is a real flex sibling of the scroll container — no viewport-relative positioning. */
   .mobile-bottom-nav {
     padding-bottom: env(safe-area-inset-bottom, 0);
     background: white;
@@ -178,8 +177,9 @@ tailwind.config = {
   }
   .dark .mobile-bottom-nav { background: #18181b; border-top-color: #27272a; }
 
+  /* Multi-select weekday picker — slightly larger for clearer multi-active state. */
   .weekday-btn {
-    width: 2rem; height: 2rem;
+    width: 2.25rem; height: 2.25rem;
     border-radius: 0.5rem;
     font-size: 0.75rem;
     font-weight: 600;
@@ -303,9 +303,6 @@ tailwind.config = {
             <option value="custom">Custom…</option>
           </select>
           <div id="weekdayPickerRow" class="hidden mt-2">
-            <div class="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400 mb-1.5">
-              <span>On which day?</span>
-            </div>
             <div class="flex gap-1.5" id="weekdayPicker">
               <button type="button" class="weekday-btn inactive" data-weekday="0">S</button>
               <button type="button" class="weekday-btn inactive" data-weekday="1">M</button>
@@ -650,6 +647,9 @@ const PRIORITY_COLOR = {
 };
 const PRIORITY_ORDER = { high: 0, medium: 1, low: 2, none: 3 };
 
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
 const STORAGE_KEY_TASKS = 'todo_tasks_v1';
 const STORAGE_KEY_THEME = 'todo_theme';
 const STORAGE_KEY_SORT = 'todo_sort_pref';
@@ -668,7 +668,7 @@ let calendarSelectedDate = null;
 let snoozeOpenForId = null;
 let cameFromTab = null;
 let pendingImportData = null;
-let currentWeekday = null;
+let currentDays = []; // array of weekday numbers for weekly/biweekly
 
 let storageUsable = true;
 function storageGet(k) { try { return localStorage.getItem(k); } catch (e) { storageUsable = false; return null; } }
@@ -702,11 +702,43 @@ function daysBetween(a, b) {
   return Math.round((parseDate(b) - parseDate(a)) / 86400000);
 }
 
+/* Returns the Monday of the week containing dateStr (YYYY-MM-DD). */
+function getWeekStart(dateStr) {
+  const d = parseDate(dateStr);
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  return formatDate(d);
+}
+
+/* Returns the next date strictly after fromDate where the weekday is in days
+   AND the week satisfies the interval parity (relative to anchor's week). */
+function advanceWeekly(fromDate, days, interval, anchor) {
+  const anchorWeekStart = getWeekStart(anchor);
+  const d = parseDate(fromDate);
+  for (let i = 1; i <= 400; i++) {
+    d.setDate(d.getDate() + 1);
+    if (!days.includes(d.getDay())) continue;
+    const dStr = formatDate(d);
+    const dWeekStart = getWeekStart(dStr);
+    const weeksDiff = Math.round(daysBetween(anchorWeekStart, dWeekStart) / 7);
+    if (weeksDiff >= 0 && weeksDiff % interval === 0) return dStr;
+  }
+  return formatDate(d);
+}
+
 function advanceDate(fromDate, recurrence) {
   if (!recurrence) return fromDate;
   const { freq, interval } = recurrence;
   if (freq === 'daily') return addDaysStr(fromDate, interval);
-  if (freq === 'weekly') return addDaysStr(fromDate, interval * 7);
+  if (freq === 'weekly') {
+    if (recurrence.days && recurrence.days.length > 0) {
+      const anchor = recurrence.anchor || fromDate;
+      return advanceWeekly(fromDate, recurrence.days, interval, anchor);
+    }
+    // Legacy single-day weekly (no days array).
+    return addDaysStr(fromDate, interval * 7);
+  }
   if (freq === 'monthly') return addMonthsStr(fromDate, interval);
   if (freq === 'yearly') return addYearsStr(fromDate, interval);
   if (freq === 'weekdays') {
@@ -745,8 +777,8 @@ function advanceDuePast(fromDate, recurrence, today) {
 ===================================================== */
 function occursOn(task, dateStr) {
   if (!task.recurrence || !task.dueDate) return false;
-  if (dateStr < task.dueDate) return false;
   const r = task.recurrence;
+  if (dateStr < task.dueDate) return false;
   const anchor = parseDate(task.dueDate);
   const d = parseDate(dateStr);
   const diffDays = daysBetween(task.dueDate, dateStr);
@@ -755,6 +787,15 @@ function occursOn(task, dateStr) {
     return diffDays % r.interval === 0;
   }
   if (r.freq === 'weekly') {
+    if (r.days && r.days.length > 0) {
+      if (!r.days.includes(d.getDay())) return false;
+      const anchorDate = r.anchor || task.dueDate;
+      const anchorWeekStart = getWeekStart(anchorDate);
+      const dWeekStart = getWeekStart(dateStr);
+      const weeksDiff = Math.round(daysBetween(anchorWeekStart, dWeekStart) / 7);
+      return weeksDiff >= 0 && weeksDiff % r.interval === 0;
+    }
+    // Legacy single-day weekly (no days array).
     const weeksDiff = Math.floor(diffDays / 7);
     if (weeksDiff % r.interval !== 0) return false;
     return d.getDay() === anchor.getDay();
@@ -811,11 +852,19 @@ function formatRecurrenceLabel(r) {
   const { freq, interval } = r;
   if (freq === 'weekdays') return 'Every weekday';
   if (freq === 'weekends') return 'Every weekend';
-  if (freq === 'weekly' && interval === 1) return 'Every week';
-  if (freq === 'weekly' && interval === 2) return 'Every 2 weeks';
+  if (freq === 'weekly') {
+    const days = r.days || [];
+    if (days.length > 0) {
+      const label = days.map(d => DAY_LABELS[d]).join(', ');
+      if (interval === 1) return label;
+      return `${label} · Biweekly`;
+    }
+    if (interval === 1) return 'Every week';
+    if (interval === 2) return 'Every 2 weeks';
+  }
   if (freq === 'monthly' && interval === 3) return 'Every quarter';
   if (freq === 'monthly' && interval === 6) return 'Every 6 months';
-  const unit = { daily: 'day', weekly: 'week', monthly: 'month', yearly: 'year' }[freq] || 'day';
+  const unit = { daily: 'day', monthly: 'month', yearly: 'year' }[freq] || 'day';
   if (interval === 1) {
     if (freq === 'daily') return 'Every day';
     if (freq === 'monthly') return 'Every month';
@@ -840,7 +889,6 @@ function formatDateLabel(dateStr) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-/* Weekday-prefixed date label used in the Recurring Tasks panel. */
 function formatPanelDate(dateStr) {
   if (!dateStr) return '';
   const today = todayStr();
@@ -897,7 +945,19 @@ function sanitizeTasks(input) {
       const validFrequencies = ['daily', 'weekly', 'monthly', 'yearly', 'weekdays', 'weekends'];
       const freq = validFrequencies.includes(rawRecurrence.freq) ? rawRecurrence.freq : null;
       const interval = Math.min(3650, Math.max(1, Math.floor(Number(rawRecurrence.interval) || 1)));
-      if (freq) recurrence = { freq, interval: (freq === 'weekdays' || freq === 'weekends') ? 1 : interval };
+      if (freq) {
+        recurrence = { freq, interval: (freq === 'weekdays' || freq === 'weekends') ? 1 : interval };
+        if (freq === 'weekly' && Array.isArray(rawRecurrence.days)) {
+          const cleanDays = rawRecurrence.days
+            .map(d => Math.floor(Number(d)))
+            .filter(d => Number.isInteger(d) && d >= 0 && d <= 6);
+          const uniqueDays = Array.from(new Set(cleanDays)).sort((a, b) => a - b);
+          if (uniqueDays.length > 0) recurrence.days = uniqueDays;
+        }
+        if (freq === 'weekly' && isValidDateString(rawRecurrence.anchor)) {
+          recurrence.anchor = rawRecurrence.anchor;
+        }
+      }
     }
 
     const history = Array.isArray(item.history) ? item.history.slice(-5000).flatMap(entry => {
@@ -1016,12 +1076,12 @@ const historyList = document.getElementById('historyList');
 const isTouchDevice = () => window.matchMedia('(hover: none)').matches || window.innerWidth < 768;
 
 /* =====================================================
-   WEEKDAY PICKER
+   WEEKDAY PICKER (multi-select)
 ===================================================== */
 function renderWeekdayPicker() {
   weekdayPicker.querySelectorAll('.weekday-btn').forEach(b => {
     const wd = parseInt(b.dataset.weekday, 10);
-    const active = currentWeekday === wd;
+    const active = currentDays.includes(wd);
     b.className = `weekday-btn ${active ? 'active' : 'inactive'}`;
   });
 }
@@ -1031,36 +1091,47 @@ function syncWeekdayPickerVisibility() {
   const show = v === 'weekly' || v === 'biweekly';
   weekdayPickerRow.classList.toggle('hidden', !show);
   if (show) {
-    if (currentWeekday === null) {
-      const dt = dateInput.value ? parseDate(dateInput.value) : new Date();
-      currentWeekday = dt.getDay();
+    if (currentDays.length === 0) {
+      const dt = (dateInput.value && isValidDateString(dateInput.value)) ? parseDate(dateInput.value) : new Date();
+      currentDays = [dt.getDay()];
     }
     renderWeekdayPicker();
   }
 }
 
-function snapDateToWeekday(wd) {
-  const target = parseDate(isValidDateString(dateInput.value) ? dateInput.value : todayStr());
-  let diff = wd - target.getDay();
-  if (diff < 0) diff += 7;
-  target.setDate(target.getDate() + diff);
-  dateInput.value = formatDate(target);
+function snapDateToSelectedDays() {
+  if (currentDays.length === 0) return;
+  const base = parseDate(isValidDateString(dateInput.value) ? dateInput.value : todayStr());
+  for (let i = 0; i <= 14; i++) {
+    if (currentDays.includes(base.getDay())) {
+      dateInput.value = formatDate(base);
+      return;
+    }
+    base.setDate(base.getDate() + 1);
+  }
 }
 
 weekdayPicker.addEventListener('click', (e) => {
   const btn = e.target.closest('.weekday-btn');
   if (!btn) return;
   const wd = parseInt(btn.dataset.weekday, 10);
-  currentWeekday = wd;
-  snapDateToWeekday(wd);
+  if (currentDays.includes(wd)) {
+    if (currentDays.length === 1) return; // Prevent empty selection
+    currentDays = currentDays.filter(d => d !== wd);
+  } else {
+    currentDays = [...currentDays, wd].sort((a, b) => a - b);
+  }
+  snapDateToSelectedDays();
   renderWeekdayPicker();
 });
 
 dateInput.addEventListener('change', () => {
-  if (repeatSelect.value === 'weekly' || repeatSelect.value === 'biweekly') {
-    if (dateInput.value) {
-      currentWeekday = parseDate(dateInput.value).getDay();
-      renderWeekdayPicker();
+  const v = repeatSelect.value;
+  if ((v === 'weekly' || v === 'biweekly') && dateInput.value && isValidDateString(dateInput.value)) {
+    const day = parseDate(dateInput.value).getDay();
+    // If user manually picks a date outside the selected days, snap it back.
+    if (!currentDays.includes(day)) {
+      snapDateToSelectedDays();
     }
   }
 });
@@ -1170,13 +1241,12 @@ repeatSelect.addEventListener('change', () => {
   const v = repeatSelect.value;
   customRepeatRow.classList.toggle('hidden', v !== 'custom');
   if (v !== 'weekly' && v !== 'biweekly') {
-    currentWeekday = null;
+    currentDays = [];
   }
   syncWeekdayPickerVisibility();
-  if ((v === 'weekly' || v === 'biweekly') && !dateInput.value) {
-    dateInput.value = todayStr();
-    currentWeekday = parseDate(todayStr()).getDay();
-    renderWeekdayPicker();
+  if ((v === 'weekly' || v === 'biweekly')) {
+    if (!dateInput.value) dateInput.value = todayStr();
+    snapDateToSelectedDays();
   }
 });
 
@@ -1186,8 +1256,8 @@ function getRecurrenceFromForm() {
   if (v === 'daily') return { freq: 'daily', interval: 1 };
   if (v === 'weekdays') return { freq: 'weekdays', interval: 1 };
   if (v === 'weekends') return { freq: 'weekends', interval: 1 };
-  if (v === 'weekly') return { freq: 'weekly', interval: 1 };
-  if (v === 'biweekly') return { freq: 'weekly', interval: 2 };
+  if (v === 'weekly') return { freq: 'weekly', interval: 1, days: [...currentDays], anchor: dateInput.value || todayStr() };
+  if (v === 'biweekly') return { freq: 'weekly', interval: 2, days: [...currentDays], anchor: dateInput.value || todayStr() };
   if (v === 'monthly') return { freq: 'monthly', interval: 1 };
   if (v === 'quarterly') return { freq: 'monthly', interval: 3 };
   if (v === 'halfyearly') return { freq: 'monthly', interval: 6 };
@@ -1203,7 +1273,7 @@ function setFormRecurrence(r) {
   if (!r) {
     repeatSelect.value = '';
     customRepeatRow.classList.add('hidden');
-    currentWeekday = null;
+    currentDays = [];
     weekdayPickerRow.classList.add('hidden');
     return;
   }
@@ -1221,12 +1291,17 @@ function setFormRecurrence(r) {
   customRepeatRow.classList.toggle('hidden', repeatSelect.value !== 'custom');
 
   if (repeatSelect.value === 'weekly' || repeatSelect.value === 'biweekly') {
-    const anchor = dateInput.value ? parseDate(dateInput.value) : new Date();
-    currentWeekday = anchor.getDay();
+    if (r.days && r.days.length > 0) {
+      currentDays = [...r.days];
+    } else if (dateInput.value && isValidDateString(dateInput.value)) {
+      currentDays = [parseDate(dateInput.value).getDay()];
+    } else {
+      currentDays = [new Date().getDay()];
+    }
     weekdayPickerRow.classList.remove('hidden');
     renderWeekdayPicker();
   } else {
-    currentWeekday = null;
+    currentDays = [];
     weekdayPickerRow.classList.add('hidden');
   }
 }
@@ -1289,6 +1364,12 @@ taskForm.addEventListener('submit', (e) => {
   const title = titleInput.value.trim().slice(0, 200);
   if (!title) { titleInput.focus(); return; }
 
+  const v = repeatSelect.value;
+  if ((v === 'weekly' || v === 'biweekly') && currentDays.length === 0) {
+    showToast('Pick at least one weekday', 'error');
+    return;
+  }
+
   let dueDate = isValidDateString(dateInput.value) ? dateInput.value : null;
   const recurrence = getRecurrenceFromForm();
 
@@ -1296,13 +1377,19 @@ taskForm.addEventListener('submit', (e) => {
     dueDate = todayStr();
   }
 
-  if (recurrence && (recurrence.freq === 'weekly') && currentWeekday !== null && dueDate) {
-    const d = parseDate(dueDate);
-    if (d.getDay() !== currentWeekday) {
-      let diff = currentWeekday - d.getDay();
-      if (diff < 0) diff += 7;
-      d.setDate(d.getDate() + diff);
-      dueDate = formatDate(d);
+  // For weekly/biweekly, ensure the anchor lands on one of the selected days.
+  if (recurrence && recurrence.freq === 'weekly' && recurrence.days && dueDate) {
+    const day = parseDate(dueDate).getDay();
+    if (!recurrence.days.includes(day)) {
+      const base = parseDate(dueDate);
+      for (let i = 0; i <= 14; i++) {
+        if (recurrence.days.includes(base.getDay())) {
+          dueDate = formatDate(base);
+          break;
+        }
+        base.setDate(base.getDate() + 1);
+      }
+      recurrence.anchor = dueDate;
     }
   }
 
@@ -2177,7 +2264,6 @@ window.openDetail = function(id) {
     }
     repeatBtn.textContent = label;
   } else if (count > 0) {
-    // Task used to be recurring — history preserved and still viewable.
     repeatRow.style.display = 'flex';
     const sorted = [...history].sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
     const last = new Date(sorted[0].completedAt);
