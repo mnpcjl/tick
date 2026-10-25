@@ -52,9 +52,31 @@ tailwind.config = {
   .pop { animation: pop 0.25s ease-out; }
   .dropdown-enter { animation: dropdownIn 0.12s ease-out forwards; }
 
-  /* Height-animation approach: JS sets explicit height and transitions to 0 or
-     content-height, then swaps to auto once open. Reliable everywhere because
-     it doesn't rely on grid-template-rows or max-height quirks. */
+  /* Form header button: hover (desktop only) + active (all devices).
+     Hover is scoped to (hover: hover) and (pointer: fine) so iOS Safari
+     never applies-and-sticks a hover tint after touch. */
+  .form-header-btn {
+    background-color: transparent;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.15s ease;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .form-header-btn:hover {
+      background-color: rgba(0, 0, 0, 0.035);
+    }
+    .dark .form-header-btn:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+  }
+  .form-header-btn:active {
+    background-color: rgba(0, 0, 0, 0.07);
+  }
+  .dark .form-header-btn:active {
+    background-color: rgba(255, 255, 255, 0.09);
+  }
+
+  /* Height-animation approach: JS sets explicit height and transitions to 0
+     or content-height, then swaps to auto once open. Reliable everywhere. */
   .form-collapsible {
     overflow: hidden;
     height: 0;
@@ -214,7 +236,7 @@ tailwind.config = {
   <section id="today-view" class="tab-view">
 
     <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm mb-6 overflow-hidden">
-      <button id="formHeaderBtn" type="button" class="w-full flex items-center justify-between gap-2 px-5 py-4 text-base font-bold text-zinc-800 dark:text-zinc-100 transition-colors">
+      <button id="formHeaderBtn" type="button" class="form-header-btn w-full flex items-center justify-between gap-2 px-5 py-4 text-base font-bold text-zinc-800 dark:text-zinc-100">
         <span class="flex items-center gap-2">
           <i class="fa-solid fa-plus text-zinc-400" id="formHeaderIcon"></i>
           <span id="formHeaderText">New Task</span>
@@ -992,29 +1014,23 @@ const isTouchDevice = () => window.matchMedia('(hover: none)').matches || window
 
 /* =====================================================
    COLLAPSIBLE FORM — JS-measured height animation
-   Reliable on all devices (iOS included). No grid quirks,
-   no max-height guesswork. Just measured height → 0 ↔ auto.
 ===================================================== */
 function expandForm() {
   if (isFormExpanded) return;
   isFormExpanded = true;
 
-  // Measure target height
   formExpandable.style.height = 'auto';
   const targetHeight = formExpandable.scrollHeight;
 
-  // Snap to 0 without transition
   formExpandable.style.transition = 'none';
   formExpandable.style.height = '0px';
   void formExpandable.offsetHeight;
 
-  // Restore transition, animate to target
   formExpandable.style.transition = '';
   formExpandable.style.height = targetHeight + 'px';
 
   formChevron.style.transform = 'rotate(180deg)';
 
-  // After the animation, swap to auto so content changes flow naturally
   formExpandable.addEventListener('transitionend', function onEnd() {
     if (isFormExpanded) formExpandable.style.height = 'auto';
   }, { once: true });
@@ -1024,15 +1040,12 @@ function collapseForm() {
   if (!isFormExpanded) return;
   isFormExpanded = false;
 
-  // Measure current height (works even if height: auto)
   const currentHeight = formExpandable.scrollHeight;
 
-  // Snap to explicit current height without transition
   formExpandable.style.transition = 'none';
   formExpandable.style.height = currentHeight + 'px';
   void formExpandable.offsetHeight;
 
-  // Restore transition, animate to 0
   formExpandable.style.transition = '';
   formExpandable.style.height = '0px';
 
