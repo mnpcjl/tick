@@ -52,22 +52,13 @@ tailwind.config = {
   .pop { animation: pop 0.25s ease-out; }
   .dropdown-enter { animation: dropdownIn 0.12s ease-out forwards; }
 
-  /* Grid-based height animation. The persistent header means only ONE layout
-     change happens (the fields row growing/shrinking) — no competing layout
-     shifts from a button disappearing. */
+  /* Height-animation approach: JS sets explicit height and transitions to 0 or
+     content-height, then swaps to auto once open. Reliable everywhere because
+     it doesn't rely on grid-template-rows or max-height quirks. */
   .form-collapsible {
-    display: grid;
-    grid-template-rows: 1fr;
-    transition: grid-template-rows 0.28s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease-out;
-    opacity: 1;
-  }
-  .form-collapsible.collapsed {
-    grid-template-rows: 0fr;
-    opacity: 0;
-  }
-  .form-collapsible > * {
     overflow: hidden;
-    min-height: 0;
+    height: 0;
+    transition: height 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .pri-mark {
@@ -223,7 +214,7 @@ tailwind.config = {
   <section id="today-view" class="tab-view">
 
     <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm mb-6 overflow-hidden">
-      <button id="formHeaderBtn" type="button" class="w-full flex items-center justify-between gap-2 px-5 py-4 text-base font-bold text-zinc-800 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition">
+      <button id="formHeaderBtn" type="button" class="w-full flex items-center justify-between gap-2 px-5 py-4 text-base font-bold text-zinc-800 dark:text-zinc-100 transition-colors">
         <span class="flex items-center gap-2">
           <i class="fa-solid fa-plus text-zinc-400" id="formHeaderIcon"></i>
           <span id="formHeaderText">New Task</span>
@@ -231,93 +222,91 @@ tailwind.config = {
         <i class="fa-solid fa-chevron-down text-xs text-zinc-400 transition-transform duration-200" id="formChevron" style="transform: rotate(0deg);"></i>
       </button>
 
-      <div id="formExpandable" class="form-collapsible collapsed">
-        <div>
-          <div class="px-5 pb-5">
-            <form id="taskForm" onsubmit="return false;">
-              <input type="text" id="titleInput" placeholder="What needs to be done?" required autocomplete="off" maxlength="200"
-                class="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-base font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
+      <div id="formExpandable" class="form-collapsible">
+        <div class="px-5 pb-5 pt-3">
+          <form id="taskForm" onsubmit="return false;">
+            <input type="text" id="titleInput" placeholder="What needs to be done?" required autocomplete="off" maxlength="200"
+              class="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-base font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
 
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-                <div>
-                  <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Type</label>
-                  <select id="typeSelect" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition"></select>
-                </div>
-                <div>
-                  <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Priority</label>
-                  <select id="prioritySelect" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
-                    <option value="high">!!! High</option>
-                    <option value="medium">!! Medium</option>
-                    <option value="low">! Low</option>
-                    <option value="none">None</option>
-                  </select>
-                </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+              <div>
+                <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Type</label>
+                <select id="typeSelect" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition"></select>
               </div>
-
-              <div class="grid grid-cols-2 gap-3 mt-3">
-                <div>
-                  <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Due Date</label>
-                  <input type="date" id="dateInput" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
-                </div>
-                <div>
-                  <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Time <span class="normal-case font-normal">(optional)</span></label>
-                  <input type="time" id="timeInput" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
-                </div>
-              </div>
-
-              <div class="mt-3">
-                <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Repeat</label>
-                <select id="repeatSelect" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
-                  <option value="">Never</option>
-                  <option value="daily">Daily</option>
-                  <option value="weekdays">Weekdays</option>
-                  <option value="weekends">Weekends</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="biweekly">Biweekly</option>
-                  <option value="monthly">Monthly</option>
-                  <option value="quarterly">Quarterly</option>
-                  <option value="halfyearly">Half-yearly</option>
-                  <option value="yearly">Yearly</option>
-                  <option value="custom">Custom…</option>
+              <div>
+                <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Priority</label>
+                <select id="prioritySelect" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
+                  <option value="high">!!! High</option>
+                  <option value="medium">!! Medium</option>
+                  <option value="low">! Low</option>
+                  <option value="none">None</option>
                 </select>
-                <div id="weekdayPickerRow" class="hidden mt-2">
-                  <div class="flex gap-1.5" id="weekdayPicker">
-                    <button type="button" class="weekday-btn inactive" data-weekday="0">S</button>
-                    <button type="button" class="weekday-btn inactive" data-weekday="1">M</button>
-                    <button type="button" class="weekday-btn inactive" data-weekday="2">T</button>
-                    <button type="button" class="weekday-btn inactive" data-weekday="3">W</button>
-                    <button type="button" class="weekday-btn inactive" data-weekday="4">T</button>
-                    <button type="button" class="weekday-btn inactive" data-weekday="5">F</button>
-                    <button type="button" class="weekday-btn inactive" data-weekday="6">S</button>
-                  </div>
-                </div>
-                <div id="customRepeatRow" class="hidden mt-2 flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300">
-                  <span>Every</span>
-                  <input type="number" id="customInterval" min="1" max="3650" value="3" class="w-16 px-2 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100">
-                  <select id="customUnit" class="px-2 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100">
-                    <option value="daily">day(s)</option>
-                    <option value="weekly">week(s)</option>
-                    <option value="monthly">month(s)</option>
-                    <option value="yearly">year(s)</option>
-                  </select>
-                </div>
               </div>
+            </div>
 
-              <div class="mt-3">
-                <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Notes <span class="normal-case font-normal">(optional)</span></label>
-                <textarea id="notesInput" rows="2" maxlength="10000" placeholder="Add details…" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition resize-none"></textarea>
+            <div class="grid grid-cols-2 gap-3 mt-3">
+              <div>
+                <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Due Date</label>
+                <input type="date" id="dateInput" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
               </div>
+              <div>
+                <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Time <span class="normal-case font-normal">(optional)</span></label>
+                <input type="time" id="timeInput" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
+              </div>
+            </div>
 
-              <div class="flex gap-3 mt-4">
-                <button type="submit" id="submitBtn" class="flex-1 py-3 rounded-xl bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 font-bold text-sm shadow-sm transition-all duration-200 flex items-center justify-center gap-2">
-                  <i class="fa-solid fa-plus"></i> Add Task
-                </button>
-                <button type="button" id="cancelEditBtn" class="hidden px-5 py-3 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 font-bold text-sm transition">
-                  Cancel
-                </button>
+            <div class="mt-3">
+              <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Repeat</label>
+              <select id="repeatSelect" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
+                <option value="">Never</option>
+                <option value="daily">Daily</option>
+                <option value="weekdays">Weekdays</option>
+                <option value="weekends">Weekends</option>
+                <option value="weekly">Weekly</option>
+                <option value="biweekly">Biweekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="halfyearly">Half-yearly</option>
+                <option value="yearly">Yearly</option>
+                <option value="custom">Custom…</option>
+              </select>
+              <div id="weekdayPickerRow" class="hidden mt-2">
+                <div class="flex gap-1.5" id="weekdayPicker">
+                  <button type="button" class="weekday-btn inactive" data-weekday="0">S</button>
+                  <button type="button" class="weekday-btn inactive" data-weekday="1">M</button>
+                  <button type="button" class="weekday-btn inactive" data-weekday="2">T</button>
+                  <button type="button" class="weekday-btn inactive" data-weekday="3">W</button>
+                  <button type="button" class="weekday-btn inactive" data-weekday="4">T</button>
+                  <button type="button" class="weekday-btn inactive" data-weekday="5">F</button>
+                  <button type="button" class="weekday-btn inactive" data-weekday="6">S</button>
+                </div>
               </div>
-            </form>
-          </div>
+              <div id="customRepeatRow" class="hidden mt-2 flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300">
+                <span>Every</span>
+                <input type="number" id="customInterval" min="1" max="3650" value="3" class="w-16 px-2 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100">
+                <select id="customUnit" class="px-2 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100">
+                  <option value="daily">day(s)</option>
+                  <option value="weekly">week(s)</option>
+                  <option value="monthly">month(s)</option>
+                  <option value="yearly">year(s)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="mt-3">
+              <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Notes <span class="normal-case font-normal">(optional)</span></label>
+              <textarea id="notesInput" rows="2" maxlength="10000" placeholder="Add details…" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition resize-none"></textarea>
+            </div>
+
+            <div class="flex gap-3 mt-4">
+              <button type="submit" id="submitBtn" class="flex-1 py-3 rounded-xl bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 font-bold text-sm shadow-sm transition-all duration-200 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-plus"></i> Add Task
+              </button>
+              <button type="button" id="cancelEditBtn" class="hidden px-5 py-3 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 font-bold text-sm transition">
+                Cancel
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
@@ -653,6 +642,7 @@ let cameFromTab = null;
 let pendingImportData = null;
 let currentDays = [];
 let doneTodayExpanded = false;
+let isFormExpanded = false;
 
 let storageUsable = true;
 function storageGet(k) { try { return localStorage.getItem(k); } catch (e) { storageUsable = false; return null; } }
@@ -1001,29 +991,62 @@ const historyList = document.getElementById('historyList');
 const isTouchDevice = () => window.matchMedia('(hover: none)').matches || window.innerWidth < 768;
 
 /* =====================================================
-   COLLAPSIBLE FORM
-   The header button never disappears. Only the fields row
-   below animates (grid-template-rows 0fr ↔ 1fr). One layout
-   change per toggle — no competing button hide + form grow.
+   COLLAPSIBLE FORM — JS-measured height animation
+   Reliable on all devices (iOS included). No grid quirks,
+   no max-height guesswork. Just measured height → 0 ↔ auto.
 ===================================================== */
 function expandForm() {
-  formExpandable.classList.remove('collapsed');
+  if (isFormExpanded) return;
+  isFormExpanded = true;
+
+  // Measure target height
+  formExpandable.style.height = 'auto';
+  const targetHeight = formExpandable.scrollHeight;
+
+  // Snap to 0 without transition
+  formExpandable.style.transition = 'none';
+  formExpandable.style.height = '0px';
+  void formExpandable.offsetHeight;
+
+  // Restore transition, animate to target
+  formExpandable.style.transition = '';
+  formExpandable.style.height = targetHeight + 'px';
+
   formChevron.style.transform = 'rotate(180deg)';
+
+  // After the animation, swap to auto so content changes flow naturally
+  formExpandable.addEventListener('transitionend', function onEnd() {
+    if (isFormExpanded) formExpandable.style.height = 'auto';
+  }, { once: true });
 }
 
 function collapseForm() {
-  formExpandable.classList.add('collapsed');
+  if (!isFormExpanded) return;
+  isFormExpanded = false;
+
+  // Measure current height (works even if height: auto)
+  const currentHeight = formExpandable.scrollHeight;
+
+  // Snap to explicit current height without transition
+  formExpandable.style.transition = 'none';
+  formExpandable.style.height = currentHeight + 'px';
+  void formExpandable.offsetHeight;
+
+  // Restore transition, animate to 0
+  formExpandable.style.transition = '';
+  formExpandable.style.height = '0px';
+
   formChevron.style.transform = 'rotate(0deg)';
 }
 
 formHeaderBtn.addEventListener('click', () => {
-  if (formExpandable.classList.contains('collapsed')) {
+  if (isFormExpanded) {
+    collapseForm();
+  } else {
     expandForm();
     if (!isTouchDevice()) {
       setTimeout(() => titleInput.focus({ preventScroll: true }), 320);
     }
-  } else {
-    collapseForm();
   }
 });
 
@@ -1072,6 +1095,7 @@ weekdayPicker.addEventListener('click', (e) => {
   }
   snapDateToSelectedDays();
   renderWeekdayPicker();
+  if (isFormExpanded) formExpandable.style.height = 'auto';
 });
 
 dateInput.addEventListener('change', () => {
@@ -1185,6 +1209,7 @@ repeatSelect.addEventListener('change', () => {
     if (!dateInput.value) dateInput.value = todayStr();
     snapDateToSelectedDays();
   }
+  if (isFormExpanded) formExpandable.style.height = 'auto';
 });
 
 function getRecurrenceFromForm() {
