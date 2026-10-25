@@ -52,6 +52,19 @@ tailwind.config = {
   .pop { animation: pop 0.25s ease-out; }
   .dropdown-enter { animation: dropdownIn 0.12s ease-out forwards; }
 
+  /* Collapsible form: max-height chosen to comfortably exceed the tallest
+     content state (edit mode + weekday picker + custom row). */
+  .form-collapsible {
+    max-height: 900px;
+    overflow: hidden;
+    transition: max-height 0.35s ease-out, opacity 0.25s ease-out;
+    opacity: 1;
+  }
+  .form-collapsible.collapsed {
+    max-height: 0;
+    opacity: 0;
+  }
+
   .pri-mark {
     display: inline-block;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -247,95 +260,109 @@ tailwind.config = {
   <!-- TODAY -->
   <section id="today-view" class="tab-view">
 
-    <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-5 mb-6">
-      <h2 class="text-base font-bold text-zinc-800 dark:text-zinc-100 flex items-center gap-2 mb-4">
-        <i class="fa-solid fa-plus text-zinc-400" id="formHeaderIcon"></i>
-        <span id="formHeaderText">New Task</span>
-      </h2>
+    <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm mb-6 overflow-hidden">
+      <button id="expandFormBtn" type="button" class="w-full flex items-center gap-2.5 px-5 py-4 text-sm font-semibold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition">
+        <i class="fa-solid fa-plus text-zinc-400"></i>
+        <span>Add Task</span>
+      </button>
 
-      <form id="taskForm" onsubmit="return false;">
-        <input type="text" id="titleInput" placeholder="What needs to be done?" required autocomplete="off" maxlength="200"
-          class="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-base font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
+      <div id="formExpandable" class="form-collapsible collapsed">
+        <div class="px-5 pb-5 pt-2">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-base font-bold text-zinc-800 dark:text-zinc-100 flex items-center gap-2">
+              <i class="fa-solid fa-plus text-zinc-400" id="formHeaderIcon"></i>
+              <span id="formHeaderText">New Task</span>
+            </h2>
+            <button id="collapseFormBtn" type="button" class="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-          <div>
-            <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Type</label>
-            <select id="typeSelect" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition"></select>
-          </div>
-          <div>
-            <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Priority</label>
-            <select id="prioritySelect" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
-              <option value="high">!!! High</option>
-              <option value="medium">!! Medium</option>
-              <option value="low">! Low</option>
-              <option value="none">None</option>
-            </select>
-          </div>
-        </div>
+          <form id="taskForm" onsubmit="return false;">
+            <input type="text" id="titleInput" placeholder="What needs to be done?" required autocomplete="off" maxlength="200"
+              class="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-base font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
 
-        <div class="grid grid-cols-2 gap-3 mt-3">
-          <div>
-            <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Due Date</label>
-            <input type="date" id="dateInput" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
-          </div>
-          <div>
-            <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Time <span class="normal-case font-normal">(optional)</span></label>
-            <input type="time" id="timeInput" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
-          </div>
-        </div>
-
-        <div class="mt-3">
-          <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Repeat</label>
-          <select id="repeatSelect" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
-            <option value="">Never</option>
-            <option value="daily">Daily</option>
-            <option value="weekdays">Weekdays</option>
-            <option value="weekends">Weekends</option>
-            <option value="weekly">Weekly</option>
-            <option value="biweekly">Biweekly</option>
-            <option value="monthly">Monthly</option>
-            <option value="quarterly">Quarterly</option>
-            <option value="halfyearly">Half-yearly</option>
-            <option value="yearly">Yearly</option>
-            <option value="custom">Custom…</option>
-          </select>
-          <div id="weekdayPickerRow" class="hidden mt-2">
-            <div class="flex gap-1.5" id="weekdayPicker">
-              <button type="button" class="weekday-btn inactive" data-weekday="0">S</button>
-              <button type="button" class="weekday-btn inactive" data-weekday="1">M</button>
-              <button type="button" class="weekday-btn inactive" data-weekday="2">T</button>
-              <button type="button" class="weekday-btn inactive" data-weekday="3">W</button>
-              <button type="button" class="weekday-btn inactive" data-weekday="4">T</button>
-              <button type="button" class="weekday-btn inactive" data-weekday="5">F</button>
-              <button type="button" class="weekday-btn inactive" data-weekday="6">S</button>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+              <div>
+                <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Type</label>
+                <select id="typeSelect" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition"></select>
+              </div>
+              <div>
+                <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Priority</label>
+                <select id="prioritySelect" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
+                  <option value="high">!!! High</option>
+                  <option value="medium">!! Medium</option>
+                  <option value="low">! Low</option>
+                  <option value="none">None</option>
+                </select>
+              </div>
             </div>
-          </div>
-          <div id="customRepeatRow" class="hidden mt-2 flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300">
-            <span>Every</span>
-            <input type="number" id="customInterval" min="1" max="3650" value="3" class="w-16 px-2 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100">
-            <select id="customUnit" class="px-2 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100">
-              <option value="daily">day(s)</option>
-              <option value="weekly">week(s)</option>
-              <option value="monthly">month(s)</option>
-              <option value="yearly">year(s)</option>
-            </select>
-          </div>
-        </div>
 
-        <div class="mt-3">
-          <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Notes <span class="normal-case font-normal">(optional)</span></label>
-          <textarea id="notesInput" rows="2" maxlength="10000" placeholder="Add details…" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition resize-none"></textarea>
-        </div>
+            <div class="grid grid-cols-2 gap-3 mt-3">
+              <div>
+                <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Due Date</label>
+                <input type="date" id="dateInput" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
+              </div>
+              <div>
+                <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Time <span class="normal-case font-normal">(optional)</span></label>
+                <input type="time" id="timeInput" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
+              </div>
+            </div>
 
-        <div class="flex gap-3 mt-4">
-          <button type="submit" id="submitBtn" class="flex-1 py-3 rounded-xl bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 font-bold text-sm shadow-sm transition-all duration-200 flex items-center justify-center gap-2">
-            <i class="fa-solid fa-plus"></i> Add Task
-          </button>
-          <button type="button" id="cancelEditBtn" class="hidden px-5 py-3 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 font-bold text-sm transition">
-            Cancel
-          </button>
+            <div class="mt-3">
+              <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Repeat</label>
+              <select id="repeatSelect" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
+                <option value="">Never</option>
+                <option value="daily">Daily</option>
+                <option value="weekdays">Weekdays</option>
+                <option value="weekends">Weekends</option>
+                <option value="weekly">Weekly</option>
+                <option value="biweekly">Biweekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="halfyearly">Half-yearly</option>
+                <option value="yearly">Yearly</option>
+                <option value="custom">Custom…</option>
+              </select>
+              <div id="weekdayPickerRow" class="hidden mt-2">
+                <div class="flex gap-1.5" id="weekdayPicker">
+                  <button type="button" class="weekday-btn inactive" data-weekday="0">S</button>
+                  <button type="button" class="weekday-btn inactive" data-weekday="1">M</button>
+                  <button type="button" class="weekday-btn inactive" data-weekday="2">T</button>
+                  <button type="button" class="weekday-btn inactive" data-weekday="3">W</button>
+                  <button type="button" class="weekday-btn inactive" data-weekday="4">T</button>
+                  <button type="button" class="weekday-btn inactive" data-weekday="5">F</button>
+                  <button type="button" class="weekday-btn inactive" data-weekday="6">S</button>
+                </div>
+              </div>
+              <div id="customRepeatRow" class="hidden mt-2 flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300">
+                <span>Every</span>
+                <input type="number" id="customInterval" min="1" max="3650" value="3" class="w-16 px-2 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100">
+                <select id="customUnit" class="px-2 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100">
+                  <option value="daily">day(s)</option>
+                  <option value="weekly">week(s)</option>
+                  <option value="monthly">month(s)</option>
+                  <option value="yearly">year(s)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="mt-3">
+              <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Notes <span class="normal-case font-normal">(optional)</span></label>
+              <textarea id="notesInput" rows="2" maxlength="10000" placeholder="Add details…" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition resize-none"></textarea>
+            </div>
+
+            <div class="flex gap-3 mt-4">
+              <button type="submit" id="submitBtn" class="flex-1 py-3 rounded-xl bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 font-bold text-sm shadow-sm transition-all duration-200 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-plus"></i> Add Task
+              </button>
+              <button type="button" id="cancelEditBtn" class="hidden px-5 py-3 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 font-bold text-sm transition">
+                Cancel
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
     </div>
 
     <div class="flex justify-between items-center mb-4">
@@ -715,7 +742,6 @@ function daysBetween(a, b) {
   return Math.round((parseDate(b) - parseDate(a)) / 86400000);
 }
 
-/* Returns true when the wall-clock time has already passed the given HH:MM. */
 function isTimePast(timeStr) {
   if (!timeStr) return false;
   const now = new Date();
@@ -1053,6 +1079,10 @@ const cancelEditBtn = document.getElementById('cancelEditBtn');
 const formHeaderIcon = document.getElementById('formHeaderIcon');
 const formHeaderText = document.getElementById('formHeaderText');
 
+const expandFormBtn = document.getElementById('expandFormBtn');
+const collapseFormBtn = document.getElementById('collapseFormBtn');
+const formExpandable = document.getElementById('formExpandable');
+
 const overdueSection = document.getElementById('overdueSection');
 const overdueList = document.getElementById('overdueList');
 const todayList = document.getElementById('todayList');
@@ -1094,6 +1124,38 @@ const historyList = document.getElementById('historyList');
 
 const isTouchDevice = () => window.matchMedia('(hover: none)').matches || window.innerWidth < 768;
 
+/* =====================================================
+   COLLAPSIBLE FORM
+===================================================== */
+function expandForm() {
+  expandFormBtn.classList.add('hidden');
+  formExpandable.classList.remove('collapsed');
+}
+
+function collapseForm() {
+  formExpandable.classList.add('collapsed');
+  expandFormBtn.classList.remove('hidden');
+}
+
+expandFormBtn.addEventListener('click', () => {
+  expandForm();
+  if (!isTouchDevice()) {
+    setTimeout(() => titleInput.focus({ preventScroll: true }), 350);
+  }
+});
+
+collapseFormBtn.addEventListener('click', () => {
+  if (editingId !== null) {
+    // resetForm() handles cancel + collapse for the edit case
+    resetForm();
+  } else {
+    collapseForm();
+  }
+});
+
+/* =====================================================
+   WEEKDAY PICKER
+===================================================== */
 function renderWeekdayPicker() {
   weekdayPicker.querySelectorAll('.weekday-btn').forEach(b => {
     const wd = parseInt(b.dataset.weekday, 10);
@@ -1326,6 +1388,7 @@ function resetForm() {
   submitBtn.innerHTML = '<i class="fa-solid fa-plus"></i> Add Task';
   submitBtn.className = 'flex-1 py-3 rounded-xl bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 font-bold text-sm shadow-sm transition-all duration-200 flex items-center justify-center gap-2';
   cancelEditBtn.classList.add('hidden');
+  collapseForm();
   if (returnTo && returnTo !== 'today' && currentTab === 'today') {
     switchTab(returnTo);
   }
@@ -1351,6 +1414,7 @@ window.startEdit = function(id) {
   submitBtn.className = 'flex-1 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-bold text-sm shadow-sm transition-all duration-200 flex items-center justify-center gap-2';
   cancelEditBtn.classList.remove('hidden');
 
+  expandForm();
   if (currentTab !== 'today') {
     switchTab('today');
     setTimeout(() => { if (!isTouchDevice()) titleInput.focus({ preventScroll: true }); }, 350);
@@ -1426,7 +1490,7 @@ taskForm.addEventListener('submit', (e) => {
     notesInput.value = '';
     timeInput.value = '';
     setFormRecurrence(null);
-    if (!isTouchDevice()) titleInput.focus();
+    collapseForm();
     showToast('Task added');
   }
   saveData();
@@ -1477,8 +1541,6 @@ function renderTaskRow(t, opts = {}) {
   const today = todayStr();
   const displayDate = forDate || t.dueDate;
 
-  // Time-aware overdue: a task due today whose time has passed is overdue
-  // even before midnight. Past-date tasks remain overdue as before.
   const isTimeOverdue = displayDate === today && t.dueTime && isTimePast(t.dueTime);
   const isOverdue = !isCompleted && displayDate && (!forDate || forDate === today) && (
     displayDate < today || isTimeOverdue
@@ -1605,9 +1667,6 @@ function renderDoneTodaySection(doneToday) {
       new Date(b.completedAt || 0) - new Date(a.completedAt || 0)
     );
     doneTodayList.classList.remove('hidden');
-    // hideDate suppresses the due-date label. For early-completed recurring tasks
-    // the dueDate has already advanced to the next occurrence, so showing it here
-    // would be misleading. The pill's "done today" context is sufficient.
     doneTodayList.innerHTML = sortedDone.map(t => renderTaskRow(t, { hideDate: true })).join('');
   } else {
     doneTodayList.classList.add('hidden');
@@ -2115,15 +2174,10 @@ window.toggleComplete = function(id) {
       t.completed = true;
       t.completedAt = completedAt;
 
-      // Capture pre-mutation dueDate so the undo path can restore it if we
-      // advanced it below (early-completion case).
       const originalDue = t.dueDate;
       let nextDate;
 
       if (t.dueDate && today < t.dueDate) {
-        // Early completion: advance dueDate now so the task does not come
-        // back on its original date. This is the whole point of doing it
-        // early — the user has cleared the current cycle's obligation.
         nextDate = advanceDate(t.dueDate, t.recurrence);
         t.dueDate = nextDate;
         let guard = 0;
@@ -2133,9 +2187,6 @@ window.toggleComplete = function(id) {
           guard++;
         }
       } else {
-        // On-time or late completion: compute the next occurrence for the
-        // toast, but leave dueDate untouched (normalizeRecurring handles the
-        // roll-over after midnight).
         nextDate = advanceDate(t.dueDate || today, t.recurrence);
         let guard = 0;
         while (nextDate <= today && guard < 1000) {
@@ -2230,8 +2281,6 @@ window.toggleComplete = function(id) {
       showToast('Task completed', 'success', 'Undo', undoFn);
     }
   } else {
-    // Un-complete path. If the last completion was today and it was an early
-    // completion (dueDate was advanced), restore the original dueDate.
     if (t.recurrence && t.history && t.history.length > 0) {
       const last = t.history[t.history.length - 1];
       if (last && last.completedAt && formatDate(new Date(last.completedAt)) === today) {
@@ -2676,7 +2725,9 @@ document.addEventListener('keydown', (e) => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   e.preventDefault();
   if (currentTab !== 'today') switchTab('today');
-  setTimeout(() => titleInput.focus(), 100);
+  else appEl.scrollTo({ top: 0, behavior: 'smooth' });
+  expandForm();
+  setTimeout(() => titleInput.focus({ preventScroll: true }), 350);
 });
 
 document.addEventListener('visibilitychange', () => {
