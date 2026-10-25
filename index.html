@@ -177,7 +177,6 @@ tailwind.config = {
   }
   .dark .mobile-bottom-nav { background: #18181b; border-top-color: #27272a; }
 
-  /* Multi-select weekday picker — slightly larger for clearer multi-active state. */
   .weekday-btn {
     width: 2.25rem; height: 2.25rem;
     border-radius: 0.5rem;
@@ -359,8 +358,6 @@ tailwind.config = {
     <div id="todaySection" class="mb-6">
       <div id="todayList" class="space-y-2"></div>
     </div>
-
-    <div id="upcomingPreview"></div>
   </section>
 
   <!-- ALL -->
@@ -647,7 +644,6 @@ const PRIORITY_COLOR = {
 };
 const PRIORITY_ORDER = { high: 0, medium: 1, low: 2, none: 3 };
 
-const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const STORAGE_KEY_TASKS = 'todo_tasks_v1';
@@ -668,7 +664,7 @@ let calendarSelectedDate = null;
 let snoozeOpenForId = null;
 let cameFromTab = null;
 let pendingImportData = null;
-let currentDays = []; // array of weekday numbers for weekly/biweekly
+let currentDays = [];
 
 let storageUsable = true;
 function storageGet(k) { try { return localStorage.getItem(k); } catch (e) { storageUsable = false; return null; } }
@@ -711,8 +707,6 @@ function getWeekStart(dateStr) {
   return formatDate(d);
 }
 
-/* Returns the next date strictly after fromDate where the weekday is in days
-   AND the week satisfies the interval parity (relative to anchor's week). */
 function advanceWeekly(fromDate, days, interval, anchor) {
   const anchorWeekStart = getWeekStart(anchor);
   const d = parseDate(fromDate);
@@ -736,7 +730,6 @@ function advanceDate(fromDate, recurrence) {
       const anchor = recurrence.anchor || fromDate;
       return advanceWeekly(fromDate, recurrence.days, interval, anchor);
     }
-    // Legacy single-day weekly (no days array).
     return addDaysStr(fromDate, interval * 7);
   }
   if (freq === 'monthly') return addMonthsStr(fromDate, interval);
@@ -795,7 +788,6 @@ function occursOn(task, dateStr) {
       const weeksDiff = Math.round(daysBetween(anchorWeekStart, dWeekStart) / 7);
       return weeksDiff >= 0 && weeksDiff % r.interval === 0;
     }
-    // Legacy single-day weekly (no days array).
     const weeksDiff = Math.floor(diffDays / 7);
     if (weeksDiff % r.interval !== 0) return false;
     return d.getDay() === anchor.getDay();
@@ -1044,7 +1036,6 @@ const formHeaderText = document.getElementById('formHeaderText');
 const overdueSection = document.getElementById('overdueSection');
 const overdueList = document.getElementById('overdueList');
 const todayList = document.getElementById('todayList');
-const upcomingPreview = document.getElementById('upcomingPreview');
 
 const searchInput = document.getElementById('searchInput');
 const monthFilter = document.getElementById('monthFilter');
@@ -1116,7 +1107,7 @@ weekdayPicker.addEventListener('click', (e) => {
   if (!btn) return;
   const wd = parseInt(btn.dataset.weekday, 10);
   if (currentDays.includes(wd)) {
-    if (currentDays.length === 1) return; // Prevent empty selection
+    if (currentDays.length === 1) return;
     currentDays = currentDays.filter(d => d !== wd);
   } else {
     currentDays = [...currentDays, wd].sort((a, b) => a - b);
@@ -1129,7 +1120,6 @@ dateInput.addEventListener('change', () => {
   const v = repeatSelect.value;
   if ((v === 'weekly' || v === 'biweekly') && dateInput.value && isValidDateString(dateInput.value)) {
     const day = parseDate(dateInput.value).getDay();
-    // If user manually picks a date outside the selected days, snap it back.
     if (!currentDays.includes(day)) {
       snapDateToSelectedDays();
     }
@@ -1377,7 +1367,6 @@ taskForm.addEventListener('submit', (e) => {
     dueDate = todayStr();
   }
 
-  // For weekly/biweekly, ensure the anchor lands on one of the selected days.
   if (recurrence && recurrence.freq === 'weekly' && recurrence.days && dueDate) {
     const day = parseDate(dueDate).getDay();
     if (!recurrence.days.includes(day)) {
@@ -1585,42 +1574,6 @@ function renderToday() {
         <p class="text-xs text-zinc-400 mt-1">Enjoy the quiet.</p>
       </div>
     `;
-  }
-
-  const day1 = addDaysStr(today, 1);
-  const day2 = addDaysStr(today, 2);
-  const day3 = addDaysStr(today, 3);
-  const targetDays = [day1, day2, day3];
-
-  const upcomingRows = [];
-  targetDays.forEach(d => {
-    const tasksOnDay = tasks.filter(t => {
-      if (!t.recurrence && t.completed) return false;
-      if (!t.dueDate) return false;
-      if (!t.recurrence && t.dueDate === today) return false;
-      return occursOn(t, d) || (!t.recurrence && t.dueDate === d);
-    });
-    tasksOnDay.forEach(t => {
-      upcomingRows.push({ task: t, date: d });
-    });
-  });
-
-  if (upcomingRows.length > 0) {
-    upcomingRows.sort((a, b) => {
-      if (a.date !== b.date) return a.date < b.date ? -1 : 1;
-      const pa = PRIORITY_ORDER[a.task.priority] ?? 3;
-      const pb = PRIORITY_ORDER[b.task.priority] ?? 3;
-      if (pa !== pb) return pa - pb;
-      return 0;
-    });
-    upcomingPreview.innerHTML = `
-      <h3 class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2">Coming up</h3>
-      <div class="space-y-2">
-        ${upcomingRows.map(r => renderTaskRow(r.task, { forDate: r.date })).join('')}
-      </div>
-    `;
-  } else {
-    upcomingPreview.innerHTML = '';
   }
 
   updateRecurringCount();
