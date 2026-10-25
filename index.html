@@ -358,6 +358,11 @@ tailwind.config = {
     <div id="todaySection" class="mb-6">
       <div id="todayList" class="space-y-2"></div>
     </div>
+
+    <div id="doneTodaySection" class="hidden mt-4">
+      <button id="doneTodayToggle" type="button" class="w-full flex items-center justify-between gap-2 px-3 py-2.5 bg-zinc-100 dark:bg-zinc-900 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-800 transition text-sm font-semibold text-zinc-700 dark:text-zinc-200"></button>
+      <div id="doneTodayList" class="hidden mt-2 space-y-2"></div>
+    </div>
   </section>
 
   <!-- ALL -->
@@ -665,6 +670,7 @@ let snoozeOpenForId = null;
 let cameFromTab = null;
 let pendingImportData = null;
 let currentDays = [];
+let doneTodayExpanded = false;
 
 let storageUsable = true;
 function storageGet(k) { try { return localStorage.getItem(k); } catch (e) { storageUsable = false; return null; } }
@@ -698,7 +704,6 @@ function daysBetween(a, b) {
   return Math.round((parseDate(b) - parseDate(a)) / 86400000);
 }
 
-/* Returns the Monday of the week containing dateStr (YYYY-MM-DD). */
 function getWeekStart(dateStr) {
   const d = parseDate(dateStr);
   const day = d.getDay();
@@ -765,9 +770,6 @@ function advanceDuePast(fromDate, recurrence, today) {
   return d;
 }
 
-/* =====================================================
-   RECURRENCE PROJECTION
-===================================================== */
 function occursOn(task, dateStr) {
   if (!task.recurrence || !task.dueDate) return false;
   const r = task.recurrence;
@@ -911,9 +913,6 @@ function isValidDateString(value) {
   return Number.isFinite(date.getTime()) && formatDate(date) === value;
 }
 
-/* =====================================================
-   IMPORT-ONLY SANITIZER
-===================================================== */
 function sanitizeTasks(input) {
   if (!Array.isArray(input)) return [];
   const usedIds = new Set();
@@ -1036,6 +1035,9 @@ const formHeaderText = document.getElementById('formHeaderText');
 const overdueSection = document.getElementById('overdueSection');
 const overdueList = document.getElementById('overdueList');
 const todayList = document.getElementById('todayList');
+const doneTodaySection = document.getElementById('doneTodaySection');
+const doneTodayToggle = document.getElementById('doneTodayToggle');
+const doneTodayList = document.getElementById('doneTodayList');
 
 const searchInput = document.getElementById('searchInput');
 const monthFilter = document.getElementById('monthFilter');
@@ -1066,9 +1068,6 @@ const historyList = document.getElementById('historyList');
 
 const isTouchDevice = () => window.matchMedia('(hover: none)').matches || window.innerWidth < 768;
 
-/* =====================================================
-   WEEKDAY PICKER (multi-select)
-===================================================== */
 function renderWeekdayPicker() {
   weekdayPicker.querySelectorAll('.weekday-btn').forEach(b => {
     const wd = parseInt(b.dataset.weekday, 10);
@@ -1126,9 +1125,6 @@ dateInput.addEventListener('change', () => {
   }
 });
 
-/* =====================================================
-   NORMALIZE RECURRING TASKS (day-rollover)
-===================================================== */
 function normalizeRecurring() {
   const today = todayStr();
   let changed = false;
@@ -1155,9 +1151,6 @@ function normalizeRecurring() {
   if (changed) saveData();
 }
 
-/* =====================================================
-   TABS
-===================================================== */
 window.switchTab = function(tabId) {
   if (!['today', 'all', 'settings'].includes(tabId)) return;
   currentTab = tabId;
@@ -1185,9 +1178,6 @@ window.switchTab = function(tabId) {
   appEl.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
-/* =====================================================
-   DATA
-===================================================== */
 function loadData() {
   const raw = storageGet(STORAGE_KEY_TASKS);
   if (!raw) { tasks = []; return; }
@@ -1213,9 +1203,6 @@ function createTaskId() {
   return id;
 }
 
-/* =====================================================
-   FORM
-===================================================== */
 function populateTypeSelect() {
   typeSelect.innerHTML = '';
   CATEGORIES.forEach(c => {
@@ -1436,9 +1423,6 @@ function updateSortButtons() {
   });
 }
 
-/* =====================================================
-   SORT HELPERS
-===================================================== */
 function compareByDeadline(a, b) {
   if (!a.dueDate && !b.dueDate) return (b.createdAt || 0) - (a.createdAt || 0);
   if (!a.dueDate) return 1;
@@ -1461,9 +1445,6 @@ function sortTasks(list) {
   return arr;
 }
 
-/* =====================================================
-   TASK ROW
-===================================================== */
 function renderTaskRow(t, opts = {}) {
   const { showSnooze = false, forDate = null } = opts;
   const isCompleted = (forDate != null) ? isTaskCompletedOn(t, forDate) : !!t.completed;
@@ -1486,9 +1467,6 @@ function renderTaskRow(t, opts = {}) {
   if (t.dueTime) metaParts.push(`<span>${escapeHtml(t.dueTime)}</span>`);
   metaParts.push(`<span class="inline-flex items-center gap-1"><i class="fa-solid ${typeIcon} text-[10px] opacity-70"></i>${escapeHtml(t.type)}</span>`);
   if (t.recurrence) metaParts.push(`<span class="inline-flex items-center gap-1"><i class="fa-solid fa-rotate text-[10px]"></i>${escapeHtml(formatRecurrenceLabel(t.recurrence))}</span>`);
-  if (isCompleted && t.recurrence && displayDate === today) {
-    metaParts.push(`<span class="text-emerald-600 dark:text-emerald-400 font-semibold">Done today</span>`);
-  }
 
   const leftBorder = isOverdue ? 'border-l-2 border-l-rose-500' : 'border-l-2 border-l-transparent';
 
@@ -1520,36 +1498,80 @@ function getVisibleTaskRows(id) {
     .filter(r => r.offsetParent !== null);
 }
 
-/* =====================================================
-   TODAY
-===================================================== */
 function getTodayBuckets() {
   const today = todayStr();
-  const visible = tasks.filter(t => {
-    if (!t.dueDate) return false;
+  const activeOverdue = [];
+  const activeToday = [];
+  const doneToday = [];
+
+  tasks.forEach(t => {
+    if (!t.dueDate) return;
     const completedToday = t.completed && t.completedAt &&
       formatDate(new Date(t.completedAt)) === today;
-    if (!t.recurrence && t.completed) return false;
+
     if (t.recurrence) {
-      if (t.dueDate === today) return true;
-      if (completedToday) return true;
-      if (t.dueDate < today && !t.completed) return true;
-      return false;
+      if (completedToday) {
+        doneToday.push(t);
+        return;
+      }
+      if (t.dueDate === today) {
+        activeToday.push(t);
+        return;
+      }
+      if (t.dueDate < today && !t.completed) {
+        activeOverdue.push(t);
+      }
+      return;
     }
-    if (t.dueDate === today) return true;
-    if (t.dueDate < today && !t.completed) return true;
-    return false;
+
+    if (t.completed) return;
+    if (t.dueDate === today) {
+      activeToday.push(t);
+    } else if (t.dueDate < today) {
+      activeOverdue.push(t);
+    }
   });
 
-  const overdue = visible.filter(t => t.dueDate < today && !t.completed);
-  const dueToday = visible.filter(t => t.dueDate === today || (t.recurrence && t.completed && t.completedAt && formatDate(new Date(t.completedAt)) === today && t.dueDate <= today));
-  return { overdue, dueToday };
+  return { overdue: activeOverdue, dueToday: activeToday, doneToday };
+}
+
+function renderDoneTodaySection(doneToday) {
+  if (!doneToday || doneToday.length === 0) {
+    doneTodaySection.classList.add('hidden');
+    doneTodayList.classList.add('hidden');
+    doneTodayList.innerHTML = '';
+    doneTodayToggle.innerHTML = '';
+    return;
+  }
+
+  doneTodaySection.classList.remove('hidden');
+  const count = doneToday.length;
+  const label = count === 1 ? '1 done today' : `${count} done today`;
+  const chevron = doneTodayExpanded ? 'fa-chevron-up' : 'fa-chevron-down';
+  doneTodayToggle.innerHTML = `
+    <span class="inline-flex items-center gap-2">
+      <i class="fa-solid fa-circle-check text-emerald-500"></i>
+      <span>${label}</span>
+    </span>
+    <i class="fa-solid ${chevron} text-xs text-zinc-400"></i>
+  `;
+
+  if (doneTodayExpanded) {
+    const sortedDone = [...doneToday].sort((a, b) =>
+      new Date(b.completedAt || 0) - new Date(a.completedAt || 0)
+    );
+    doneTodayList.classList.remove('hidden');
+    doneTodayList.innerHTML = sortedDone.map(t => renderTaskRow(t)).join('');
+  } else {
+    doneTodayList.classList.add('hidden');
+    doneTodayList.innerHTML = '';
+  }
 }
 
 function renderToday() {
   normalizeRecurring();
   const today = todayStr();
-  const { overdue, dueToday } = getTodayBuckets();
+  const { overdue, dueToday, doneToday } = getTodayBuckets();
 
   const sortedOverdue = sortTasks(overdue);
   const sortedToday = sortTasks(dueToday);
@@ -1576,12 +1598,16 @@ function renderToday() {
     `;
   }
 
+  renderDoneTodaySection(doneToday);
   updateRecurringCount();
 }
 
-/* =====================================================
-   ALL VIEWS
-===================================================== */
+doneTodayToggle.addEventListener('click', () => {
+  doneTodayExpanded = !doneTodayExpanded;
+  const { doneToday } = getTodayBuckets();
+  renderDoneTodaySection(doneToday);
+});
+
 window.handleAllViewTap = function(v) {
   if (allSubView === v) {
     if (v === 'list') {
@@ -1705,9 +1731,6 @@ clearFiltersBtn.addEventListener('click', () => {
   renderList();
 });
 
-/* =====================================================
-   CALENDAR
-===================================================== */
 function getCalendarGridRange(year, month) {
   const firstDay = new Date(year, month - 1, 1);
   const startWeekday = firstDay.getDay();
@@ -1866,9 +1889,6 @@ window.selectCalendarDay = function(date) {
   renderCalendar();
 };
 
-/* =====================================================
-   ARCHIVE
-===================================================== */
 function renderArchive() {
   const query = (archiveSearchInput.value || '').trim().toLowerCase();
   let completed = tasks.filter(t => t.completed && !t.recurrence);
@@ -1913,9 +1933,6 @@ function renderArchive() {
 
 archiveSearchInput.addEventListener('input', renderArchive);
 
-/* =====================================================
-   RECURRING TASKS PANEL
-===================================================== */
 function updateRecurringCount() {
   const count = tasks.filter(t => t.recurrence).length;
   if (count === 0) recurringTasksCount.textContent = 'None';
@@ -2002,9 +2019,6 @@ recurringModal.addEventListener('click', (e) => {
   if (e.target === recurringModal) recurringModal.classList.add('hidden');
 });
 
-/* =====================================================
-   TOGGLE COMPLETE
-===================================================== */
 window.toggleComplete = function(id) {
   const t = tasks.find(x => x.id === id);
   if (!t) return;
@@ -2028,12 +2042,36 @@ window.toggleComplete = function(id) {
       const nextLabel = formatDateLabel(nextDate);
 
       const rows = getVisibleTaskRows(id);
+      const fadeInPlace = currentTab === 'today';
       rows.forEach(row => {
         const cb = row.querySelector('.checkbox');
         if (cb) { cb.classList.add('done', 'pop'); setTimeout(() => cb.classList.remove('pop'), 300); }
+        if (fadeInPlace) {
+          setTimeout(() => { if (row.parentNode) row.classList.add('completing'); }, 100);
+          setTimeout(() => { if (row.parentNode) row.classList.remove('completing'); }, 500);
+        }
       });
 
-      showToast(`Completed · Next: ${nextLabel}`);
+      const undoFn = () => {
+        if (t.history && t.history.length > 0) {
+          const last = t.history[t.history.length - 1];
+          if (last && last.completedAt && formatDate(new Date(last.completedAt)) === today) {
+            t.history.pop();
+          }
+        }
+        t.completed = false;
+        t.completedAt = null;
+        saveData();
+        renderToday();
+        if (currentTab === 'all') {
+          if (allSubView === 'list') renderList();
+          if (allSubView === 'calendar') renderCalendar();
+          if (allSubView === 'archive') renderArchive();
+        }
+        showToast('Undone');
+      };
+
+      showToast(`Completed · Next: ${nextLabel}`, 'success', 'Undo', undoFn);
 
       setTimeout(() => {
         renderToday();
@@ -2042,7 +2080,7 @@ window.toggleComplete = function(id) {
           if (allSubView === 'calendar') renderCalendar();
           if (allSubView === 'archive') renderArchive();
         }
-      }, 300);
+      }, fadeInPlace ? 550 : 300);
     } else {
       t.completed = true;
       t.completedAt = new Date().toISOString();
@@ -2065,7 +2103,7 @@ window.toggleComplete = function(id) {
           if (allSubView === 'calendar') renderCalendar();
           if (allSubView === 'archive') renderArchive();
         }
-      }, 400);
+      }, 550);
 
       const undoFn = () => {
         t.completed = false;
@@ -2102,9 +2140,6 @@ window.toggleComplete = function(id) {
   }
 };
 
-/* =====================================================
-   SNOOZE
-===================================================== */
 let activePopover = null;
 function closeActivePopover() {
   if (activePopover) { activePopover.remove(); activePopover = null; snoozeOpenForId = null; }
@@ -2158,9 +2193,6 @@ window.snoozePick = function(id) {
   startEdit(id);
 };
 
-/* =====================================================
-   DETAIL MODAL + HISTORY
-===================================================== */
 window.openDetail = function(id) {
   const t = tasks.find(x => x.id === id);
   if (!t) return;
@@ -2388,9 +2420,6 @@ function refreshDetailRepeatLabel(t) {
   }
 }
 
-/* =====================================================
-   DELETE
-===================================================== */
 document.getElementById('cancelDeleteBtn').addEventListener('click', () => {
   pendingDeleteId = null;
   deleteConfirmModal.classList.add('hidden');
@@ -2415,9 +2444,6 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
   showToast('Task deleted', 'error');
 });
 
-/* =====================================================
-   THEME
-===================================================== */
 function toggleTheme() {
   document.documentElement.classList.toggle('dark');
   const isDark = document.documentElement.classList.contains('dark');
@@ -2427,9 +2453,6 @@ function toggleTheme() {
 document.getElementById('themeToggleBtn').addEventListener('click', toggleTheme);
 document.getElementById('themeToggleBtnSettings').addEventListener('click', toggleTheme);
 
-/* =====================================================
-   EXPORT / IMPORT / RESET
-===================================================== */
 document.getElementById('exportBtn').addEventListener('click', () => {
   const dataStr = JSON.stringify(tasks, null, 2);
   const blob = new Blob([dataStr], { type: 'application/json' });
@@ -2503,9 +2526,6 @@ document.getElementById('confirmResetBtn').addEventListener('click', () => {
   showToast('All data cleared', 'error');
 });
 
-/* =====================================================
-   KEYBOARD SHORTCUTS
-===================================================== */
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     if (!deleteConfirmModal.classList.contains('hidden')) {
@@ -2541,9 +2561,6 @@ document.addEventListener('keydown', (e) => {
   setTimeout(() => titleInput.focus(), 100);
 });
 
-/* =====================================================
-   VISIBILITY CHANGE — catch day rollover
-===================================================== */
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden) {
     normalizeRecurring();
@@ -2553,9 +2570,6 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
-/* =====================================================
-   INIT
-===================================================== */
 window.addEventListener('load', () => {
   if (!testStorage()) {
     storageUsable = false;
