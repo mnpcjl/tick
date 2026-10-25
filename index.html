@@ -362,6 +362,10 @@ tailwind.config = {
           <span>Completed</span>
           <i class="fa-solid fa-check text-xs text-zinc-800 dark:text-zinc-100 hidden" data-check="completed"></i>
         </button>
+        <button type="button" onclick="selectAllView('archived')" data-view="archived" class="all-view-option w-full text-left px-4 py-2.5 text-sm font-semibold text-zinc-800 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition flex items-center justify-between">
+          <span>Archive</span>
+          <i class="fa-solid fa-check text-xs text-zinc-800 dark:text-zinc-100 hidden" data-check="archived"></i>
+        </button>
       </div>
     </div>
 
@@ -407,6 +411,23 @@ tailwind.config = {
           </div>
           <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Nothing completed yet</p>
           <p class="text-xs text-zinc-400 mt-1">Completed tasks appear here.</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="all-archived-view" class="hidden">
+      <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-5">
+        <div class="mb-4">
+          <input type="text" id="archivedSearchInput" placeholder="Search archived tasks…"
+            class="text-xs px-3 py-2 bg-zinc-100 dark:bg-zinc-800 border-0 rounded-xl text-zinc-700 dark:text-zinc-200 font-medium focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 w-full">
+        </div>
+        <div id="archivedContent" class="space-y-5"></div>
+        <div id="archivedEmpty" class="hidden py-12 text-center">
+          <div class="w-12 h-12 mx-auto mb-3 text-zinc-300 dark:text-zinc-600 flex items-center justify-center rounded-full bg-zinc-50 dark:bg-zinc-950">
+            <i class="fa-solid fa-inbox text-xl"></i>
+          </div>
+          <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Archive is empty</p>
+          <p class="text-xs text-zinc-400 mt-1">Archived tasks are hidden from active views. Tap any task's Archive button to move it here.</p>
         </div>
       </div>
     </div>
@@ -562,9 +583,12 @@ tailwind.config = {
       </div>
     </div>
 
-    <div class="flex gap-3 mt-5">
+    <div class="flex gap-2 mt-5">
       <button id="detailEditBtn" class="flex-1 py-2.5 rounded-xl bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 font-bold text-sm transition flex items-center justify-center gap-2">
         <i class="fa-solid fa-pen"></i> Edit
+      </button>
+      <button id="detailArchiveBtn" class="flex-1 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800 font-bold text-sm transition flex items-center justify-center gap-2">
+        <i class="fa-solid fa-box-archive"></i> Archive
       </button>
       <button id="detailDeleteBtn" class="flex-1 py-2.5 rounded-xl border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-bold text-sm transition flex items-center justify-center gap-2">
         <i class="fa-solid fa-trash-can"></i> Delete
@@ -855,6 +879,8 @@ function sanitizeTasks(input) {
     }) : [];
     const completedAtMs = safeTimestamp(item.completedAt);
     const createdAt = safeTimestamp(item.createdAt);
+    const archivedAtMs = safeTimestamp(item.archivedAt);
+    const isArchived = item.archived === true;
     const validType = CATEGORIES.some(category => category.name === item.type) ? item.type : 'Others';
     const validPriority = Object.prototype.hasOwnProperty.call(PRIORITY_ORDER, item.priority) ? item.priority : 'none';
 
@@ -869,6 +895,8 @@ function sanitizeTasks(input) {
       recurrence,
       completed: item.completed === true && !!completedAtMs,
       completedAt: completedAtMs ? new Date(completedAtMs).toISOString() : null,
+      archived: isArchived,
+      archivedAt: isArchived ? new Date(archivedAtMs || Date.now()).toISOString() : null,
       history,
       createdAt: createdAt || Date.now()
     };
@@ -946,6 +974,10 @@ const listEmpty = document.getElementById('listEmpty');
 const archiveSearchInput = document.getElementById('archiveSearchInput');
 const archiveContent = document.getElementById('archiveContent');
 const archiveEmpty = document.getElementById('archiveEmpty');
+
+const archivedSearchInput = document.getElementById('archivedSearchInput');
+const archivedContent = document.getElementById('archivedContent');
+const archivedEmpty = document.getElementById('archivedEmpty');
 
 const allViewDropdownWrapper = document.getElementById('allViewDropdownWrapper');
 const allViewDropdownBtn = document.getElementById('allViewDropdownBtn');
@@ -1053,6 +1085,7 @@ function normalizeRecurring() {
   let changed = false;
   tasks.forEach(t => {
     if (!t.recurrence) return;
+    if (t.archived) return;
     const completedToday = t.completed && t.completedAt &&
       formatDate(new Date(t.completedAt)) === today;
 
@@ -1317,6 +1350,8 @@ taskForm.addEventListener('submit', (e) => {
       ...taskData,
       completed: false,
       completedAt: null,
+      archived: false,
+      archivedAt: null,
       history: [],
       createdAt: Date.now()
     };
@@ -1373,11 +1408,12 @@ function sortTasks(list) {
 function renderTaskRow(t, opts = {}) {
   const { showSnooze = false, hideDate = false } = opts;
   const isCompleted = !!t.completed;
+  const isArchived = !!t.archived;
   const today = todayStr();
   const displayDate = t.dueDate;
 
   const isTimeOverdue = displayDate === today && t.dueTime && isTimePast(t.dueTime);
-  const isOverdue = !isCompleted && displayDate && (displayDate < today || isTimeOverdue);
+  const isOverdue = !isCompleted && !isArchived && displayDate && (displayDate < today || isTimeOverdue);
 
   const typeIcon = getTypeIcon(t.type);
   const pri = t.priority || 'none';
@@ -1399,17 +1435,25 @@ function renderTaskRow(t, opts = {}) {
   if (t.dueTime) metaParts.push(`<span>${escapeHtml(t.dueTime)}</span>`);
   metaParts.push(`<span class="inline-flex items-center gap-1"><i class="fa-solid ${typeIcon} text-[10px] opacity-70"></i>${escapeHtml(t.type)}</span>`);
   if (t.recurrence) metaParts.push(`<span class="inline-flex items-center gap-1"><i class="fa-solid fa-rotate text-[10px]"></i>${escapeHtml(formatRecurrenceLabel(t.recurrence))}</span>`);
+  if (isArchived && t.archivedAt) {
+    const archivedLabel = new Date(t.archivedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    metaParts.push(`<span class="text-zinc-500 dark:text-zinc-400">Archived ${archivedLabel}</span>`);
+  }
   if (isCompleted && t.recurrence && displayDate === today && !hideDate) {
     metaParts.push(`<span class="text-emerald-600 dark:text-emerald-400 font-semibold">Done today</span>`);
   }
 
   const leftBorder = isOverdue ? 'border-l-2 border-l-rose-500' : 'border-l-2 border-l-transparent';
 
+  const leftSlot = isArchived
+    ? `<div class="w-[22px] h-[22px] flex items-center justify-center text-zinc-400 dark:text-zinc-500 flex-shrink-0"><i class="fa-solid fa-box-archive text-xs" aria-hidden="true"></i></div>`
+    : `<button class="checkbox ${isCompleted ? 'done' : ''}" type="button" aria-label="${isCompleted ? 'Mark active' : 'Complete'}: ${escapeHtml(t.title)}" data-check-id="${t.id}" onclick="event.stopPropagation(); toggleComplete(${t.id})">
+        <i class="fa-solid fa-check" aria-hidden="true"></i>
+      </button>`;
+
   return `
     <div class="task-row flex items-center gap-3 p-3 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 ${leftBorder} hover:border-zinc-300 dark:hover:border-zinc-700 transition cursor-pointer" data-task-id="${t.id}" tabindex="0" onclick="openDetail(${t.id})" onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();openDetail(${t.id})}">
-      <button class="checkbox ${isCompleted ? 'done' : ''}" type="button" aria-label="${isCompleted ? 'Mark active' : 'Complete'}: ${escapeHtml(t.title)}" data-check-id="${t.id}" onclick="event.stopPropagation(); toggleComplete(${t.id})">
-        <i class="fa-solid fa-check" aria-hidden="true"></i>
-      </button>
+      ${leftSlot}
       <div class="flex-1 min-w-0">
         <p class="text-sm font-semibold text-zinc-900 dark:text-white ${isCompleted ? 'line-through opacity-60' : ''} break-words">${escapeHtml(t.title)}</p>
         <div class="flex items-center gap-2 text-[11px] text-zinc-400 dark:text-zinc-500 mt-0.5 flex-wrap">
@@ -1441,6 +1485,7 @@ function getTodayBuckets() {
 
   tasks.forEach(t => {
     if (!t.dueDate) return;
+    if (t.archived) return;
     const completedToday = t.completed && t.completedAt &&
       formatDate(new Date(t.completedAt)) === today;
 
@@ -1573,8 +1618,8 @@ document.addEventListener('click', (e) => {
 });
 
 function applyAllView(view) {
-  if (!['upcoming', 'completed'].includes(view)) view = 'upcoming';
-  const labels = { upcoming: 'Upcoming', completed: 'Completed' };
+  if (!['upcoming', 'completed', 'archived'].includes(view)) view = 'upcoming';
+  const labels = { upcoming: 'Upcoming', completed: 'Completed', archived: 'Archive' };
   allViewDropdownLabel.textContent = labels[view];
 
   document.querySelectorAll('.all-view-option').forEach(b => {
@@ -1584,13 +1629,15 @@ function applyAllView(view) {
 
   document.getElementById('all-upcoming-view').classList.toggle('hidden', view !== 'upcoming');
   document.getElementById('all-completed-view').classList.toggle('hidden', view !== 'completed');
+  document.getElementById('all-archived-view').classList.toggle('hidden', view !== 'archived');
 
   if (view === 'upcoming') renderUpcoming();
   if (view === 'completed') renderCompleted();
+  if (view === 'archived') renderArchived();
 }
 
 window.selectAllView = function(view) {
-  if (!['upcoming', 'completed'].includes(view)) return;
+  if (!['upcoming', 'completed', 'archived'].includes(view)) return;
 
   if (allSubView === view) {
     if (view === 'upcoming') {
@@ -1598,6 +1645,8 @@ window.selectAllView = function(view) {
       monthFilter.value = '';
     } else if (view === 'completed') {
       archiveSearchInput.value = '';
+    } else if (view === 'archived') {
+      archivedSearchInput.value = '';
     }
   }
 
@@ -1617,7 +1666,7 @@ function renderUpcoming() {
   const query = (searchInput.value || '').trim().toLowerCase();
   const month = monthFilter.value;
 
-  let filtered = tasks.filter(t => !t.completed || t.recurrence);
+  let filtered = tasks.filter(t => !t.archived && (!t.completed || t.recurrence));
 
   if (month) filtered = filtered.filter(t => t.dueDate && t.dueDate.startsWith(month));
   if (query) {
@@ -1634,7 +1683,6 @@ function renderUpcoming() {
     });
   }
 
-  // Upcoming is future-only. Overdue and today's tasks live in the Today tab.
   const today = todayStr();
   const futureFiltered = filtered.filter(t => !t.dueDate || t.dueDate > today);
 
@@ -1701,7 +1749,7 @@ clearFiltersBtn.addEventListener('click', () => {
 
 function renderCompleted() {
   const query = (archiveSearchInput.value || '').trim().toLowerCase();
-  let completed = tasks.filter(t => t.completed && !t.recurrence);
+  let completed = tasks.filter(t => t.completed && !t.recurrence && !t.archived);
   if (query) {
     completed = completed.filter(t =>
       (t.title && t.title.toLowerCase().includes(query)) ||
@@ -1743,8 +1791,53 @@ function renderCompleted() {
 
 archiveSearchInput.addEventListener('input', renderCompleted);
 
+function renderArchived() {
+  const query = (archivedSearchInput.value || '').trim().toLowerCase();
+  let archived = tasks.filter(t => t.archived);
+  if (query) {
+    archived = archived.filter(t =>
+      (t.title && t.title.toLowerCase().includes(query)) ||
+      (t.notes && t.notes.toLowerCase().includes(query)) ||
+      (t.type && t.type.toLowerCase().includes(query))
+    );
+  }
+
+  if (archived.length === 0) {
+    archivedContent.innerHTML = '';
+    archivedEmpty.classList.remove('hidden');
+    return;
+  }
+  archivedEmpty.classList.add('hidden');
+
+  // Group by archived month — consistent with Completed's grouping.
+  const groups = {};
+  archived.forEach(t => {
+    const dt = t.archivedAt ? new Date(t.archivedAt) : new Date(t.createdAt || Date.now());
+    const key = `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}`;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(t);
+  });
+
+  const sortedKeys = Object.keys(groups).sort().reverse();
+  let html = '';
+  sortedKeys.forEach(k => {
+    const [y, m] = k.split('-').map(Number);
+    const label = new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    const arr = groups[k].sort((a, b) => new Date(b.archivedAt || 0) - new Date(a.archivedAt || 0));
+    html += `
+      <div>
+        <h4 class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2">${label}</h4>
+        <div class="space-y-2">${arr.map(t => renderTaskRow(t)).join('')}</div>
+      </div>
+    `;
+  });
+  archivedContent.innerHTML = html;
+}
+
+archivedSearchInput.addEventListener('input', renderArchived);
+
 function updateRecurringCount() {
-  const count = tasks.filter(t => t.recurrence).length;
+  const count = tasks.filter(t => t.recurrence && !t.archived).length;
   if (count === 0) recurringTasksCount.textContent = 'None';
   else if (count === 1) recurringTasksCount.textContent = '1 active';
   else recurringTasksCount.textContent = count + ' active';
@@ -1767,7 +1860,7 @@ function getNextOccurrenceDate(task) {
 }
 
 function renderRecurringPanel() {
-  const recurring = tasks.filter(t => t.recurrence);
+  const recurring = tasks.filter(t => t.recurrence && !t.archived);
   if (recurring.length === 0) {
     recurringList.innerHTML = `<p class="text-sm text-zinc-500 dark:text-zinc-400 italic text-center py-4">No recurring tasks yet. Create one by setting "Repeat" when you add a task.</p>`;
     return;
@@ -1832,6 +1925,7 @@ recurringModal.addEventListener('click', (e) => {
 window.toggleComplete = function(id) {
   const t = tasks.find(x => x.id === id);
   if (!t) return;
+  if (t.archived) return;
   const today = todayStr();
 
   if (!t.completed) {
@@ -1894,6 +1988,7 @@ window.toggleComplete = function(id) {
         if (currentTab === 'all') {
           if (allSubView === 'upcoming') renderUpcoming();
           if (allSubView === 'completed') renderCompleted();
+          if (allSubView === 'archived') renderArchived();
         }
         showToast('Undone');
       };
@@ -1905,6 +2000,7 @@ window.toggleComplete = function(id) {
         if (currentTab === 'all') {
           if (allSubView === 'upcoming') renderUpcoming();
           if (allSubView === 'completed') renderCompleted();
+          if (allSubView === 'archived') renderArchived();
         }
       }, fadeInPlace ? 550 : 300);
     } else {
@@ -1927,6 +2023,7 @@ window.toggleComplete = function(id) {
         if (currentTab === 'all') {
           if (allSubView === 'upcoming') renderUpcoming();
           if (allSubView === 'completed') renderCompleted();
+          if (allSubView === 'archived') renderArchived();
         }
       }, 550);
 
@@ -1938,6 +2035,7 @@ window.toggleComplete = function(id) {
         if (currentTab === 'all') {
           if (allSubView === 'upcoming') renderUpcoming();
           if (allSubView === 'completed') renderCompleted();
+          if (allSubView === 'archived') renderArchived();
         }
         showToast('Undone');
       };
@@ -1961,6 +2059,7 @@ window.toggleComplete = function(id) {
     if (currentTab === 'all') {
       if (allSubView === 'completed') renderCompleted();
       if (allSubView === 'upcoming') renderUpcoming();
+      if (allSubView === 'archived') renderArchived();
     }
     showToast('Moved back to active');
   }
@@ -2016,6 +2115,51 @@ window.snoozePick = function(id) {
   if (!t) return;
   closeActivePopover();
   startEdit(id);
+};
+
+window.archiveTask = function(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  const prevArchived = t.archived || false;
+  const prevArchivedAt = t.archivedAt || null;
+  t.archived = true;
+  t.archivedAt = new Date().toISOString();
+  saveData();
+  closeDetail();
+  renderToday();
+  if (currentTab === 'all') {
+    if (allSubView === 'upcoming') renderUpcoming();
+    if (allSubView === 'completed') renderCompleted();
+    if (allSubView === 'archived') renderArchived();
+  }
+  showToast('Archived', 'success', 'Undo', () => {
+    t.archived = prevArchived;
+    t.archivedAt = prevArchivedAt;
+    saveData();
+    renderToday();
+    if (currentTab === 'all') {
+      if (allSubView === 'upcoming') renderUpcoming();
+      if (allSubView === 'completed') renderCompleted();
+      if (allSubView === 'archived') renderArchived();
+    }
+    showToast('Restored');
+  });
+};
+
+window.unarchiveTask = function(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  t.archived = false;
+  t.archivedAt = null;
+  saveData();
+  closeDetail();
+  renderToday();
+  if (currentTab === 'all') {
+    if (allSubView === 'upcoming') renderUpcoming();
+    if (allSubView === 'completed') renderCompleted();
+    if (allSubView === 'archived') renderArchived();
+  }
+  showToast('Restored');
 };
 
 window.openDetail = function(id) {
@@ -2097,6 +2241,18 @@ window.openDetail = function(id) {
     notesEl.className = 'text-sm text-zinc-400 dark:text-zinc-500 italic leading-relaxed whitespace-pre-wrap';
   }
 
+  // Archive button: Restore for archived, Archive for active non-completed, hidden for completed
+  const archiveBtn = document.getElementById('detailArchiveBtn');
+  if (t.archived) {
+    archiveBtn.classList.remove('hidden');
+    archiveBtn.innerHTML = '<i class="fa-solid fa-inbox"></i> Restore';
+  } else if (t.completed && !t.recurrence) {
+    archiveBtn.classList.add('hidden');
+  } else {
+    archiveBtn.classList.remove('hidden');
+    archiveBtn.innerHTML = '<i class="fa-solid fa-box-archive"></i> Archive';
+  }
+
   detailModal.classList.remove('hidden');
 };
 
@@ -2112,6 +2268,17 @@ detailModal.addEventListener('click', (e) => { if (e.target === detailModal) clo
 
 document.getElementById('detailEditBtn').addEventListener('click', () => {
   if (detailId !== null) startEdit(detailId);
+});
+
+document.getElementById('detailArchiveBtn').addEventListener('click', () => {
+  if (detailId === null) return;
+  const t = tasks.find(x => x.id === detailId);
+  if (!t) return;
+  if (t.archived) {
+    unarchiveTask(detailId);
+  } else {
+    archiveTask(detailId);
+  }
 });
 
 document.getElementById('detailDeleteBtn').addEventListener('click', () => {
@@ -2261,6 +2428,7 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
   if (currentTab === 'all') {
     if (allSubView === 'upcoming') renderUpcoming();
     if (allSubView === 'completed') renderCompleted();
+    if (allSubView === 'archived') renderArchived();
   }
   if (!recurringModal.classList.contains('hidden')) {
     renderRecurringPanel();
