@@ -715,6 +715,16 @@ function daysBetween(a, b) {
   return Math.round((parseDate(b) - parseDate(a)) / 86400000);
 }
 
+/* Returns true when the wall-clock time has already passed the given HH:MM. */
+function isTimePast(timeStr) {
+  if (!timeStr) return false;
+  const now = new Date();
+  const [h, m] = timeStr.split(':').map(Number);
+  const dueMinutes = h * 60 + m;
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  return nowMinutes > dueMinutes;
+}
+
 function getWeekStart(dateStr) {
   const d = parseDate(dateStr);
   const day = d.getDay();
@@ -1462,20 +1472,31 @@ function sortTasks(list) {
 }
 
 function renderTaskRow(t, opts = {}) {
-  const { showSnooze = false, forDate = null } = opts;
+  const { showSnooze = false, forDate = null, hideDate = false } = opts;
   const isCompleted = (forDate != null) ? isTaskCompletedOn(t, forDate) : !!t.completed;
   const today = todayStr();
   const displayDate = forDate || t.dueDate;
-  const isOverdue = !isCompleted && displayDate && displayDate < today && (!forDate || forDate === today);
+
+  // Time-aware overdue: a task due today whose time has passed is overdue
+  // even before midnight. Past-date tasks remain overdue as before.
+  const isTimeOverdue = displayDate === today && t.dueTime && isTimePast(t.dueTime);
+  const isOverdue = !isCompleted && displayDate && (!forDate || forDate === today) && (
+    displayDate < today || isTimeOverdue
+  );
+
   const typeIcon = getTypeIcon(t.type);
   const pri = t.priority || 'none';
   const priClass = isCompleted ? `${PRIORITY_COLOR[pri]} completed` : PRIORITY_COLOR[pri];
 
   const metaParts = [];
-  if (displayDate) {
+  if (displayDate && !hideDate) {
     if (isOverdue) {
-      const days = daysBetween(displayDate, today);
-      metaParts.push(`<span data-date-meta class="text-rose-500 font-semibold">${days}d overdue</span>`);
+      if (displayDate < today) {
+        const days = daysBetween(displayDate, today);
+        metaParts.push(`<span data-date-meta class="text-rose-500 font-semibold">${days}d overdue</span>`);
+      } else {
+        metaParts.push(`<span data-date-meta class="text-rose-500 font-semibold">Overdue</span>`);
+      }
     } else {
       metaParts.push(`<span data-date-meta>${formatDateLabel(displayDate)}</span>`);
     }
@@ -1483,6 +1504,9 @@ function renderTaskRow(t, opts = {}) {
   if (t.dueTime) metaParts.push(`<span>${escapeHtml(t.dueTime)}</span>`);
   metaParts.push(`<span class="inline-flex items-center gap-1"><i class="fa-solid ${typeIcon} text-[10px] opacity-70"></i>${escapeHtml(t.type)}</span>`);
   if (t.recurrence) metaParts.push(`<span class="inline-flex items-center gap-1"><i class="fa-solid fa-rotate text-[10px]"></i>${escapeHtml(formatRecurrenceLabel(t.recurrence))}</span>`);
+  if (isCompleted && t.recurrence && displayDate === today && !hideDate) {
+    metaParts.push(`<span class="text-emerald-600 dark:text-emerald-400 font-semibold">Done today</span>`);
+  }
 
   const leftBorder = isOverdue ? 'border-l-2 border-l-rose-500' : 'border-l-2 border-l-transparent';
 
@@ -1514,9 +1538,6 @@ function getVisibleTaskRows(id) {
     .filter(r => r.offsetParent !== null);
 }
 
-/* Done-today bucket now includes both recurring and non-recurring tasks
-   that were completed today. This fixes the asymmetry where non-recurring
-   completions only appeared in the Completed tab. */
 function getTodayBuckets() {
   const today = todayStr();
   const activeOverdue = [];
@@ -1584,7 +1605,10 @@ function renderDoneTodaySection(doneToday) {
       new Date(b.completedAt || 0) - new Date(a.completedAt || 0)
     );
     doneTodayList.classList.remove('hidden');
-    doneTodayList.innerHTML = sortedDone.map(t => renderTaskRow(t)).join('');
+    // hideDate suppresses the due-date label. For early-completed recurring tasks
+    // the dueDate has already advanced to the next occurrence, so showing it here
+    // would be misleading. The pill's "done today" context is sufficient.
+    doneTodayList.innerHTML = sortedDone.map(t => renderTaskRow(t, { hideDate: true })).join('');
   } else {
     doneTodayList.classList.add('hidden');
     doneTodayList.innerHTML = '';
@@ -1631,9 +1655,6 @@ doneTodayToggle.addEventListener('click', () => {
   renderDoneTodaySection(doneToday);
 });
 
-/* =====================================================
-   ALL VIEW — dropdown navigation
-===================================================== */
 function openAllViewDropdown() {
   allViewDropdownMenu.classList.remove('hidden');
   allViewDropdownMenu.classList.remove('dropdown-enter');
@@ -1660,7 +1681,6 @@ document.addEventListener('click', (e) => {
   }
 });
 
-/* Applies the current sub-view without touching filter state. */
 function applyAllView(view) {
   const labels = { upcoming: 'Upcoming', calendar: 'Calendar', completed: 'Completed' };
   allViewDropdownLabel.textContent = labels[view];
@@ -1682,7 +1702,6 @@ function applyAllView(view) {
 window.selectAllView = function(view) {
   if (!['upcoming', 'calendar', 'completed'].includes(view)) return;
 
-  // Re-selecting the same view resets its filters.
   if (allSubView === view) {
     if (view === 'upcoming') {
       searchInput.value = '';
@@ -2095,14 +2114,37 @@ window.toggleComplete = function(id) {
       t.history.push({ dueDate: t.dueDate || today, completedAt });
       t.completed = true;
       t.completedAt = completedAt;
-      saveData();
 
-      let nextDate = advanceDate(t.dueDate || today, t.recurrence);
-      let guard = 0;
-      while (nextDate <= today && guard < 1000) {
-        nextDate = advanceDate(nextDate, t.recurrence);
-        guard++;
+      // Capture pre-mutation dueDate so the undo path can restore it if we
+      // advanced it below (early-completion case).
+      const originalDue = t.dueDate;
+      let nextDate;
+
+      if (t.dueDate && today < t.dueDate) {
+        // Early completion: advance dueDate now so the task does not come
+        // back on its original date. This is the whole point of doing it
+        // early — the user has cleared the current cycle's obligation.
+        nextDate = advanceDate(t.dueDate, t.recurrence);
+        t.dueDate = nextDate;
+        let guard = 0;
+        while (t.dueDate <= today && guard < 100) {
+          t.dueDate = advanceDate(t.dueDate, t.recurrence);
+          nextDate = t.dueDate;
+          guard++;
+        }
+      } else {
+        // On-time or late completion: compute the next occurrence for the
+        // toast, but leave dueDate untouched (normalizeRecurring handles the
+        // roll-over after midnight).
+        nextDate = advanceDate(t.dueDate || today, t.recurrence);
+        let guard = 0;
+        while (nextDate <= today && guard < 1000) {
+          nextDate = advanceDate(nextDate, t.recurrence);
+          guard++;
+        }
       }
+
+      saveData();
       const nextLabel = formatDateLabel(nextDate);
 
       const rows = getVisibleTaskRows(id);
@@ -2125,6 +2167,9 @@ window.toggleComplete = function(id) {
         }
         t.completed = false;
         t.completedAt = null;
+        if (originalDue !== null && originalDue !== undefined) {
+          t.dueDate = originalDue;
+        }
         saveData();
         renderToday();
         if (currentTab === 'all') {
@@ -2185,9 +2230,14 @@ window.toggleComplete = function(id) {
       showToast('Task completed', 'success', 'Undo', undoFn);
     }
   } else {
+    // Un-complete path. If the last completion was today and it was an early
+    // completion (dueDate was advanced), restore the original dueDate.
     if (t.recurrence && t.history && t.history.length > 0) {
       const last = t.history[t.history.length - 1];
       if (last && last.completedAt && formatDate(new Date(last.completedAt)) === today) {
+        if (last.dueDate && last.dueDate < t.dueDate) {
+          t.dueDate = last.dueDate;
+        }
         t.history.pop();
       }
     }
@@ -2592,7 +2642,6 @@ document.getElementById('confirmResetBtn').addEventListener('click', () => {
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
-    // Close the All-view dropdown first if open (lightest-weight dismissal)
     if (!allViewDropdownMenu.classList.contains('hidden')) {
       closeAllViewDropdown();
       return;
