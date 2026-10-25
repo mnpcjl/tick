@@ -52,26 +52,34 @@ tailwind.config = {
   .pop { animation: pop 0.25s ease-out; }
   .dropdown-enter { animation: dropdownIn 0.12s ease-out forwards; }
 
-  /* Form header button: hover (desktop only) + active (all devices).
-     Hover is scoped to (hover: hover) and (pointer: fine) so iOS Safari
-     never applies-and-sticks a hover tint after touch. */
+  /* Form header button.
+     - cursor: pointer is required for iOS Safari to fire :active on tap.
+     - touch-action and user-select prevent long-press artifacts.
+     - Hover and active tints are scoped to :not(.expanded) so once the form
+       is open the header reads as a settled status label, not a clickable pill.
+     - Cursor stays pointer even when expanded (option b): interactive cue
+       without visual tint. */
   .form-header-btn {
     background-color: transparent;
     -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
+    cursor: pointer;
     transition: background-color 0.15s ease;
   }
   @media (hover: hover) and (pointer: fine) {
-    .form-header-btn:hover {
+    .form-header-btn:not(.expanded):hover {
       background-color: rgba(0, 0, 0, 0.035);
     }
-    .dark .form-header-btn:hover {
+    .dark .form-header-btn:not(.expanded):hover {
       background-color: rgba(255, 255, 255, 0.05);
     }
   }
-  .form-header-btn:active {
+  .form-header-btn:not(.expanded):active {
     background-color: rgba(0, 0, 0, 0.07);
   }
-  .dark .form-header-btn:active {
+  .dark .form-header-btn:not(.expanded):active {
     background-color: rgba(255, 255, 255, 0.09);
   }
 
@@ -1013,11 +1021,14 @@ const historyList = document.getElementById('historyList');
 const isTouchDevice = () => window.matchMedia('(hover: none)').matches || window.innerWidth < 768;
 
 /* =====================================================
-   COLLAPSIBLE FORM — JS-measured height animation
+   COLLAPSIBLE FORM
+   Uses JS-measured height animation. Adds/removes .expanded on the header
+   so CSS can disable hover/press tint while the form is open (option b).
 ===================================================== */
 function expandForm() {
   if (isFormExpanded) return;
   isFormExpanded = true;
+  formHeaderBtn.classList.add('expanded');
 
   formExpandable.style.height = 'auto';
   const targetHeight = formExpandable.scrollHeight;
@@ -1039,6 +1050,7 @@ function expandForm() {
 function collapseForm() {
   if (!isFormExpanded) return;
   isFormExpanded = false;
+  formHeaderBtn.classList.remove('expanded');
 
   const currentHeight = formExpandable.scrollHeight;
 
