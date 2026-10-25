@@ -52,8 +52,6 @@ tailwind.config = {
   .pop { animation: pop 0.25s ease-out; }
   .dropdown-enter { animation: dropdownIn 0.12s ease-out forwards; }
 
-  /* Collapsible form: max-height chosen to comfortably exceed the tallest
-     content state (edit mode + weekday picker + custom row). */
   .form-collapsible {
     max-height: 900px;
     overflow: hidden;
@@ -83,49 +81,6 @@ tailwind.config = {
   .dark .pri-mark-low { color: #facc15; }
   .pri-mark-none { visibility: hidden; }
   .pri-mark.completed { opacity: 0.4; }
-
-  .cal-cell {
-    aspect-ratio: 1 / 1;
-    display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-    padding-top: 0.3rem;
-    cursor: pointer;
-    position: relative;
-    border-radius: 0.5rem;
-    border: 1.5px solid transparent;
-    box-sizing: border-box;
-    transition: border-color 0.15s ease, background 0.15s ease;
-  }
-  .cal-cell:hover { border-color: #d4d4d8; }
-  .dark .cal-cell:hover { border-color: #3f3f46; }
-  .cal-cell.other { opacity: 0.3; }
-  .cal-num {
-    font-size: 0.75rem; font-weight: 600;
-    color: #18181b; line-height: 1;
-    width: 22px; height: 22px;
-    display: inline-flex; align-items: center; justify-content: center;
-    border-radius: 50%;
-    box-sizing: border-box;
-  }
-  .dark .cal-num { color: #e4e4e7; }
-  .cal-cell.today .cal-num { background: #18181b; color: #ffffff; }
-  .dark .cal-cell.today .cal-num { background: #fafafa; color: #09090b; }
-  .cal-cell.selected,
-  .cal-cell.selected:hover { background: #18181b; border-color: transparent; }
-  .dark .cal-cell.selected,
-  .dark .cal-cell.selected:hover { background: #fafafa; border-color: transparent; }
-  .cal-cell.selected .cal-num { color: #ffffff; }
-  .dark .cal-cell.selected .cal-num { color: #09090b; }
-  .cal-cell.selected.today .cal-num { background: #ffffff; color: #18181b; }
-  .dark .cal-cell.selected.today .cal-num { background: #09090b; color: #fafafa; }
-  .cal-dots { display: flex; gap: 2px; margin-top: 5px; justify-content: center; }
-  .cal-dot { width: 4px; height: 4px; border-radius: 50%; background: #18181b; }
-  .dark .cal-dot { background: #e4e4e7; }
-  .cal-dot.ring { background: transparent; border: 1.5px solid #18181b; }
-  .dark .cal-dot.ring { border-color: #e4e4e7; }
-  .cal-cell.selected .cal-dot { background: #ffffff; }
-  .dark .cal-cell.selected .cal-dot { background: #09090b; }
-  .cal-cell.selected .cal-dot.ring { background: transparent; border-color: #ffffff; }
-  .dark .cal-cell.selected .cal-dot.ring { background: transparent; border-color: #09090b; }
 
   .checkbox {
     width: 22px; height: 22px; border-radius: 50%;
@@ -403,10 +358,6 @@ tailwind.config = {
           <span>Upcoming</span>
           <i class="fa-solid fa-check text-xs text-zinc-800 dark:text-zinc-100 hidden" data-check="upcoming"></i>
         </button>
-        <button type="button" onclick="selectAllView('calendar')" data-view="calendar" class="all-view-option w-full text-left px-4 py-2.5 text-sm font-semibold text-zinc-800 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition flex items-center justify-between">
-          <span>Calendar</span>
-          <i class="fa-solid fa-check text-xs text-zinc-800 dark:text-zinc-100 hidden" data-check="calendar"></i>
-        </button>
         <button type="button" onclick="selectAllView('completed')" data-view="completed" class="all-view-option w-full text-left px-4 py-2.5 text-sm font-semibold text-zinc-800 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition flex items-center justify-between">
           <span>Completed</span>
           <i class="fa-solid fa-check text-xs text-zinc-800 dark:text-zinc-100 hidden" data-check="completed"></i>
@@ -417,7 +368,7 @@ tailwind.config = {
     <div id="all-upcoming-view">
       <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-5">
         <div class="flex flex-col sm:flex-row gap-2 mb-5">
-          <input type="text" id="searchInput" placeholder="Search tasks…"
+          <input type="text" id="searchInput" placeholder="Search upcoming tasks…"
             class="text-xs px-3 py-2 bg-zinc-100 dark:bg-zinc-800 border-0 rounded-xl text-zinc-700 dark:text-zinc-200 font-medium focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 w-full sm:flex-1">
           <div class="flex items-center gap-2">
             <input type="month" id="monthFilter"
@@ -437,39 +388,8 @@ tailwind.config = {
           <div class="w-12 h-12 mx-auto mb-3 text-zinc-300 dark:text-zinc-600 flex items-center justify-center rounded-full bg-zinc-50 dark:bg-zinc-950">
             <i class="fa-solid fa-clipboard-list text-xl"></i>
           </div>
-          <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">No tasks found</p>
-          <p class="text-xs text-zinc-400 mt-1">Add a task from the Today tab to get started.</p>
-        </div>
-      </div>
-    </div>
-
-    <div id="all-calendar-view" class="hidden">
-      <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-5">
-        <div class="flex justify-between items-center mb-4">
-          <button onclick="shiftCalendarMonth(-1)" class="w-9 h-9 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center text-zinc-600 dark:text-zinc-300 transition">
-            <i class="fa-solid fa-chevron-left"></i>
-          </button>
-          <h3 id="calendarTitle" class="text-base font-bold text-zinc-800 dark:text-zinc-100"></h3>
-          <button onclick="shiftCalendarMonth(1)" class="w-9 h-9 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center text-zinc-600 dark:text-zinc-300 transition">
-            <i class="fa-solid fa-chevron-right"></i>
-          </button>
-        </div>
-
-        <div class="grid grid-cols-7 mb-2">
-          <div class="text-center text-[10px] font-bold uppercase tracking-wider text-zinc-400">Sun</div>
-          <div class="text-center text-[10px] font-bold uppercase tracking-wider text-zinc-400">Mon</div>
-          <div class="text-center text-[10px] font-bold uppercase tracking-wider text-zinc-400">Tue</div>
-          <div class="text-center text-[10px] font-bold uppercase tracking-wider text-zinc-400">Wed</div>
-          <div class="text-center text-[10px] font-bold uppercase tracking-wider text-zinc-400">Thu</div>
-          <div class="text-center text-[10px] font-bold uppercase tracking-wider text-zinc-400">Fri</div>
-          <div class="text-center text-[10px] font-bold uppercase tracking-wider text-zinc-400">Sat</div>
-        </div>
-
-        <div id="calendarGrid" class="grid grid-cols-7 gap-1"></div>
-
-        <div class="mt-6 pt-5 border-t border-zinc-100 dark:border-zinc-800">
-          <h4 id="calendarSelectedTitle" class="text-xs uppercase font-bold tracking-wider text-zinc-400 mb-3"></h4>
-          <div id="calendarDayTasks"></div>
+          <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">No upcoming tasks</p>
+          <p class="text-xs text-zinc-400 mt-1">Tasks due tomorrow or later appear here. Today's tasks live in the Today tab.</p>
         </div>
       </div>
     </div>
@@ -702,8 +622,6 @@ let detailId = null;
 let pendingDeleteId = null;
 let currentFormType = 'Academic';
 let allSubView = 'upcoming';
-let calendarMonth = '';
-let calendarSelectedDate = null;
 let snoozeOpenForId = null;
 let cameFromTab = null;
 let pendingImportData = null;
@@ -815,77 +733,6 @@ function advanceDuePast(fromDate, recurrence, today) {
     guard++;
   }
   return d;
-}
-
-function occursOn(task, dateStr) {
-  if (!task.recurrence || !task.dueDate) return false;
-  const r = task.recurrence;
-  if (dateStr < task.dueDate) return false;
-  const anchor = parseDate(task.dueDate);
-  const d = parseDate(dateStr);
-  const diffDays = daysBetween(task.dueDate, dateStr);
-
-  if (r.freq === 'daily') {
-    return diffDays % r.interval === 0;
-  }
-  if (r.freq === 'weekly') {
-    if (r.days && r.days.length > 0) {
-      if (!r.days.includes(d.getDay())) return false;
-      const anchorDate = r.anchor || task.dueDate;
-      const anchorWeekStart = getWeekStart(anchorDate);
-      const dWeekStart = getWeekStart(dateStr);
-      const weeksDiff = Math.round(daysBetween(anchorWeekStart, dWeekStart) / 7);
-      return weeksDiff >= 0 && weeksDiff % r.interval === 0;
-    }
-    const weeksDiff = Math.floor(diffDays / 7);
-    if (weeksDiff % r.interval !== 0) return false;
-    return d.getDay() === anchor.getDay();
-  }
-  if (r.freq === 'weekdays') {
-    const day = d.getDay();
-    return day !== 0 && day !== 6;
-  }
-  if (r.freq === 'weekends') {
-    const day = d.getDay();
-    return day === 0 || day === 6;
-  }
-  if (r.freq === 'monthly') {
-    const targetDay = anchor.getDate();
-    const lastDayOfMonth = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
-    const effectiveDay = Math.min(targetDay, lastDayOfMonth);
-    if (d.getDate() !== effectiveDay) return false;
-    const monthsDiff = (d.getFullYear() - anchor.getFullYear()) * 12 + (d.getMonth() - anchor.getMonth());
-    return monthsDiff >= 0 && monthsDiff % r.interval === 0;
-  }
-  if (r.freq === 'yearly') {
-    if (d.getMonth() !== anchor.getMonth()) return false;
-    if (d.getDate() !== anchor.getDate()) return false;
-    const yearsDiff = d.getFullYear() - anchor.getFullYear();
-    return yearsDiff >= 0 && yearsDiff % r.interval === 0;
-  }
-  return false;
-}
-
-function taskOccursOn(task, dateStr) {
-  if (!task.recurrence) {
-    return !task.completed && task.dueDate === dateStr;
-  }
-  return occursOn(task, dateStr);
-}
-
-function isTaskCompletedOn(task, dateStr) {
-  if (!dateStr) return !!task.completed;
-  if (task.recurrence) {
-    if (task.history && task.history.some(h => h.completedAt && formatDate(new Date(h.completedAt)) === dateStr)) return true;
-    if (task.completed && task.completedAt && formatDate(new Date(task.completedAt)) === dateStr) return true;
-    return false;
-  }
-  return !!(task.completed && task.completedAt && formatDate(new Date(task.completedAt)) === dateStr);
-}
-
-function taskHasHistoryOn(task, dateStr) {
-  const history = task.history || [];
-  return history.some(h => h.completedAt && formatDate(new Date(h.completedAt)) === dateStr);
 }
 
 function formatRecurrenceLabel(r) {
@@ -1096,11 +943,6 @@ const clearFiltersBtn = document.getElementById('clearFiltersBtn');
 const listContent = document.getElementById('listContent');
 const listEmpty = document.getElementById('listEmpty');
 
-const calendarTitle = document.getElementById('calendarTitle');
-const calendarGrid = document.getElementById('calendarGrid');
-const calendarSelectedTitle = document.getElementById('calendarSelectedTitle');
-const calendarDayTasks = document.getElementById('calendarDayTasks');
-
 const archiveSearchInput = document.getElementById('archiveSearchInput');
 const archiveContent = document.getElementById('archiveContent');
 const archiveEmpty = document.getElementById('archiveEmpty');
@@ -1124,9 +966,6 @@ const historyList = document.getElementById('historyList');
 
 const isTouchDevice = () => window.matchMedia('(hover: none)').matches || window.innerWidth < 768;
 
-/* =====================================================
-   COLLAPSIBLE FORM
-===================================================== */
 function expandForm() {
   expandFormBtn.classList.add('hidden');
   formExpandable.classList.remove('collapsed');
@@ -1146,16 +985,12 @@ expandFormBtn.addEventListener('click', () => {
 
 collapseFormBtn.addEventListener('click', () => {
   if (editingId !== null) {
-    // resetForm() handles cancel + collapse for the edit case
     resetForm();
   } else {
     collapseForm();
   }
 });
 
-/* =====================================================
-   WEEKDAY PICKER
-===================================================== */
 function renderWeekdayPicker() {
   weekdayPicker.querySelectorAll('.weekday-btn').forEach(b => {
     const wd = parseInt(b.dataset.weekday, 10);
@@ -1536,15 +1371,13 @@ function sortTasks(list) {
 }
 
 function renderTaskRow(t, opts = {}) {
-  const { showSnooze = false, forDate = null, hideDate = false } = opts;
-  const isCompleted = (forDate != null) ? isTaskCompletedOn(t, forDate) : !!t.completed;
+  const { showSnooze = false, hideDate = false } = opts;
+  const isCompleted = !!t.completed;
   const today = todayStr();
-  const displayDate = forDate || t.dueDate;
+  const displayDate = t.dueDate;
 
   const isTimeOverdue = displayDate === today && t.dueTime && isTimePast(t.dueTime);
-  const isOverdue = !isCompleted && displayDate && (!forDate || forDate === today) && (
-    displayDate < today || isTimeOverdue
-  );
+  const isOverdue = !isCompleted && displayDate && (displayDate < today || isTimeOverdue);
 
   const typeIcon = getTypeIcon(t.type);
   const pri = t.priority || 'none';
@@ -1626,7 +1459,6 @@ function getTodayBuckets() {
       return;
     }
 
-    // Non-recurring
     if (t.completed) {
       if (completedToday) doneToday.push(t);
       return;
@@ -1741,7 +1573,8 @@ document.addEventListener('click', (e) => {
 });
 
 function applyAllView(view) {
-  const labels = { upcoming: 'Upcoming', calendar: 'Calendar', completed: 'Completed' };
+  if (!['upcoming', 'completed'].includes(view)) view = 'upcoming';
+  const labels = { upcoming: 'Upcoming', completed: 'Completed' };
   allViewDropdownLabel.textContent = labels[view];
 
   document.querySelectorAll('.all-view-option').forEach(b => {
@@ -1750,25 +1583,19 @@ function applyAllView(view) {
   });
 
   document.getElementById('all-upcoming-view').classList.toggle('hidden', view !== 'upcoming');
-  document.getElementById('all-calendar-view').classList.toggle('hidden', view !== 'calendar');
   document.getElementById('all-completed-view').classList.toggle('hidden', view !== 'completed');
 
   if (view === 'upcoming') renderUpcoming();
-  if (view === 'calendar') renderCalendar();
   if (view === 'completed') renderCompleted();
 }
 
 window.selectAllView = function(view) {
-  if (!['upcoming', 'calendar', 'completed'].includes(view)) return;
+  if (!['upcoming', 'completed'].includes(view)) return;
 
   if (allSubView === view) {
     if (view === 'upcoming') {
       searchInput.value = '';
       monthFilter.value = '';
-    } else if (view === 'calendar') {
-      const now = new Date();
-      calendarMonth = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
-      calendarSelectedDate = todayStr();
     } else if (view === 'completed') {
       archiveSearchInput.value = '';
     }
@@ -1807,33 +1634,34 @@ function renderUpcoming() {
     });
   }
 
-  if (filtered.length === 0) {
+  // Upcoming is future-only. Overdue and today's tasks live in the Today tab.
+  const today = todayStr();
+  const futureFiltered = filtered.filter(t => !t.dueDate || t.dueDate > today);
+
+  if (futureFiltered.length === 0) {
     listContent.innerHTML = '';
     listEmpty.classList.remove('hidden');
     return;
   }
   listEmpty.classList.add('hidden');
 
-  const today = todayStr();
   const tomorrow = addDaysStr(today, 1);
   const soonEnd = addDaysStr(today, 7);
 
-  const groups = { overdue: [], today: [], tomorrow: [], soon: [], later: [], nodate: [] };
+  const groups = { tomorrow: [], soon: [], later: [], nodate: [] };
 
-  filtered.forEach(t => {
+  futureFiltered.forEach(t => {
     if (!t.dueDate) groups.nodate.push(t);
-    else if (t.dueDate < today) groups.overdue.push(t);
-    else if (t.dueDate === today) groups.today.push(t);
     else if (t.dueDate === tomorrow) groups.tomorrow.push(t);
     else if (t.dueDate <= soonEnd) groups.soon.push(t);
     else groups.later.push(t);
   });
 
   if (sortPref === 'priority') {
-    const sorted = sortTasks(filtered);
+    const sorted = sortTasks(futureFiltered);
     listContent.innerHTML = `
       <div>
-        <h4 class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2">All Active Tasks</h4>
+        <h4 class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2">All Upcoming</h4>
         <div class="space-y-2">${sorted.map(t => renderTaskRow(t)).join('')}</div>
       </div>
     `;
@@ -1841,8 +1669,6 @@ function renderUpcoming() {
   }
 
   const sections = [
-    { key: 'overdue', label: 'Overdue', color: 'text-rose-500' },
-    { key: 'today', label: 'Today', color: 'text-zinc-800 dark:text-zinc-200' },
     { key: 'tomorrow', label: 'Tomorrow', color: 'text-zinc-800 dark:text-zinc-200' },
     { key: 'soon', label: 'Soon', color: 'text-zinc-800 dark:text-zinc-200' },
     { key: 'later', label: 'Later', color: 'text-zinc-800 dark:text-zinc-200' },
@@ -1872,164 +1698,6 @@ clearFiltersBtn.addEventListener('click', () => {
   monthFilter.value = '';
   renderUpcoming();
 });
-
-function getCalendarGridRange(year, month) {
-  const firstDay = new Date(year, month - 1, 1);
-  const startWeekday = firstDay.getDay();
-  const gridStart = new Date(firstDay);
-  gridStart.setDate(gridStart.getDate() - startWeekday);
-  const gridEnd = new Date(gridStart);
-  gridEnd.setDate(gridEnd.getDate() + 41);
-  return { gridStart, gridEnd, startWeekday };
-}
-
-window.shiftCalendarMonth = function(delta) {
-  const [y, m] = calendarMonth.split('-').map(Number);
-  const targetMonth = m - 1 + delta;
-  const targetYear = y + Math.floor(targetMonth / 12);
-  const targetMonthNum = ((targetMonth % 12) + 12) % 12 + 1;
-  const newMonth = `${targetYear}-${pad(targetMonthNum)}`;
-
-  const { gridStart, gridEnd } = getCalendarGridRange(targetYear, targetMonthNum);
-  const gridStartStr = formatDate(gridStart);
-  const gridEndStr = formatDate(gridEnd);
-
-  const now = new Date();
-  const currentMonth = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
-
-  calendarMonth = newMonth;
-
-  if (calendarSelectedDate && calendarSelectedDate >= gridStartStr && calendarSelectedDate <= gridEndStr) {
-    // keep
-  } else if (newMonth === currentMonth) {
-    calendarSelectedDate = todayStr();
-  } else {
-    calendarSelectedDate = `${newMonth}-01`;
-  }
-  renderCalendar();
-};
-
-function renderCalendar() {
-  normalizeRecurring();
-  if (!calendarMonth) {
-    const now = new Date();
-    calendarMonth = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
-  }
-
-  const [year, month] = calendarMonth.split('-').map(Number);
-  const monthName = new Date(year, month - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-  calendarTitle.textContent = monthName;
-
-  const firstDay = new Date(year, month - 1, 1);
-  const startWeekday = firstDay.getDay();
-  const daysInMonth = new Date(year, month, 0).getDate();
-  const prevMonthDays = new Date(year, month - 1, 0).getDate();
-
-  const today = todayStr();
-
-  const cells = [];
-  for (let i = startWeekday - 1; i >= 0; i--) {
-    const d = prevMonthDays - i;
-    const prevMonth = month === 1 ? 12 : month - 1;
-    const prevYear = month === 1 ? year - 1 : year;
-    cells.push({ day: d, date: `${prevYear}-${pad(prevMonth)}-${pad(d)}`, other: true });
-  }
-  for (let d = 1; d <= daysInMonth; d++) {
-    cells.push({ day: d, date: `${year}-${pad(month)}-${pad(d)}`, other: false });
-  }
-  let nextDay = 1;
-  const nextMonth = month === 12 ? 1 : month + 1;
-  const nextYear = month === 12 ? year + 1 : year;
-  while (cells.length < 42) {
-    cells.push({ day: nextDay, date: `${nextYear}-${pad(nextMonth)}-${pad(nextDay)}`, other: true });
-    nextDay++;
-  }
-
-  let gridHtml = '';
-  cells.forEach(c => {
-    const tasksOnDay = tasks.filter(t => taskOccursOn(t, c.date));
-    const dots = tasksOnDay.slice(0, 3).map(t => {
-      const recurring = t.recurrence ? 'ring' : '';
-      return `<span class="cal-dot ${recurring}"></span>`;
-    }).join('');
-    const moreIndicator = tasksOnDay.length > 3 ? `<span class="text-[8px] text-zinc-400 mt-0.5">+${tasksOnDay.length - 3}</span>` : '';
-
-    const cls = [
-      'cal-cell',
-      c.other ? 'other' : '',
-      c.date === today ? 'today' : '',
-      c.date === calendarSelectedDate ? 'selected' : ''
-    ].filter(Boolean).join(' ');
-
-    gridHtml += `
-      <div class="${cls}" data-date="${c.date}" onclick="selectCalendarDay('${c.date}')">
-        <span class="cal-num">${c.day}</span>
-        <div class="cal-dots">${dots}</div>
-        ${moreIndicator}
-      </div>
-    `;
-  });
-
-  calendarGrid.innerHTML = gridHtml;
-
-  if (!calendarSelectedDate) {
-    if (today.startsWith(calendarMonth)) {
-      calendarSelectedDate = today;
-    } else {
-      calendarSelectedDate = `${year}-${pad(month)}-01`;
-    }
-    return renderCalendar();
-  }
-
-  const dateLabel = parseDate(calendarSelectedDate).toLocaleDateString('en-US', {
-    weekday: 'long', month: 'long', day: 'numeric'
-  });
-  calendarSelectedTitle.textContent = dateLabel;
-
-  const dayActive = sortTasks(tasks.filter(t => taskOccursOn(t, calendarSelectedDate)));
-  const dayCompleted = tasks.filter(t => {
-    if (taskOccursOn(t, calendarSelectedDate)) return false;
-    if (!t.recurrence) {
-      return t.completed && t.completedAt && formatDate(new Date(t.completedAt)) === calendarSelectedDate;
-    }
-    return taskHasHistoryOn(t, calendarSelectedDate) && !isTaskCompletedOn(t, calendarSelectedDate);
-  });
-  const dayCompletedAlso = tasks.filter(t => {
-    if (!t.recurrence) return false;
-    return taskHasHistoryOn(t, calendarSelectedDate) && !taskOccursOn(t, calendarSelectedDate);
-  });
-
-  const allCompleted = [...dayCompleted.filter(t => !t.recurrence), ...dayCompletedAlso];
-
-  if (dayActive.length === 0 && allCompleted.length === 0) {
-    calendarDayTasks.innerHTML = `<p class="text-xs text-zinc-400 italic py-3 text-center">No tasks on this day.</p>`;
-    return;
-  }
-
-  let html = '';
-  if (dayActive.length > 0) {
-    html += `<div class="space-y-2">${dayActive.map(t => renderTaskRow(t, { forDate: calendarSelectedDate })).join('')}</div>`;
-  }
-  if (allCompleted.length > 0) {
-    const divider = dayActive.length > 0 ? 'mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800' : '';
-    html += `
-      <div class="${divider}">
-        <div class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2">Completed</div>
-        <div class="space-y-2">${allCompleted.map(t => renderTaskRow(t, { forDate: calendarSelectedDate })).join('')}</div>
-      </div>
-    `;
-  }
-  calendarDayTasks.innerHTML = html;
-}
-
-window.selectCalendarDay = function(date) {
-  const dateMonth = date.substring(0, 7);
-  if (dateMonth !== calendarMonth) {
-    calendarMonth = dateMonth;
-  }
-  calendarSelectedDate = date;
-  renderCalendar();
-};
 
 function renderCompleted() {
   const query = (archiveSearchInput.value || '').trim().toLowerCase();
@@ -2225,7 +1893,6 @@ window.toggleComplete = function(id) {
         renderToday();
         if (currentTab === 'all') {
           if (allSubView === 'upcoming') renderUpcoming();
-          if (allSubView === 'calendar') renderCalendar();
           if (allSubView === 'completed') renderCompleted();
         }
         showToast('Undone');
@@ -2237,7 +1904,6 @@ window.toggleComplete = function(id) {
         renderToday();
         if (currentTab === 'all') {
           if (allSubView === 'upcoming') renderUpcoming();
-          if (allSubView === 'calendar') renderCalendar();
           if (allSubView === 'completed') renderCompleted();
         }
       }, fadeInPlace ? 550 : 300);
@@ -2260,7 +1926,6 @@ window.toggleComplete = function(id) {
         renderToday();
         if (currentTab === 'all') {
           if (allSubView === 'upcoming') renderUpcoming();
-          if (allSubView === 'calendar') renderCalendar();
           if (allSubView === 'completed') renderCompleted();
         }
       }, 550);
@@ -2272,7 +1937,6 @@ window.toggleComplete = function(id) {
         renderToday();
         if (currentTab === 'all') {
           if (allSubView === 'upcoming') renderUpcoming();
-          if (allSubView === 'calendar') renderCalendar();
           if (allSubView === 'completed') renderCompleted();
         }
         showToast('Undone');
@@ -2297,7 +1961,6 @@ window.toggleComplete = function(id) {
     if (currentTab === 'all') {
       if (allSubView === 'completed') renderCompleted();
       if (allSubView === 'upcoming') renderUpcoming();
-      if (allSubView === 'calendar') renderCalendar();
     }
     showToast('Moved back to active');
   }
@@ -2345,7 +2008,6 @@ window.snoozeTask = function(id, days) {
   closeActivePopover();
   renderToday();
   if (currentTab === 'all' && allSubView === 'upcoming') renderUpcoming();
-  if (currentTab === 'all' && allSubView === 'calendar') renderCalendar();
   showToast(`Snoozed ${days} day${days > 1 ? 's' : ''}`);
 };
 
@@ -2598,7 +2260,6 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
   renderToday();
   if (currentTab === 'all') {
     if (allSubView === 'upcoming') renderUpcoming();
-    if (allSubView === 'calendar') renderCalendar();
     if (allSubView === 'completed') renderCompleted();
   }
   if (!recurringModal.classList.contains('hidden')) {
@@ -2611,7 +2272,6 @@ function toggleTheme() {
   document.documentElement.classList.toggle('dark');
   const isDark = document.documentElement.classList.contains('dark');
   storageSet(STORAGE_KEY_THEME, isDark ? 'dark' : 'light');
-  if (currentTab === 'all' && allSubView === 'calendar') renderCalendar();
 }
 document.getElementById('themeToggleBtn').addEventListener('click', toggleTheme);
 document.getElementById('themeToggleBtnSettings').addEventListener('click', toggleTheme);
@@ -2735,7 +2395,6 @@ document.addEventListener('visibilitychange', () => {
     normalizeRecurring();
     if (currentTab === 'today') renderToday();
     if (currentTab === 'all' && allSubView === 'upcoming') renderUpcoming();
-    if (currentTab === 'all' && allSubView === 'calendar') renderCalendar();
   }
 });
 
@@ -2761,9 +2420,6 @@ window.addEventListener('load', () => {
 
   loadData();
   normalizeRecurring();
-
-  const now = new Date();
-  calendarMonth = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
 
   updateSortButtons();
   allSubView = 'upcoming';
