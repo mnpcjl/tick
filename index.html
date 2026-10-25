@@ -53,14 +53,18 @@ tailwind.config = {
   .dropdown-enter { animation: dropdownIn 0.12s ease-out forwards; }
 
   .form-collapsible {
-    max-height: 900px;
-    overflow: hidden;
-    transition: max-height 0.35s ease-out, opacity 0.25s ease-out;
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease-out;
     opacity: 1;
   }
   .form-collapsible.collapsed {
-    max-height: 0;
+    grid-template-rows: 0fr;
     opacity: 0;
+  }
+  .form-collapsible > * {
+    overflow: hidden;
+    min-height: 0;
   }
 
   .pri-mark {
@@ -216,9 +220,9 @@ tailwind.config = {
   <section id="today-view" class="tab-view">
 
     <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm mb-6 overflow-hidden">
-      <button id="expandFormBtn" type="button" class="w-full flex items-center gap-2.5 px-5 py-4 text-sm font-semibold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition">
+      <button id="expandFormBtn" type="button" class="w-full flex items-center gap-2 px-5 py-4 text-base font-bold text-zinc-800 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition">
         <i class="fa-solid fa-plus text-zinc-400"></i>
-        <span>Add Task</span>
+        <span>New Task</span>
       </button>
 
       <div id="formExpandable" class="form-collapsible collapsed">
@@ -1809,7 +1813,6 @@ function renderArchived() {
   }
   archivedEmpty.classList.add('hidden');
 
-  // Group by archived month — consistent with Completed's grouping.
   const groups = {};
   archived.forEach(t => {
     const dt = t.archivedAt ? new Date(t.archivedAt) : new Date(t.createdAt || Date.now());
@@ -2241,7 +2244,6 @@ window.openDetail = function(id) {
     notesEl.className = 'text-sm text-zinc-400 dark:text-zinc-500 italic leading-relaxed whitespace-pre-wrap';
   }
 
-  // Archive button: Restore for archived, Archive for active non-completed, hidden for completed
   const archiveBtn = document.getElementById('detailArchiveBtn');
   if (t.archived) {
     archiveBtn.classList.remove('hidden');
