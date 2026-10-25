@@ -44,11 +44,13 @@ tailwind.config = {
   @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
   @keyframes pop { 0% { transform: scale(0.8); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
   @keyframes completeOut { 0% { opacity: 1; transform: translateX(0); } 100% { opacity: 0; transform: translateX(20px); } }
+  @keyframes dropdownIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
 
   .toast-enter { animation: slideUp 0.25s ease-out forwards; }
   .toast-exit { animation: fadeOut 0.25s ease-in forwards; }
   .completing { animation: completeOut 0.4s ease-out forwards; }
   .pop { animation: pop 0.25s ease-out; }
+  .dropdown-enter { animation: dropdownIn 0.12s ease-out forwards; }
 
   .pri-mark {
     display: inline-block;
@@ -162,10 +164,6 @@ tailwind.config = {
   .dark .history-date-input:hover { background: rgba(255,255,255,0.05); }
   .history-date-input:focus { outline: none; background: rgba(0,0,0,0.04); }
   .dark .history-date-input:focus { background: rgba(255,255,255,0.05); }
-
-  .seg-btn { transition: all 0.15s; }
-  .seg-btn.active { background: white; color: #18181b; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-  .dark .seg-btn.active { background: #27272a; color: #fafafa; }
 
   .mobile-bottom-nav {
     padding-bottom: env(safe-area-inset-bottom, 0);
@@ -368,15 +366,28 @@ tailwind.config = {
   <!-- ALL -->
   <section id="all-view" class="tab-view hidden">
 
-    <div class="flex justify-center mb-6">
-      <div class="inline-flex bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-1" id="allViewGroup">
-        <button onclick="handleAllViewTap('list')" data-view="list" class="seg-btn px-3 sm:px-5 py-2 rounded-lg text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-white active">Upcoming</button>
-        <button onclick="handleAllViewTap('calendar')" data-view="calendar" class="seg-btn px-3 sm:px-5 py-2 rounded-lg text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-white">Calendar</button>
-        <button onclick="handleAllViewTap('archive')" data-view="archive" class="seg-btn px-3 sm:px-5 py-2 rounded-lg text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-white">Completed</button>
+    <div class="flex justify-center mb-6" id="allViewDropdownWrapper" style="position: relative;">
+      <button type="button" id="allViewDropdownBtn" class="inline-flex items-center gap-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 text-sm font-semibold text-zinc-800 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition min-w-[180px] justify-between">
+        <span id="allViewDropdownLabel">Upcoming</span>
+        <i class="fa-solid fa-chevron-down text-xs text-zinc-400"></i>
+      </button>
+      <div id="allViewDropdownMenu" class="hidden absolute top-full mt-1 left-1/2 w-[180px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-lg z-20 overflow-hidden dropdown-enter" style="transform: translateX(-50%);">
+        <button type="button" onclick="selectAllView('upcoming')" data-view="upcoming" class="all-view-option w-full text-left px-4 py-2.5 text-sm font-semibold text-zinc-800 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition flex items-center justify-between">
+          <span>Upcoming</span>
+          <i class="fa-solid fa-check text-xs text-zinc-800 dark:text-zinc-100 hidden" data-check="upcoming"></i>
+        </button>
+        <button type="button" onclick="selectAllView('calendar')" data-view="calendar" class="all-view-option w-full text-left px-4 py-2.5 text-sm font-semibold text-zinc-800 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition flex items-center justify-between">
+          <span>Calendar</span>
+          <i class="fa-solid fa-check text-xs text-zinc-800 dark:text-zinc-100 hidden" data-check="calendar"></i>
+        </button>
+        <button type="button" onclick="selectAllView('completed')" data-view="completed" class="all-view-option w-full text-left px-4 py-2.5 text-sm font-semibold text-zinc-800 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition flex items-center justify-between">
+          <span>Completed</span>
+          <i class="fa-solid fa-check text-xs text-zinc-800 dark:text-zinc-100 hidden" data-check="completed"></i>
+        </button>
       </div>
     </div>
 
-    <div id="all-list-view">
+    <div id="all-upcoming-view">
       <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-5">
         <div class="flex flex-col sm:flex-row gap-2 mb-5">
           <input type="text" id="searchInput" placeholder="Search tasks…"
@@ -436,7 +447,7 @@ tailwind.config = {
       </div>
     </div>
 
-    <div id="all-archive-view" class="hidden">
+    <div id="all-completed-view" class="hidden">
       <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-5">
         <div class="mb-4">
           <input type="text" id="archiveSearchInput" placeholder="Search completed tasks…"
@@ -663,7 +674,7 @@ let editingId = null;
 let detailId = null;
 let pendingDeleteId = null;
 let currentFormType = 'Academic';
-let allSubView = 'list';
+let allSubView = 'upcoming';
 let calendarMonth = '';
 let calendarSelectedDate = null;
 let snoozeOpenForId = null;
@@ -1054,6 +1065,11 @@ const archiveSearchInput = document.getElementById('archiveSearchInput');
 const archiveContent = document.getElementById('archiveContent');
 const archiveEmpty = document.getElementById('archiveEmpty');
 
+const allViewDropdownWrapper = document.getElementById('allViewDropdownWrapper');
+const allViewDropdownBtn = document.getElementById('allViewDropdownBtn');
+const allViewDropdownMenu = document.getElementById('allViewDropdownMenu');
+const allViewDropdownLabel = document.getElementById('allViewDropdownLabel');
+
 const detailModal = document.getElementById('detailModal');
 const deleteConfirmModal = document.getElementById('deleteConfirmModal');
 const confirmModal = document.getElementById('confirmModal');
@@ -1414,7 +1430,7 @@ window.setSortPref = function(pref) {
   storageSet(STORAGE_KEY_SORT, pref);
   updateSortButtons();
   renderToday();
-  if (currentTab === 'all' && allSubView === 'list') renderList();
+  if (currentTab === 'all' && allSubView === 'upcoming') renderUpcoming();
 };
 function updateSortButtons() {
   document.querySelectorAll('.sort-btn').forEach(b => {
@@ -1498,6 +1514,9 @@ function getVisibleTaskRows(id) {
     .filter(r => r.offsetParent !== null);
 }
 
+/* Done-today bucket now includes both recurring and non-recurring tasks
+   that were completed today. This fixes the asymmetry where non-recurring
+   completions only appeared in the Completed tab. */
 function getTodayBuckets() {
   const today = todayStr();
   const activeOverdue = [];
@@ -1524,7 +1543,11 @@ function getTodayBuckets() {
       return;
     }
 
-    if (t.completed) return;
+    // Non-recurring
+    if (t.completed) {
+      if (completedToday) doneToday.push(t);
+      return;
+    }
     if (t.dueDate === today) {
       activeToday.push(t);
     } else if (t.dueDate < today) {
@@ -1608,42 +1631,83 @@ doneTodayToggle.addEventListener('click', () => {
   renderDoneTodaySection(doneToday);
 });
 
-window.handleAllViewTap = function(v) {
-  if (allSubView === v) {
-    if (v === 'list') {
+/* =====================================================
+   ALL VIEW — dropdown navigation
+===================================================== */
+function openAllViewDropdown() {
+  allViewDropdownMenu.classList.remove('hidden');
+  allViewDropdownMenu.classList.remove('dropdown-enter');
+  void allViewDropdownMenu.offsetWidth;
+  allViewDropdownMenu.classList.add('dropdown-enter');
+}
+
+function closeAllViewDropdown() {
+  allViewDropdownMenu.classList.add('hidden');
+}
+
+allViewDropdownBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (allViewDropdownMenu.classList.contains('hidden')) {
+    openAllViewDropdown();
+  } else {
+    closeAllViewDropdown();
+  }
+});
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#allViewDropdownWrapper')) {
+    closeAllViewDropdown();
+  }
+});
+
+/* Applies the current sub-view without touching filter state. */
+function applyAllView(view) {
+  const labels = { upcoming: 'Upcoming', calendar: 'Calendar', completed: 'Completed' };
+  allViewDropdownLabel.textContent = labels[view];
+
+  document.querySelectorAll('.all-view-option').forEach(b => {
+    const check = b.querySelector('[data-check]');
+    if (check) check.classList.toggle('hidden', b.dataset.view !== view);
+  });
+
+  document.getElementById('all-upcoming-view').classList.toggle('hidden', view !== 'upcoming');
+  document.getElementById('all-calendar-view').classList.toggle('hidden', view !== 'calendar');
+  document.getElementById('all-completed-view').classList.toggle('hidden', view !== 'completed');
+
+  if (view === 'upcoming') renderUpcoming();
+  if (view === 'calendar') renderCalendar();
+  if (view === 'completed') renderCompleted();
+}
+
+window.selectAllView = function(view) {
+  if (!['upcoming', 'calendar', 'completed'].includes(view)) return;
+
+  // Re-selecting the same view resets its filters.
+  if (allSubView === view) {
+    if (view === 'upcoming') {
       searchInput.value = '';
       monthFilter.value = '';
-    } else if (v === 'calendar') {
+    } else if (view === 'calendar') {
       const now = new Date();
       calendarMonth = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
       calendarSelectedDate = todayStr();
-    } else if (v === 'archive') {
+    } else if (view === 'completed') {
       archiveSearchInput.value = '';
     }
   }
-  setAllView(v);
-  appEl.scrollTo({ top: 0, behavior: 'smooth' });
-};
 
-window.setAllView = function(v) {
-  allSubView = v;
-  document.querySelectorAll('#allViewGroup .seg-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.view === v);
-  });
-  document.getElementById('all-list-view').classList.toggle('hidden', v !== 'list');
-  document.getElementById('all-calendar-view').classList.toggle('hidden', v !== 'calendar');
-  document.getElementById('all-archive-view').classList.toggle('hidden', v !== 'archive');
-  if (v === 'list') renderList();
-  if (v === 'calendar') renderCalendar();
-  if (v === 'archive') renderArchive();
+  allSubView = view;
+  closeAllViewDropdown();
+  applyAllView(view);
+  appEl.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 function renderAll() {
   normalizeRecurring();
-  setAllView(allSubView);
+  applyAllView(allSubView);
 }
 
-function renderList() {
+function renderUpcoming() {
   normalizeRecurring();
   const query = (searchInput.value || '').trim().toLowerCase();
   const month = monthFilter.value;
@@ -1723,12 +1787,12 @@ function renderList() {
   listContent.innerHTML = html;
 }
 
-searchInput.addEventListener('input', renderList);
-monthFilter.addEventListener('change', renderList);
+searchInput.addEventListener('input', renderUpcoming);
+monthFilter.addEventListener('change', renderUpcoming);
 clearFiltersBtn.addEventListener('click', () => {
   searchInput.value = '';
   monthFilter.value = '';
-  renderList();
+  renderUpcoming();
 });
 
 function getCalendarGridRange(year, month) {
@@ -1889,7 +1953,7 @@ window.selectCalendarDay = function(date) {
   renderCalendar();
 };
 
-function renderArchive() {
+function renderCompleted() {
   const query = (archiveSearchInput.value || '').trim().toLowerCase();
   let completed = tasks.filter(t => t.completed && !t.recurrence);
   if (query) {
@@ -1931,7 +1995,7 @@ function renderArchive() {
   archiveContent.innerHTML = html;
 }
 
-archiveSearchInput.addEventListener('input', renderArchive);
+archiveSearchInput.addEventListener('input', renderCompleted);
 
 function updateRecurringCount() {
   const count = tasks.filter(t => t.recurrence).length;
@@ -2064,9 +2128,9 @@ window.toggleComplete = function(id) {
         saveData();
         renderToday();
         if (currentTab === 'all') {
-          if (allSubView === 'list') renderList();
+          if (allSubView === 'upcoming') renderUpcoming();
           if (allSubView === 'calendar') renderCalendar();
-          if (allSubView === 'archive') renderArchive();
+          if (allSubView === 'completed') renderCompleted();
         }
         showToast('Undone');
       };
@@ -2076,9 +2140,9 @@ window.toggleComplete = function(id) {
       setTimeout(() => {
         renderToday();
         if (currentTab === 'all') {
-          if (allSubView === 'list') renderList();
+          if (allSubView === 'upcoming') renderUpcoming();
           if (allSubView === 'calendar') renderCalendar();
-          if (allSubView === 'archive') renderArchive();
+          if (allSubView === 'completed') renderCompleted();
         }
       }, fadeInPlace ? 550 : 300);
     } else {
@@ -2099,9 +2163,9 @@ window.toggleComplete = function(id) {
       setTimeout(() => {
         renderToday();
         if (currentTab === 'all') {
-          if (allSubView === 'list') renderList();
+          if (allSubView === 'upcoming') renderUpcoming();
           if (allSubView === 'calendar') renderCalendar();
-          if (allSubView === 'archive') renderArchive();
+          if (allSubView === 'completed') renderCompleted();
         }
       }, 550);
 
@@ -2111,9 +2175,9 @@ window.toggleComplete = function(id) {
         saveData();
         renderToday();
         if (currentTab === 'all') {
-          if (allSubView === 'list') renderList();
+          if (allSubView === 'upcoming') renderUpcoming();
           if (allSubView === 'calendar') renderCalendar();
-          if (allSubView === 'archive') renderArchive();
+          if (allSubView === 'completed') renderCompleted();
         }
         showToast('Undone');
       };
@@ -2132,8 +2196,8 @@ window.toggleComplete = function(id) {
     saveData();
     renderToday();
     if (currentTab === 'all') {
-      if (allSubView === 'archive') renderArchive();
-      if (allSubView === 'list') renderList();
+      if (allSubView === 'completed') renderCompleted();
+      if (allSubView === 'upcoming') renderUpcoming();
       if (allSubView === 'calendar') renderCalendar();
     }
     showToast('Moved back to active');
@@ -2181,7 +2245,7 @@ window.snoozeTask = function(id, days) {
   saveData();
   closeActivePopover();
   renderToday();
-  if (currentTab === 'all' && allSubView === 'list') renderList();
+  if (currentTab === 'all' && allSubView === 'upcoming') renderUpcoming();
   if (currentTab === 'all' && allSubView === 'calendar') renderCalendar();
   showToast(`Snoozed ${days} day${days > 1 ? 's' : ''}`);
 };
@@ -2434,9 +2498,9 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
   deleteConfirmModal.classList.add('hidden');
   renderToday();
   if (currentTab === 'all') {
-    if (allSubView === 'list') renderList();
+    if (allSubView === 'upcoming') renderUpcoming();
     if (allSubView === 'calendar') renderCalendar();
-    if (allSubView === 'archive') renderArchive();
+    if (allSubView === 'completed') renderCompleted();
   }
   if (!recurringModal.classList.contains('hidden')) {
     renderRecurringPanel();
@@ -2528,6 +2592,11 @@ document.getElementById('confirmResetBtn').addEventListener('click', () => {
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
+    // Close the All-view dropdown first if open (lightest-weight dismissal)
+    if (!allViewDropdownMenu.classList.contains('hidden')) {
+      closeAllViewDropdown();
+      return;
+    }
     if (!deleteConfirmModal.classList.contains('hidden')) {
       pendingDeleteId = null;
       deleteConfirmModal.classList.add('hidden');
@@ -2565,7 +2634,7 @@ document.addEventListener('visibilitychange', () => {
   if (!document.hidden) {
     normalizeRecurring();
     if (currentTab === 'today') renderToday();
-    if (currentTab === 'all' && allSubView === 'list') renderList();
+    if (currentTab === 'all' && allSubView === 'upcoming') renderUpcoming();
     if (currentTab === 'all' && allSubView === 'calendar') renderCalendar();
   }
 });
@@ -2597,7 +2666,8 @@ window.addEventListener('load', () => {
   calendarMonth = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
 
   updateSortButtons();
-  setAllView('list');
+  allSubView = 'upcoming';
+  applyAllView('upcoming');
   renderToday();
 
   if ('serviceWorker' in navigator) {
