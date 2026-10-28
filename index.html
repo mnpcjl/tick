@@ -52,13 +52,6 @@ tailwind.config = {
   .pop { animation: pop 0.25s ease-out; }
   .dropdown-enter { animation: dropdownIn 0.12s ease-out forwards; }
 
-  /* Form header button.
-     - cursor: pointer is required for iOS Safari to fire :active on tap.
-     - touch-action and user-select prevent long-press artifacts.
-     - Hover and active tints are scoped to :not(.expanded) so once the form
-       is open the header reads as a settled status label, not a clickable pill.
-     - Cursor stays pointer even when expanded (option b): interactive cue
-       without visual tint. */
   .form-header-btn {
     background-color: transparent;
     -webkit-tap-highlight-color: transparent;
@@ -83,8 +76,30 @@ tailwind.config = {
     background-color: rgba(255, 255, 255, 0.09);
   }
 
-  /* Height-animation approach: JS sets explicit height and transitions to 0
-     or content-height, then swaps to auto once open. Reliable everywhere. */
+  .tt-form-header-btn {
+    background-color: transparent;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .tt-form-header-btn:not(.expanded):hover {
+      background-color: rgba(0, 0, 0, 0.035);
+    }
+    .dark .tt-form-header-btn:not(.expanded):hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+  }
+  .tt-form-header-btn:not(.expanded):active {
+    background-color: rgba(0, 0, 0, 0.07);
+  }
+  .dark .tt-form-header-btn:not(.expanded):active {
+    background-color: rgba(255, 255, 255, 0.09);
+  }
+
   .form-collapsible {
     overflow: hidden;
     height: 0;
@@ -190,6 +205,41 @@ tailwind.config = {
   }
   .dark .weekday-btn.active { background: #fafafa; color: #09090b; }
 
+  .tt-day-tab {
+    flex: 1;
+    min-width: 3.5rem;
+    padding: 0.5rem 0;
+    text-align: center;
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #71717a;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .dark .tt-day-tab { color: #a1a1aa; }
+  .tt-day-tab:hover { background: #f4f4f5; }
+  .dark .tt-day-tab:hover { background: #27272a; }
+  .tt-day-tab.active {
+    background: #18181b;
+    color: #ffffff;
+    border-color: #18181b;
+  }
+  .dark .tt-day-tab.active {
+    background: #fafafa;
+    color: #09090b;
+    border-color: #fafafa;
+  }
+  .tt-tab-count {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+  .tt-day-tab.active .tt-tab-count { color: rgba(255, 255, 255, 0.8); }
+  .dark .tt-day-tab.active .tt-tab-count { color: rgba(9, 9, 11, 0.7); }
+
   :focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 
   @media (prefers-reduced-motion: reduce) {
@@ -274,14 +324,18 @@ tailwind.config = {
               </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-3 mt-3">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
               <div>
                 <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Due Date</label>
                 <input type="date" id="dateInput" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
               </div>
               <div>
-                <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Time <span class="normal-case font-normal">(optional)</span></label>
+                <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Start Time</label>
                 <input type="time" id="timeInput" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
+              </div>
+              <div>
+                <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">End Time</label>
+                <input type="time" id="endTimeInput" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
               </div>
             </div>
 
@@ -379,6 +433,10 @@ tailwind.config = {
           <span>Upcoming</span>
           <i class="fa-solid fa-check text-xs text-zinc-800 dark:text-zinc-100 hidden" data-check="upcoming"></i>
         </button>
+        <button type="button" onclick="selectAllView('timetable')" data-view="timetable" class="all-view-option w-full text-left px-4 py-2.5 text-sm font-semibold text-zinc-800 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition flex items-center justify-between">
+          <span>Timetable</span>
+          <i class="fa-solid fa-check text-xs text-zinc-800 dark:text-zinc-100 hidden" data-check="timetable"></i>
+        </button>
         <button type="button" onclick="selectAllView('completed')" data-view="completed" class="all-view-option w-full text-left px-4 py-2.5 text-sm font-semibold text-zinc-800 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition flex items-center justify-between">
           <span>Completed</span>
           <i class="fa-solid fa-check text-xs text-zinc-800 dark:text-zinc-100 hidden" data-check="completed"></i>
@@ -415,6 +473,26 @@ tailwind.config = {
           </div>
           <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">No upcoming tasks</p>
           <p class="text-xs text-zinc-400 mt-1">Tasks due tomorrow or later appear here. Today's tasks live in the Today tab.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TIMETABLE VIEW (computed from tasks with start+end time) -->
+    <div id="all-timetable-view" class="hidden">
+      <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-5">
+        <!-- Day Tabs -->
+        <div class="flex gap-1 mb-6 overflow-x-auto pb-1" id="tt-day-tabs">
+          <!-- populated by JS -->
+        </div>
+
+        <!-- Slot List -->
+        <div id="ttSlotList" class="space-y-3"></div>
+        <div id="ttEmptyState" class="hidden py-10 text-center">
+          <div class="w-12 h-12 mx-auto mb-3 text-zinc-300 dark:text-zinc-700 flex items-center justify-center rounded-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+            <i class="fa-regular fa-calendar text-lg"></i>
+          </div>
+          <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400" id="ttEmptyText">No scheduled tasks on this day.</p>
+          <p class="text-xs text-zinc-400 mt-1">Add a task with both a start and end time — it appears here automatically.</p>
         </div>
       </div>
     </div>
@@ -538,10 +616,21 @@ tailwind.config = {
   </div>
 </div>
 
+<div id="deleteConfirmModal" class="hidden fixed inset-0 bg-zinc-950/50 backdrop-blur-sm z-[65] flex items-center justify-center p-4">
+  <div role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle" class="bg-white dark:bg-zinc-900 rounded-2xl max-w-sm w-full p-6 shadow-xl border border-zinc-100 dark:border-zinc-800">
+    <h3 id="deleteModalTitle" class="text-lg font-bold text-zinc-900 dark:text-white mb-2">Delete this task?</h3>
+    <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-6">This will permanently remove the task and its completion history.</p>
+    <div class="flex gap-3 justify-end">
+      <button id="cancelDeleteBtn" class="px-4 py-2 text-sm font-semibold text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-xl transition">Cancel</button>
+      <button id="confirmDeleteBtn" class="px-4 py-2 text-sm font-semibold text-white bg-rose-500 hover:bg-rose-600 rounded-xl transition">Delete</button>
+    </div>
+  </div>
+</div>
+
 <div id="importConfirmModal" class="hidden fixed inset-0 bg-zinc-950/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
   <div role="dialog" aria-modal="true" aria-labelledby="importModalTitle" class="bg-white dark:bg-zinc-900 rounded-2xl max-w-sm w-full p-6 shadow-xl border border-zinc-100 dark:border-zinc-800">
-    <h3 id="importModalTitle" class="text-lg font-bold text-zinc-900 dark:text-white mb-2">Replace All Tasks?</h3>
-    <p id="importConfirmText" class="text-sm text-zinc-500 dark:text-zinc-400 mb-6">This will replace all your current tasks with the imported data.</p>
+    <h3 id="importModalTitle" class="text-lg font-bold text-zinc-900 dark:text-white mb-2">Replace All Data?</h3>
+    <p id="importConfirmText" class="text-sm text-zinc-500 dark:text-zinc-400 mb-6">This will replace all your current data with the imported data.</p>
     <div class="flex gap-3 justify-end">
       <button id="cancelImportBtn" class="px-4 py-2 text-sm font-semibold text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-xl transition">Cancel</button>
       <button id="confirmImportBtn" class="px-4 py-2 text-sm font-semibold text-white bg-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 hover:bg-black dark:hover:bg-white rounded-xl transition">Replace</button>
@@ -583,6 +672,10 @@ tailwind.config = {
         <span class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 flex-shrink-0">Priority</span>
         <span id="detailPriority" class="text-sm font-semibold text-zinc-800 dark:text-zinc-100 text-right"></span>
       </div>
+      <div class="flex justify-between gap-4" id="detailScheduleRow" style="display: none;">
+        <span class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 flex-shrink-0">Schedule</span>
+        <span id="detailSchedule" class="text-sm font-semibold text-right"></span>
+      </div>
       <div class="flex justify-between gap-4" id="detailDateRow">
         <span class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 flex-shrink-0">Due</span>
         <span id="detailDate" class="text-sm font-semibold text-zinc-800 dark:text-zinc-100 text-right"></span>
@@ -618,17 +711,6 @@ tailwind.config = {
   </div>
 </div>
 
-<div id="deleteConfirmModal" class="hidden fixed inset-0 bg-zinc-950/50 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
-  <div role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle" class="bg-white dark:bg-zinc-900 rounded-2xl max-w-sm w-full p-6 shadow-xl border border-zinc-100 dark:border-zinc-800">
-    <h3 id="deleteModalTitle" class="text-lg font-bold text-zinc-900 dark:text-white mb-2">Delete this task?</h3>
-    <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-6">This action cannot be undone.</p>
-    <div class="flex gap-3 justify-end">
-      <button id="cancelDeleteBtn" class="px-4 py-2 text-sm font-semibold text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-xl transition">Cancel</button>
-      <button id="confirmDeleteBtn" class="px-4 py-2 text-sm font-semibold text-white bg-rose-500 hover:bg-rose-600 rounded-xl transition">Delete</button>
-    </div>
-  </div>
-</div>
-
 <script>
 const CATEGORIES = [
   { name: 'Academic',       icon: 'fa-graduation-cap' },
@@ -653,8 +735,11 @@ const PRIORITY_COLOR = {
 const PRIORITY_ORDER = { high: 0, medium: 1, low: 2, none: 3 };
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAY_NAMES_FULL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 const STORAGE_KEY_TASKS = 'todo_tasks_v1';
+const STORAGE_KEY_SLOTS = 'timetable_slots_v1';
+const STORAGE_KEY_MIGRATED = 'slots_migrated_v1';
 const STORAGE_KEY_THEME = 'todo_theme';
 const STORAGE_KEY_SORT = 'todo_sort_pref';
 const MAX_VISIBLE_TOASTS = 3;
@@ -673,6 +758,9 @@ let pendingImportData = null;
 let currentDays = [];
 let doneTodayExpanded = false;
 let isFormExpanded = false;
+
+// Timetable state
+let selectedTimetableDay = new Date().getDay();
 
 let storageUsable = true;
 function storageGet(k) { try { return localStorage.getItem(k); } catch (e) { storageUsable = false; return null; } }
@@ -853,6 +941,10 @@ function isValidDateString(value) {
   return Number.isFinite(date.getTime()) && formatDate(date) === value;
 }
 
+function isValidTimeString(value) {
+  return typeof value === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
+}
+
 function sanitizeTasks(input) {
   if (!Array.isArray(input)) return [];
   const usedIds = new Set();
@@ -906,6 +998,10 @@ function sanitizeTasks(input) {
     const validType = CATEGORIES.some(category => category.name === item.type) ? item.type : 'Others';
     const validPriority = Object.prototype.hasOwnProperty.call(PRIORITY_ORDER, item.priority) ? item.priority : 'none';
 
+    const dueTime = isValidTimeString(item.dueTime) ? item.dueTime : null;
+    let endTime = isValidTimeString(item.endTime) ? item.endTime : null;
+    if (dueTime && endTime && endTime <= dueTime) endTime = null;
+
     return {
       id,
       title: String(item.title == null ? '' : item.title).trim().slice(0, 200),
@@ -913,7 +1009,8 @@ function sanitizeTasks(input) {
       type: validType,
       priority: validPriority,
       dueDate: isValidDateString(item.dueDate) ? item.dueDate : null,
-      dueTime: typeof item.dueTime === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(item.dueTime) ? item.dueTime : null,
+      dueTime,
+      endTime,
       recurrence,
       completed: item.completed === true && !!completedAtMs,
       completedAt: completedAtMs ? new Date(completedAtMs).toISOString() : null,
@@ -923,6 +1020,25 @@ function sanitizeTasks(input) {
       createdAt: createdAt || Date.now()
     };
   }).filter(task => task.title.length > 0);
+}
+
+function sanitizeSlots(input) {
+  if (!Array.isArray(input)) return [];
+  return input.filter(item => item && typeof item === 'object' && !Array.isArray(item)).map(item => {
+    const startTime = typeof item.startTime === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(item.startTime) ? item.startTime : '09:00';
+    let endTime = typeof item.endTime === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(item.endTime) ? item.endTime : '10:00';
+    if (endTime <= startTime) endTime = '10:00';
+    return {
+      id: Number.isSafeInteger(item.id) && item.id > 0 ? item.id : Date.now() + Math.random(),
+      title: String(item.title == null ? '' : item.title).trim().slice(0, 200),
+      day: (Number.isInteger(item.day) && item.day >= 0 && item.day <= 6) ? item.day : 1,
+      startTime,
+      endTime,
+      type: CATEGORIES.some(c => c.name === item.type) ? item.type : 'Others',
+      location: String(item.location == null ? '' : item.location).trim().slice(0, 100),
+      notes: String(item.notes == null ? '' : item.notes).trim().slice(0, 10000)
+    };
+  }).filter(s => s.title.length > 0);
 }
 
 function showToast(message, type = 'success', actionLabel = null, actionFn = null) {
@@ -958,12 +1074,15 @@ function showToast(message, type = 'success', actionLabel = null, actionFn = nul
 const appEl = document.getElementById('app');
 const toastContainer = document.getElementById('toastContainer');
 const storageWarning = document.getElementById('storageWarning');
+
+// Task DOM elements
 const taskForm = document.getElementById('taskForm');
 const titleInput = document.getElementById('titleInput');
 const typeSelect = document.getElementById('typeSelect');
 const prioritySelect = document.getElementById('prioritySelect');
 const dateInput = document.getElementById('dateInput');
 const timeInput = document.getElementById('timeInput');
+const endTimeInput = document.getElementById('endTimeInput');
 const repeatSelect = document.getElementById('repeatSelect');
 const weekdayPickerRow = document.getElementById('weekdayPickerRow');
 const weekdayPicker = document.getElementById('weekdayPicker');
@@ -1018,63 +1137,232 @@ const recurringTasksCount = document.getElementById('recurringTasksCount');
 const historyPanel = document.getElementById('historyPanel');
 const historyList = document.getElementById('historyList');
 
+// Timetable DOM elements
+const ttDayTabs = document.getElementById('tt-day-tabs');
+const ttSlotList = document.getElementById('ttSlotList');
+const ttEmptyState = document.getElementById('ttEmptyState');
+const ttEmptyText = document.getElementById('ttEmptyText');
+
 const isTouchDevice = () => window.matchMedia('(hover: none)').matches || window.innerWidth < 768;
 
 /* =====================================================
-   COLLAPSIBLE FORM
-   Uses JS-measured height animation. Adds/removes .expanded on the header
-   so CSS can disable hover/press tint while the form is open (option b).
+   COLLAPSIBLE TASK FORM
 ===================================================== */
-function expandForm() {
+function expandTaskForm() {
   if (isFormExpanded) return;
   isFormExpanded = true;
   formHeaderBtn.classList.add('expanded');
-
   formExpandable.style.height = 'auto';
   const targetHeight = formExpandable.scrollHeight;
-
   formExpandable.style.transition = 'none';
   formExpandable.style.height = '0px';
   void formExpandable.offsetHeight;
-
   formExpandable.style.transition = '';
   formExpandable.style.height = targetHeight + 'px';
-
   formChevron.style.transform = 'rotate(180deg)';
-
   formExpandable.addEventListener('transitionend', function onEnd() {
     if (isFormExpanded) formExpandable.style.height = 'auto';
   }, { once: true });
 }
 
-function collapseForm() {
+function collapseTaskForm() {
   if (!isFormExpanded) return;
   isFormExpanded = false;
   formHeaderBtn.classList.remove('expanded');
-
   const currentHeight = formExpandable.scrollHeight;
-
   formExpandable.style.transition = 'none';
   formExpandable.style.height = currentHeight + 'px';
   void formExpandable.offsetHeight;
-
   formExpandable.style.transition = '';
   formExpandable.style.height = '0px';
-
   formChevron.style.transform = 'rotate(0deg)';
 }
 
 formHeaderBtn.addEventListener('click', () => {
   if (isFormExpanded) {
-    collapseForm();
+    collapseTaskForm();
   } else {
-    expandForm();
-    if (!isTouchDevice()) {
-      setTimeout(() => titleInput.focus({ preventScroll: true }), 320);
-    }
+    expandTaskForm();
+    if (!isTouchDevice()) setTimeout(() => titleInput.focus({ preventScroll: true }), 320);
   }
 });
 
+/* =====================================================
+   TIMETABLE HELPERS (computed from tasks)
+===================================================== */
+function getTimetableWeekdays(t) {
+  if (!t.dueTime || !t.endTime) return [];
+  if (!t.recurrence) {
+    if (!t.dueDate) return [];
+    return [parseDate(t.dueDate).getDay()];
+  }
+  const r = t.recurrence;
+  if (r.freq === 'daily') return [0,1,2,3,4,5,6];
+  if (r.freq === 'weekdays') return [1,2,3,4,5];
+  if (r.freq === 'weekends') return [0,6];
+  if (r.freq === 'weekly') {
+    if (r.days && r.days.length > 0) return [...r.days];
+    if (!t.dueDate) return [];
+    return [parseDate(t.dueDate).getDay()];
+  }
+  if (!t.dueDate) return [];
+  return [parseDate(t.dueDate).getDay()];
+}
+
+function getTimetableBadge(t) {
+  if (!t.recurrence) {
+    if (!t.dueDate) return '';
+    const today = todayStr();
+    if (t.dueDate === today) return 'Today';
+    return formatDateLabel(t.dueDate);
+  }
+  const r = t.recurrence;
+  if (r.freq === 'daily') return '';
+  if (r.freq === 'weekdays') return '';
+  if (r.freq === 'weekends') return '';
+  if (r.freq === 'weekly') {
+    const days = r.days || (t.dueDate ? [parseDate(t.dueDate).getDay()] : []);
+    if (r.interval === 1) {
+      if (days.length <= 1) return '';
+      return days.map(d => DAY_LABELS[d]).join(' · ');
+    }
+    return `Biweekly · ${formatDateLabel(getNextOccurrenceDate(t))}`;
+  }
+  if (r.freq === 'monthly') {
+    return `Monthly · ${formatDateLabel(getNextOccurrenceDate(t))}`;
+  }
+  if (r.freq === 'yearly') {
+    return `Yearly · ${formatDateLabel(getNextOccurrenceDate(t))}`;
+  }
+  return '';
+}
+
+function renderTimetable() {
+  ttDayTabs.innerHTML = '';
+  for (let i = 0; i < 7; i++) {
+    const count = tasks.filter(t =>
+      !t.archived &&
+      (!t.completed || t.recurrence) &&
+      getTimetableWeekdays(t).includes(i)
+    ).length;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `tt-day-tab ${selectedTimetableDay === i ? 'active' : ''}`;
+    btn.onclick = () => {
+      selectedTimetableDay = i;
+      renderTimetable();
+    };
+    btn.innerHTML = `${DAY_LABELS[i]}${count > 0 ? `<span class="tt-tab-count">${count}</span>` : ''}`;
+    ttDayTabs.appendChild(btn);
+  }
+
+  const dayTasks = tasks.filter(t =>
+    !t.archived &&
+    (!t.completed || t.recurrence) &&
+    getTimetableWeekdays(t).includes(selectedTimetableDay)
+  );
+  dayTasks.sort((a, b) => (a.dueTime || '').localeCompare(b.dueTime || ''));
+
+  ttSlotList.innerHTML = '';
+  if (dayTasks.length === 0) {
+    ttEmptyState.classList.remove('hidden');
+    ttEmptyText.textContent = `No scheduled tasks on ${DAY_NAMES_FULL[selectedTimetableDay]}.`;
+  } else {
+    ttEmptyState.classList.add('hidden');
+    dayTasks.forEach(t => {
+      const icon = getTypeIcon(t.type);
+      const badge = getTimetableBadge(t);
+      const pri = t.priority || 'none';
+      const priClass = PRIORITY_COLOR[pri];
+      const priMark = PRIORITY_MARKS[pri];
+      const notesPreview = t.notes ? t.notes.split('\n')[0] : '';
+
+      const card = document.createElement('div');
+      card.className = "flex items-start gap-3 p-3 bg-zinc-50 dark:bg-zinc-950/60 rounded-xl border border-zinc-100 dark:border-zinc-800/50 hover:border-zinc-300 dark:hover:border-zinc-600 transition cursor-pointer";
+      card.onclick = () => openDetail(t.id);
+      card.innerHTML = `
+        <div class="w-10 h-10 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">
+          <i class="fa-solid ${icon}"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-start justify-between gap-2">
+            <p class="text-sm font-bold text-zinc-800 dark:text-zinc-100 break-words">${escapeHtml(t.title)}</p>
+            <div class="flex items-center gap-1.5 flex-shrink-0">
+              ${priMark ? `<span class="pri-mark ${priClass}">${priMark}</span>` : ''}
+              <span class="text-xs font-semibold text-zinc-600 dark:text-zinc-300 whitespace-nowrap">${escapeHtml(t.dueTime)}–${escapeHtml(t.endTime)}</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 flex-wrap">
+            <span class="inline-flex items-center gap-1"><i class="fa-solid ${icon} text-[10px] opacity-70"></i>${escapeHtml(t.type)}</span>
+            ${badge ? `<span class="opacity-40">·</span><span class="text-zinc-400 dark:text-zinc-500">${escapeHtml(badge)}</span>` : ''}
+          </div>
+          ${notesPreview ? `<p class="text-xs text-zinc-400 dark:text-zinc-500 italic mt-1 line-clamp-1">${escapeHtml(notesPreview)}</p>` : ''}
+        </div>
+      `;
+      ttSlotList.appendChild(card);
+    });
+  }
+}
+
+/* =====================================================
+   MIGRATION: slots → tasks (one-time)
+===================================================== */
+function migrateSlotsToTasks() {
+  if (storageGet(STORAGE_KEY_MIGRATED) === 'true') return;
+  const rawSlots = storageGet(STORAGE_KEY_SLOTS);
+  if (!rawSlots) {
+    storageSet(STORAGE_KEY_MIGRATED, 'true');
+    return;
+  }
+  try {
+    const parsed = JSON.parse(rawSlots);
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      storageSet(STORAGE_KEY_MIGRATED, 'true');
+      try { localStorage.removeItem(STORAGE_KEY_SLOTS); } catch (e) {}
+      return;
+    }
+    const sanitized = sanitizeSlots(parsed);
+    const today = todayStr();
+    const todayDow = parseDate(today).getDay();
+    let count = 0;
+    sanitized.forEach(slot => {
+      const diff = (slot.day - todayDow + 7) % 7;
+      const dueDate = addDaysStr(today, diff);
+      const mergedNotes = [slot.location, slot.notes].filter(Boolean).join('\n');
+      tasks.push({
+        id: createTaskId(),
+        title: slot.title,
+        notes: mergedNotes,
+        type: slot.type,
+        priority: 'none',
+        dueDate: dueDate,
+        dueTime: slot.startTime,
+        endTime: slot.endTime,
+        recurrence: { freq: 'weekly', interval: 1, days: [slot.day], anchor: dueDate },
+        completed: false,
+        completedAt: null,
+        archived: false,
+        archivedAt: null,
+        history: [],
+        createdAt: Date.now()
+      });
+      count++;
+    });
+    saveData();
+    try { localStorage.removeItem(STORAGE_KEY_SLOTS); } catch (e) {}
+    storageSet(STORAGE_KEY_MIGRATED, 'true');
+    if (count > 0) {
+      showToast(`Migrated ${count} slot${count === 1 ? '' : 's'} to tasks`);
+    }
+  } catch (e) {
+    console.error('Slots migration failed:', e);
+    storageSet(STORAGE_KEY_MIGRATED, 'true');
+  }
+}
+
+/* =====================================================
+   TASK LOGIC
+===================================================== */
 function renderWeekdayPicker() {
   weekdayPicker.querySelectorAll('.weekday-btn').forEach(b => {
     const wd = parseInt(b.dataset.weekday, 10);
@@ -1188,18 +1476,15 @@ window.switchTab = function(tabId) {
 };
 
 function loadData() {
-  const raw = storageGet(STORAGE_KEY_TASKS);
-  if (!raw) { tasks = []; return; }
-  try {
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) { tasks = []; return; }
-    tasks = parsed;
-  } catch (e) {
-    try { storageSet(STORAGE_KEY_TASKS + '_corrupt_' + Date.now(), raw); } catch (e2) {}
-    tasks = [];
-    storageWarning.classList.remove('hidden');
-  }
+  const rawTasks = storageGet(STORAGE_KEY_TASKS);
+  if (rawTasks) {
+    try {
+      const parsed = JSON.parse(rawTasks);
+      tasks = Array.isArray(parsed) ? parsed : [];
+    } catch (e) { tasks = []; storageWarning.classList.remove('hidden'); }
+  } else { tasks = []; }
 }
+
 function saveData() {
   const ok = storageSet(STORAGE_KEY_TASKS, JSON.stringify(tasks));
   if (!ok) storageWarning.classList.remove('hidden');
@@ -1300,6 +1585,7 @@ function resetForm() {
   titleInput.value = '';
   notesInput.value = '';
   timeInput.value = '';
+  endTimeInput.value = '';
   dateInput.value = todayStr();
   setFormRecurrence(null);
   prioritySelect.value = 'none';
@@ -1310,7 +1596,7 @@ function resetForm() {
   submitBtn.innerHTML = '<i class="fa-solid fa-plus"></i> Add Task';
   submitBtn.className = 'flex-1 py-3 rounded-xl bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 font-bold text-sm shadow-sm transition-all duration-200 flex items-center justify-center gap-2';
   cancelEditBtn.classList.add('hidden');
-  collapseForm();
+  collapseTaskForm();
   if (returnTo && returnTo !== 'today' && currentTab === 'today') {
     switchTab(returnTo);
   }
@@ -1328,6 +1614,7 @@ window.startEdit = function(id) {
   prioritySelect.value = t.priority || 'none';
   dateInput.value = t.dueDate || '';
   timeInput.value = t.dueTime || '';
+  endTimeInput.value = t.endTime || '';
   notesInput.value = t.notes || '';
   setFormRecurrence(t.recurrence);
   formHeaderIcon.className = 'fa-solid fa-pen text-blue-500';
@@ -1336,7 +1623,7 @@ window.startEdit = function(id) {
   submitBtn.className = 'flex-1 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-bold text-sm shadow-sm transition-all duration-200 flex items-center justify-center gap-2';
   cancelEditBtn.classList.remove('hidden');
 
-  expandForm();
+  expandTaskForm();
   if (currentTab !== 'today') {
     switchTab('today');
     setTimeout(() => { if (!isTouchDevice()) titleInput.focus({ preventScroll: true }); }, 350);
@@ -1359,11 +1646,27 @@ taskForm.addEventListener('submit', (e) => {
     return;
   }
 
+  const startTime = timeInput.value || null;
+  let endTimeVal = endTimeInput.value || null;
+
+  if (!startTime && endTimeVal) {
+    showToast('Please add a start time or clear the end time', 'error');
+    return;
+  }
+  if (startTime && endTimeVal && endTimeVal <= startTime) {
+    showToast('End time must be after start time', 'error');
+    return;
+  }
+
   let dueDate = isValidDateString(dateInput.value) ? dateInput.value : null;
   const recurrence = getRecurrenceFromForm();
 
-  if (recurrence && !dueDate) {
+  if (recurrence && !dueDate) dueDate = todayStr();
+
+  // Auto-date: start+end given but no date
+  if (startTime && endTimeVal && !dueDate) {
     dueDate = todayStr();
+    showToast('Scheduled for today');
   }
 
   if (recurrence && recurrence.freq === 'weekly' && recurrence.days && dueDate) {
@@ -1387,15 +1690,14 @@ taskForm.addEventListener('submit', (e) => {
     type: typeSelect.value,
     priority: prioritySelect.value || 'none',
     dueDate,
-    dueTime: timeInput.value || null,
+    dueTime: startTime,
+    endTime: endTimeVal,
     recurrence
   };
 
   if (editingId !== null) {
     const idx = tasks.findIndex(t => t.id === editingId);
-    if (idx !== -1) {
-      tasks[idx] = { ...tasks[idx], ...taskData };
-    }
+    if (idx !== -1) tasks[idx] = { ...tasks[idx], ...taskData };
     showToast('Task updated');
     resetForm();
   } else {
@@ -1413,8 +1715,9 @@ taskForm.addEventListener('submit', (e) => {
     titleInput.value = '';
     notesInput.value = '';
     timeInput.value = '';
+    endTimeInput.value = '';
     setFormRecurrence(null);
-    collapseForm();
+    collapseTaskForm();
     showToast('Task added');
   }
   saveData();
@@ -1486,7 +1789,8 @@ function renderTaskRow(t, opts = {}) {
       metaParts.push(`<span data-date-meta>${formatDateLabel(displayDate)}</span>`);
     }
   }
-  if (t.dueTime) metaParts.push(`<span>${escapeHtml(t.dueTime)}</span>`);
+  if (t.dueTime && t.endTime) metaParts.push(`<span>${escapeHtml(t.dueTime)}–${escapeHtml(t.endTime)}</span>`);
+  else if (t.dueTime) metaParts.push(`<span>${escapeHtml(t.dueTime)}</span>`);
   metaParts.push(`<span class="inline-flex items-center gap-1"><i class="fa-solid ${typeIcon} text-[10px] opacity-70"></i>${escapeHtml(t.type)}</span>`);
   if (t.recurrence) metaParts.push(`<span class="inline-flex items-center gap-1"><i class="fa-solid fa-rotate text-[10px]"></i>${escapeHtml(formatRecurrenceLabel(t.recurrence))}</span>`);
   if (isArchived && t.archivedAt) {
@@ -1495,6 +1799,13 @@ function renderTaskRow(t, opts = {}) {
   }
   if (isCompleted && t.recurrence && displayDate === today && !hideDate) {
     metaParts.push(`<span class="text-emerald-600 dark:text-emerald-400 font-semibold">Done today</span>`);
+  }
+  if (!isArchived && !isCompleted) {
+    if (t.dueTime && !t.endTime) {
+      metaParts.push(`<span class="text-amber-500 dark:text-amber-400" title="Not in timetable — missing end time">No end time</span>`);
+    } else if (!t.dueTime && t.endTime) {
+      metaParts.push(`<span class="text-amber-500 dark:text-amber-400" title="Not in timetable — missing start time">No start time</span>`);
+    }
   }
 
   const leftBorder = isOverdue ? 'border-l-2 border-l-rose-500' : 'border-l-2 border-l-transparent';
@@ -1527,8 +1838,7 @@ function renderTaskRow(t, opts = {}) {
 }
 
 function getVisibleTaskRows(id) {
-  return Array.from(document.querySelectorAll(`.task-row[data-task-id="${id}"]`))
-    .filter(r => r.offsetParent !== null);
+  return Array.from(document.querySelectorAll(`.task-row[data-task-id="${id}"]`)).filter(r => r.offsetParent !== null);
 }
 
 function getTodayBuckets() {
@@ -1540,21 +1850,12 @@ function getTodayBuckets() {
   tasks.forEach(t => {
     if (!t.dueDate) return;
     if (t.archived) return;
-    const completedToday = t.completed && t.completedAt &&
-      formatDate(new Date(t.completedAt)) === today;
+    const completedToday = t.completed && t.completedAt && formatDate(new Date(t.completedAt)) === today;
 
     if (t.recurrence) {
-      if (completedToday) {
-        doneToday.push(t);
-        return;
-      }
-      if (t.dueDate === today) {
-        activeToday.push(t);
-        return;
-      }
-      if (t.dueDate < today && !t.completed) {
-        activeOverdue.push(t);
-      }
+      if (completedToday) { doneToday.push(t); return; }
+      if (t.dueDate === today) { activeToday.push(t); return; }
+      if (t.dueDate < today && !t.completed) activeOverdue.push(t);
       return;
     }
 
@@ -1562,11 +1863,8 @@ function getTodayBuckets() {
       if (completedToday) doneToday.push(t);
       return;
     }
-    if (t.dueDate === today) {
-      activeToday.push(t);
-    } else if (t.dueDate < today) {
-      activeOverdue.push(t);
-    }
+    if (t.dueDate === today) activeToday.push(t);
+    else if (t.dueDate < today) activeOverdue.push(t);
   });
 
   return { overdue: activeOverdue, dueToday: activeToday, doneToday };
@@ -1594,9 +1892,7 @@ function renderDoneTodaySection(doneToday) {
   `;
 
   if (doneTodayExpanded) {
-    const sortedDone = [...doneToday].sort((a, b) =>
-      new Date(b.completedAt || 0) - new Date(a.completedAt || 0)
-    );
+    const sortedDone = [...doneToday].sort((a, b) => new Date(b.completedAt || 0) - new Date(a.completedAt || 0));
     doneTodayList.classList.remove('hidden');
     doneTodayList.innerHTML = sortedDone.map(t => renderTaskRow(t, { hideDate: true })).join('');
   } else {
@@ -1658,22 +1954,17 @@ function closeAllViewDropdown() {
 
 allViewDropdownBtn.addEventListener('click', (e) => {
   e.stopPropagation();
-  if (allViewDropdownMenu.classList.contains('hidden')) {
-    openAllViewDropdown();
-  } else {
-    closeAllViewDropdown();
-  }
+  if (allViewDropdownMenu.classList.contains('hidden')) openAllViewDropdown();
+  else closeAllViewDropdown();
 });
 
 document.addEventListener('click', (e) => {
-  if (!e.target.closest('#allViewDropdownWrapper')) {
-    closeAllViewDropdown();
-  }
+  if (!e.target.closest('#allViewDropdownWrapper')) closeAllViewDropdown();
 });
 
 function applyAllView(view) {
-  if (!['upcoming', 'completed', 'archived'].includes(view)) view = 'upcoming';
-  const labels = { upcoming: 'Upcoming', completed: 'Completed', archived: 'Archive' };
+  if (!['upcoming', 'timetable', 'completed', 'archived'].includes(view)) view = 'upcoming';
+  const labels = { upcoming: 'Upcoming', timetable: 'Timetable', completed: 'Completed', archived: 'Archive' };
   allViewDropdownLabel.textContent = labels[view];
 
   document.querySelectorAll('.all-view-option').forEach(b => {
@@ -1682,16 +1973,18 @@ function applyAllView(view) {
   });
 
   document.getElementById('all-upcoming-view').classList.toggle('hidden', view !== 'upcoming');
+  document.getElementById('all-timetable-view').classList.toggle('hidden', view !== 'timetable');
   document.getElementById('all-completed-view').classList.toggle('hidden', view !== 'completed');
   document.getElementById('all-archived-view').classList.toggle('hidden', view !== 'archived');
 
   if (view === 'upcoming') renderUpcoming();
+  if (view === 'timetable') renderTimetable();
   if (view === 'completed') renderCompleted();
   if (view === 'archived') renderArchived();
 }
 
 window.selectAllView = function(view) {
-  if (!['upcoming', 'completed', 'archived'].includes(view)) return;
+  if (!['upcoming', 'timetable', 'completed', 'archived'].includes(view)) return;
 
   if (allSubView === view) {
     if (view === 'upcoming') {
@@ -2042,6 +2335,7 @@ window.toggleComplete = function(id) {
           if (allSubView === 'upcoming') renderUpcoming();
           if (allSubView === 'completed') renderCompleted();
           if (allSubView === 'archived') renderArchived();
+          if (allSubView === 'timetable') renderTimetable();
         }
         showToast('Undone');
       };
@@ -2054,6 +2348,7 @@ window.toggleComplete = function(id) {
           if (allSubView === 'upcoming') renderUpcoming();
           if (allSubView === 'completed') renderCompleted();
           if (allSubView === 'archived') renderArchived();
+          if (allSubView === 'timetable') renderTimetable();
         }
       }, fadeInPlace ? 550 : 300);
     } else {
@@ -2066,9 +2361,7 @@ window.toggleComplete = function(id) {
         const cb = row.querySelector('.checkbox');
         if (cb) { cb.classList.add('done', 'pop'); }
         setTimeout(() => { if (row.parentNode) row.classList.add('completing'); }, 100);
-        setTimeout(() => {
-          if (row.parentNode) row.classList.remove('completing');
-        }, 500);
+        setTimeout(() => { if (row.parentNode) row.classList.remove('completing'); }, 500);
       });
 
       setTimeout(() => {
@@ -2077,6 +2370,7 @@ window.toggleComplete = function(id) {
           if (allSubView === 'upcoming') renderUpcoming();
           if (allSubView === 'completed') renderCompleted();
           if (allSubView === 'archived') renderArchived();
+          if (allSubView === 'timetable') renderTimetable();
         }
       }, 550);
 
@@ -2089,6 +2383,7 @@ window.toggleComplete = function(id) {
           if (allSubView === 'upcoming') renderUpcoming();
           if (allSubView === 'completed') renderCompleted();
           if (allSubView === 'archived') renderArchived();
+          if (allSubView === 'timetable') renderTimetable();
         }
         showToast('Undone');
       };
@@ -2113,6 +2408,7 @@ window.toggleComplete = function(id) {
       if (allSubView === 'completed') renderCompleted();
       if (allSubView === 'upcoming') renderUpcoming();
       if (allSubView === 'archived') renderArchived();
+      if (allSubView === 'timetable') renderTimetable();
     }
     showToast('Moved back to active');
   }
@@ -2184,6 +2480,7 @@ window.archiveTask = function(id) {
     if (allSubView === 'upcoming') renderUpcoming();
     if (allSubView === 'completed') renderCompleted();
     if (allSubView === 'archived') renderArchived();
+    if (allSubView === 'timetable') renderTimetable();
   }
   showToast('Archived', 'success', 'Undo', () => {
     t.archived = prevArchived;
@@ -2194,6 +2491,7 @@ window.archiveTask = function(id) {
       if (allSubView === 'upcoming') renderUpcoming();
       if (allSubView === 'completed') renderCompleted();
       if (allSubView === 'archived') renderArchived();
+      if (allSubView === 'timetable') renderTimetable();
     }
     showToast('Restored');
   });
@@ -2211,6 +2509,7 @@ window.unarchiveTask = function(id) {
     if (allSubView === 'upcoming') renderUpcoming();
     if (allSubView === 'completed') renderCompleted();
     if (allSubView === 'archived') renderArchived();
+    if (allSubView === 'timetable') renderTimetable();
   }
   showToast('Restored');
 };
@@ -2237,6 +2536,22 @@ window.openDetail = function(id) {
     priEl.innerHTML = `<span class="inline-flex items-center gap-2"><span class="pri-mark ${priClass}" style="width:auto">${PRIORITY_MARKS[pri]}</span><span>${PRIORITY_LABEL[pri]}</span></span>`;
   }
 
+  // Schedule row (timetable eligibility)
+  const scheduleRow = document.getElementById('detailScheduleRow');
+  const scheduleEl = document.getElementById('detailSchedule');
+  if (t.dueTime && t.endTime) {
+    scheduleRow.style.display = 'flex';
+    scheduleEl.innerHTML = `<span class="text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-calendar-check mr-1"></i>In timetable</span>`;
+  } else if (t.dueTime && !t.endTime) {
+    scheduleRow.style.display = 'flex';
+    scheduleEl.innerHTML = `<span class="text-amber-600 dark:text-amber-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Missing end time</span>`;
+  } else if (!t.dueTime && t.endTime) {
+    scheduleRow.style.display = 'flex';
+    scheduleEl.innerHTML = `<span class="text-amber-600 dark:text-amber-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Missing start time</span>`;
+  } else {
+    scheduleRow.style.display = 'none';
+  }
+
   const dateRow = document.getElementById('detailDateRow');
   const dateEl = document.getElementById('detailDate');
   if (t.dueDate) {
@@ -2244,7 +2559,9 @@ window.openDetail = function(id) {
     let dateStr = parseDate(t.dueDate).toLocaleDateString('en-US', {
       weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
     });
-    if (t.dueTime) dateStr += ` · ${t.dueTime}`;
+    if (t.dueTime && t.endTime) dateStr += ` · ${t.dueTime}–${t.endTime}`;
+    else if (t.dueTime) dateStr += ` · ${t.dueTime}`;
+    else if (t.endTime) dateStr += ` · by ${t.endTime}`;
     dateEl.textContent = dateStr;
   } else {
     dateRow.style.display = 'none';
@@ -2481,6 +2798,7 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
     if (allSubView === 'upcoming') renderUpcoming();
     if (allSubView === 'completed') renderCompleted();
     if (allSubView === 'archived') renderArchived();
+    if (allSubView === 'timetable') renderTimetable();
   }
   if (!recurringModal.classList.contains('hidden')) {
     renderRecurringPanel();
@@ -2497,7 +2815,8 @@ document.getElementById('themeToggleBtn').addEventListener('click', toggleTheme)
 document.getElementById('themeToggleBtnSettings').addEventListener('click', toggleTheme);
 
 document.getElementById('exportBtn').addEventListener('click', () => {
-  const dataStr = JSON.stringify(tasks, null, 2);
+  const payload = { tasks: tasks, exportedAt: new Date().toISOString() };
+  const dataStr = JSON.stringify(payload, null, 2);
   const blob = new Blob([dataStr], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -2523,12 +2842,48 @@ document.getElementById('importFileInput').addEventListener('change', (e) => {
   reader.onload = (ev) => {
     try {
       const parsed = JSON.parse(ev.target.result);
-      if (!Array.isArray(parsed) || parsed.length > 10000) throw new Error('Backup must contain at most 10,000 tasks');
-      pendingImportData = sanitizeTasks(parsed);
-      const incoming = pendingImportData.length;
-      const current = tasks.length;
+      let importedTasks = [];
+
+      if (Array.isArray(parsed)) {
+        importedTasks = parsed;
+      } else if (parsed && typeof parsed === 'object') {
+        importedTasks = Array.isArray(parsed.tasks) ? parsed.tasks.slice() : [];
+        const importedSlotsRaw = Array.isArray(parsed.slots) ? parsed.slots : [];
+        if (importedSlotsRaw.length > 0) {
+          const sanitizedSlots = sanitizeSlots(importedSlotsRaw);
+          const today = todayStr();
+          const todayDow = parseDate(today).getDay();
+          sanitizedSlots.forEach(slot => {
+            const diff = (slot.day - todayDow + 7) % 7;
+            const dueDate = addDaysStr(today, diff);
+            importedTasks.push({
+              title: slot.title,
+              notes: [slot.location, slot.notes].filter(Boolean).join('\n'),
+              type: slot.type,
+              priority: 'none',
+              dueDate: dueDate,
+              dueTime: slot.startTime,
+              endTime: slot.endTime,
+              recurrence: { freq: 'weekly', interval: 1, days: [slot.day], anchor: dueDate },
+              completed: false,
+              archived: false
+            });
+          });
+        }
+      } else {
+        throw new Error('Invalid file format');
+      }
+
+      if (importedTasks.length > 10000) throw new Error('Too many tasks');
+
+      pendingImportData = sanitizeTasks(importedTasks);
+
+      const incomingT = pendingImportData.length;
+      const currentT = tasks.length;
+
       document.getElementById('importConfirmText').textContent =
-        `You currently have ${current} task${current === 1 ? '' : 's'}. This backup contains ${incoming} valid task${incoming === 1 ? '' : 's'}. All current tasks will be permanently replaced.`;
+        `You currently have ${currentT} task${currentT === 1 ? '' : 's'}. This backup contains ${incomingT} valid task${incomingT === 1 ? '' : 's'}. All current data will be permanently replaced.`;
+
       importConfirmModal.classList.remove('hidden');
     } catch (err) {
       showToast('Invalid backup file. Choose a valid Tick JSON backup.', 'error');
@@ -2604,9 +2959,10 @@ document.addEventListener('keydown', (e) => {
   if (tgt && (tgt.tagName === 'INPUT' || tgt.tagName === 'TEXTAREA' || tgt.tagName === 'SELECT' || tgt.isContentEditable)) return;
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   e.preventDefault();
+
   if (currentTab !== 'today') switchTab('today');
   else appEl.scrollTo({ top: 0, behavior: 'smooth' });
-  expandForm();
+  if (!isFormExpanded) expandTaskForm();
   setTimeout(() => titleInput.focus({ preventScroll: true }), 350);
 });
 
@@ -2615,6 +2971,7 @@ document.addEventListener('visibilitychange', () => {
     normalizeRecurring();
     if (currentTab === 'today') renderToday();
     if (currentTab === 'all' && allSubView === 'upcoming') renderUpcoming();
+    if (currentTab === 'all' && allSubView === 'timetable') renderTimetable();
   }
 });
 
@@ -2639,6 +2996,7 @@ window.addEventListener('load', () => {
   dateInput.value = todayStr();
 
   loadData();
+  migrateSlotsToTasks();
   normalizeRecurring();
 
   updateSortButtons();
