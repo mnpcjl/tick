@@ -76,30 +76,6 @@ tailwind.config = {
     background-color: rgba(255, 255, 255, 0.09);
   }
 
-  .tt-form-header-btn {
-    background-color: transparent;
-    -webkit-tap-highlight-color: transparent;
-    -webkit-user-select: none;
-    user-select: none;
-    touch-action: manipulation;
-    cursor: pointer;
-    transition: background-color 0.15s ease;
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .tt-form-header-btn:not(.expanded):hover {
-      background-color: rgba(0, 0, 0, 0.035);
-    }
-    .dark .tt-form-header-btn:not(.expanded):hover {
-      background-color: rgba(255, 255, 255, 0.05);
-    }
-  }
-  .tt-form-header-btn:not(.expanded):active {
-    background-color: rgba(0, 0, 0, 0.07);
-  }
-  .dark .tt-form-header-btn:not(.expanded):active {
-    background-color: rgba(255, 255, 255, 0.09);
-  }
-
   .form-collapsible {
     overflow: hidden;
     height: 0;
@@ -242,13 +218,24 @@ tailwind.config = {
 
   :focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 
+  /* Motion: "auto" = follow system; "on" = force reduced; "off" = force motion (override OS) */
   @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
+    html:not(.motion-off) *,
+    html:not(.motion-off) *::before,
+    html:not(.motion-off) *::after {
       scroll-behavior: auto !important;
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
+  }
+  html.motion-on *,
+  html.motion-on *::before,
+  html.motion-on *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 </style>
 </head>
@@ -337,6 +324,12 @@ tailwind.config = {
                 <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">End Time</label>
                 <input type="time" id="endTimeInput" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
               </div>
+            </div>
+
+            <!-- #4: First occurrence hint (display-only, no behavior change) -->
+            <div id="firstOccurrenceHint" class="hidden mt-2 px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-200 text-[11px] flex items-start gap-1.5">
+              <i class="fa-solid fa-circle-info mt-0.5"></i>
+              <span id="firstOccurrenceHintText"></span>
             </div>
 
             <div class="mt-3">
@@ -480,12 +473,7 @@ tailwind.config = {
     <!-- TIMETABLE VIEW (computed from tasks with start+end time) -->
     <div id="all-timetable-view" class="hidden">
       <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-5">
-        <!-- Day Tabs -->
-        <div class="flex gap-1 mb-6 overflow-x-auto pb-1" id="tt-day-tabs">
-          <!-- populated by JS -->
-        </div>
-
-        <!-- Slot List -->
+        <div class="flex gap-1 mb-6 overflow-x-auto pb-1" id="tt-day-tabs"></div>
         <div id="ttSlotList" class="space-y-3"></div>
         <div id="ttEmptyState" class="hidden py-10 text-center">
           <div class="w-12 h-12 mx-auto mb-3 text-zinc-300 dark:text-zinc-700 flex items-center justify-center rounded-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
@@ -548,6 +536,17 @@ tailwind.config = {
             <span class="dark:hidden">Dark Mode</span>
             <span class="hidden dark:inline">Light Mode</span>
           </button>
+        </div>
+
+        <!-- #2: Reduce Animations toggle -->
+        <div>
+          <p class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2">Reduce Animations</p>
+          <div class="inline-flex w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-xl p-1 text-xs">
+            <button onclick="setMotionPref('auto')" data-motion="auto" class="motion-btn flex-1 px-2 py-2 rounded-lg font-semibold transition">Follow System</button>
+            <button onclick="setMotionPref('on')" data-motion="on" class="motion-btn flex-1 px-2 py-2 rounded-lg font-semibold transition">On</button>
+            <button onclick="setMotionPref('off')" data-motion="off" class="motion-btn flex-1 px-2 py-2 rounded-lg font-semibold transition">Off</button>
+          </div>
+          <p class="text-[10px] text-zinc-400 mt-1.5">"On" disables all animations. "Off" forces animations even if iOS Reduce Motion is enabled.</p>
         </div>
 
         <div>
@@ -742,11 +741,13 @@ const STORAGE_KEY_SLOTS = 'timetable_slots_v1';
 const STORAGE_KEY_MIGRATED = 'slots_migrated_v1';
 const STORAGE_KEY_THEME = 'todo_theme';
 const STORAGE_KEY_SORT = 'todo_sort_pref';
+const STORAGE_KEY_MOTION = 'todo_motion_pref';
 const MAX_VISIBLE_TOASTS = 3;
 
 let tasks = [];
 let currentTab = 'today';
 let sortPref = 'deadline';
+let motionPref = 'auto';
 let editingId = null;
 let detailId = null;
 let pendingDeleteId = null;
@@ -1094,6 +1095,8 @@ const submitBtn = document.getElementById('submitBtn');
 const cancelEditBtn = document.getElementById('cancelEditBtn');
 const formHeaderIcon = document.getElementById('formHeaderIcon');
 const formHeaderText = document.getElementById('formHeaderText');
+const firstOccurrenceHint = document.getElementById('firstOccurrenceHint');
+const firstOccurrenceHintText = document.getElementById('firstOccurrenceHintText');
 
 const formHeaderBtn = document.getElementById('formHeaderBtn');
 const formChevron = document.getElementById('formChevron');
@@ -1146,14 +1149,55 @@ const ttEmptyText = document.getElementById('ttEmptyText');
 const isTouchDevice = () => window.matchMedia('(hover: none)').matches || window.innerWidth < 768;
 
 /* =====================================================
+   MOTION PREFERENCE (#2)
+===================================================== */
+function loadMotionPref() {
+  const v = storageGet(STORAGE_KEY_MOTION);
+  if (v === 'auto' || v === 'on' || v === 'off') motionPref = v;
+}
+
+function applyMotionPref() {
+  const html = document.documentElement;
+  html.classList.remove('motion-on', 'motion-off');
+  if (motionPref === 'on') html.classList.add('motion-on');
+  else if (motionPref === 'off') html.classList.add('motion-off');
+  updateMotionButtons();
+}
+
+function updateMotionButtons() {
+  document.querySelectorAll('.motion-btn').forEach(b => {
+    const on = b.dataset.motion === motionPref;
+    b.className = `motion-btn flex-1 px-2 py-2 rounded-lg font-semibold transition ${on ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'}`;
+  });
+}
+
+window.setMotionPref = function(pref) {
+  if (!['auto', 'on', 'off'].includes(pref)) return;
+  motionPref = pref;
+  storageSet(STORAGE_KEY_MOTION, pref);
+  applyMotionPref();
+  const msg = pref === 'auto' ? 'Animations follow system' : pref === 'on' ? 'Animations reduced' : 'Animations enabled';
+  showToast(msg);
+};
+
+/* =====================================================
    COLLAPSIBLE TASK FORM
 ===================================================== */
 function expandTaskForm() {
   if (isFormExpanded) return;
   isFormExpanded = true;
   formHeaderBtn.classList.add('expanded');
+
+  // Measure with height:auto, then check for zero (parent hidden / not ready)
   formExpandable.style.height = 'auto';
   const targetHeight = formExpandable.scrollHeight;
+
+  // #3 guard: if layout hasn't settled (parent hidden), skip animation
+  if (targetHeight === 0) {
+    formChevron.style.transform = 'rotate(180deg)';
+    return;
+  }
+
   formExpandable.style.transition = 'none';
   formExpandable.style.height = '0px';
   void formExpandable.offsetHeight;
@@ -1186,6 +1230,30 @@ formHeaderBtn.addEventListener('click', () => {
     if (!isTouchDevice()) setTimeout(() => titleInput.focus({ preventScroll: true }), 320);
   }
 });
+
+/* =====================================================
+   FIRST-OCCURRENCE HINT (#4, display-only)
+   NOTE (deferred): auto-clamping daily/weekdays/weekends tasks with a future
+   start date to today was discussed but intentionally NOT implemented — we keep
+   Apple Reminders semantics (dueDate = first occurrence). If later desired, add
+   to taskForm submit: if recurrence in [daily,weekdays,weekends] && dueDate > today,
+   set dueDate = today and toast "Started today".
+===================================================== */
+function updateFirstOccurrenceHint() {
+  if (!firstOccurrenceHint || !firstOccurrenceHintText) return;
+  const rep = repeatSelect.value;
+  const dateVal = dateInput.value;
+  if (!rep || !dateVal || !isValidDateString(dateVal)) {
+    firstOccurrenceHint.classList.add('hidden');
+    return;
+  }
+  if (dateVal > todayStr()) {
+    firstOccurrenceHint.classList.remove('hidden');
+    firstOccurrenceHintText.textContent = `First occurrence: ${formatDateLabel(dateVal)}. This task appears in Today on that date.`;
+  } else {
+    firstOccurrenceHint.classList.add('hidden');
+  }
+}
 
 /* =====================================================
    TIMETABLE HELPERS (computed from tasks)
@@ -1409,6 +1477,7 @@ weekdayPicker.addEventListener('click', (e) => {
   snapDateToSelectedDays();
   renderWeekdayPicker();
   if (isFormExpanded) formExpandable.style.height = 'auto';
+  updateFirstOccurrenceHint();
 });
 
 dateInput.addEventListener('change', () => {
@@ -1419,6 +1488,7 @@ dateInput.addEventListener('change', () => {
       snapDateToSelectedDays();
     }
   }
+  updateFirstOccurrenceHint();
 });
 
 function normalizeRecurring() {
@@ -1520,6 +1590,7 @@ repeatSelect.addEventListener('change', () => {
     snapDateToSelectedDays();
   }
   if (isFormExpanded) formExpandable.style.height = 'auto';
+  updateFirstOccurrenceHint();
 });
 
 function getRecurrenceFromForm() {
@@ -1547,6 +1618,7 @@ function setFormRecurrence(r) {
     customRepeatRow.classList.add('hidden');
     currentDays = [];
     weekdayPickerRow.classList.add('hidden');
+    updateFirstOccurrenceHint();
     return;
   }
   const { freq, interval } = r;
@@ -1576,6 +1648,7 @@ function setFormRecurrence(r) {
     currentDays = [];
     weekdayPickerRow.classList.add('hidden');
   }
+  updateFirstOccurrenceHint();
 }
 
 function resetForm() {
@@ -1597,6 +1670,7 @@ function resetForm() {
   submitBtn.className = 'flex-1 py-3 rounded-xl bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 font-bold text-sm shadow-sm transition-all duration-200 flex items-center justify-center gap-2';
   cancelEditBtn.classList.add('hidden');
   collapseTaskForm();
+  updateFirstOccurrenceHint();
   if (returnTo && returnTo !== 'today' && currentTab === 'today') {
     switchTab(returnTo);
   }
@@ -1622,15 +1696,15 @@ window.startEdit = function(id) {
   submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> Update Task';
   submitBtn.className = 'flex-1 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-bold text-sm shadow-sm transition-all duration-200 flex items-center justify-center gap-2';
   cancelEditBtn.classList.remove('hidden');
+  updateFirstOccurrenceHint();
 
-  expandTaskForm();
-  if (currentTab !== 'today') {
-    switchTab('today');
-    setTimeout(() => { if (!isTouchDevice()) titleInput.focus({ preventScroll: true }); }, 350);
-  } else {
+  // #3 fix: switch tab BEFORE expanding, then expand on next frame
+  if (currentTab !== 'today') switchTab('today');
+  requestAnimationFrame(() => {
+    expandTaskForm();
     appEl.scrollTo({ top: 0, behavior: 'smooth' });
     setTimeout(() => { if (!isTouchDevice()) titleInput.focus({ preventScroll: true }); }, 350);
-  }
+  });
 };
 
 cancelEditBtn.addEventListener('click', resetForm);
@@ -2536,7 +2610,6 @@ window.openDetail = function(id) {
     priEl.innerHTML = `<span class="inline-flex items-center gap-2"><span class="pri-mark ${priClass}" style="width:auto">${PRIORITY_MARKS[pri]}</span><span>${PRIORITY_LABEL[pri]}</span></span>`;
   }
 
-  // Schedule row (timetable eligibility)
   const scheduleRow = document.getElementById('detailScheduleRow');
   const scheduleEl = document.getElementById('detailSchedule');
   if (t.dueTime && t.endTime) {
@@ -2991,6 +3064,9 @@ window.addEventListener('load', () => {
   const savedSort = storageGet(STORAGE_KEY_SORT);
   if (savedSort === 'priority' || savedSort === 'deadline') sortPref = savedSort;
 
+  loadMotionPref();
+  applyMotionPref();
+
   populateTypeSelect();
   prioritySelect.value = 'none';
   dateInput.value = todayStr();
@@ -3003,6 +3079,7 @@ window.addEventListener('load', () => {
   allSubView = 'upcoming';
   applyAllView('upcoming');
   renderToday();
+  updateFirstOccurrenceHint();
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js')
