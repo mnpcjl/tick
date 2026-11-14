@@ -42,7 +42,6 @@ tailwind.config = {
   }
   input[type="date"]::-webkit-date-and-time-value { text-align: left; }
 
-  /* Subtle motion: pure fades only. No slides, no springs, no scale. */
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
 
@@ -73,10 +72,6 @@ tailwind.config = {
 
   :focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 
-  /* Motion preference:
-     - default (no class): respects OS prefers-reduced-motion
-     - html.motion-on: force reduce (block fades)
-     - html.motion-off: force motion (allow fades even if OS says reduce) */
   @media (prefers-reduced-motion: reduce) {
     html:not(.motion-off) *,
     html:not(.motion-off) *::before,
@@ -103,15 +98,12 @@ tailwind.config = {
 <div id="app" class="max-w-3xl mx-auto px-4 py-6 md:py-8 w-full flex-1 overflow-y-auto">
 
   <header class="flex justify-between items-center mb-6">
-    <div>
-      <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
-        <span class="w-9 h-9 md:w-10 md:h-10 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-xl flex items-center justify-center flex-shrink-0">
-          <i class="fa-solid fa-check text-base md:text-lg"></i>
-        </span>
-        Tick
-      </h1>
-      <p class="text-xs md:text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">Task Tracker</p>
-    </div>
+    <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2.5">
+      <span class="w-9 h-9 md:w-10 md:h-10 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-xl flex items-center justify-center flex-shrink-0">
+        <i class="fa-solid fa-check text-base md:text-lg"></i>
+      </span>
+      Tick
+    </h1>
     <button id="themeToggleBtn" title="Toggle Theme" class="p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">
       <i class="fa-solid fa-moon dark:hidden"></i>
       <i class="fa-solid fa-sun hidden dark:block text-amber-400"></i>
@@ -172,14 +164,21 @@ tailwind.config = {
     <div id="todaySection">
       <div id="todayList" class="space-y-2"></div>
     </div>
+
+    <div id="undatedSection" class="hidden mt-6">
+      <h3 class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2 flex items-center gap-1.5">
+        <i class="fa-solid fa-inbox"></i> No Date
+      </h3>
+      <div id="undatedList" class="space-y-2"></div>
+    </div>
   </section>
 
   <!-- ALL -->
   <section id="all-view" class="tab-view hidden">
     <div class="flex justify-center mb-4">
-      <div class="inline-flex bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-1 text-xs">
-        <button onclick="setAllView('scheduled')" data-allview="scheduled" class="allview-btn px-4 py-2 rounded-lg font-semibold transition">Scheduled</button>
-        <button onclick="setAllView('done')" data-allview="done" class="allview-btn px-4 py-2 rounded-lg font-semibold transition">Done</button>
+      <div class="grid grid-cols-2 w-60 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-1 text-xs">
+        <button onclick="setAllView('scheduled')" data-allview="scheduled" class="allview-btn py-2 rounded-lg font-semibold transition text-center">Scheduled</button>
+        <button onclick="setAllView('done')" data-allview="done" class="allview-btn py-2 rounded-lg font-semibold transition text-center">Done</button>
       </div>
     </div>
 
@@ -416,6 +415,8 @@ tailwind.config = {
   const overdueSection = document.getElementById('overdueSection');
   const overdueList = document.getElementById('overdueList');
   const todayList = document.getElementById('todayList');
+  const undatedSection = document.getElementById('undatedSection');
+  const undatedList = document.getElementById('undatedList');
 
   const searchInput = document.getElementById('searchInput');
   const allContent = document.getElementById('allContent');
@@ -615,6 +616,7 @@ tailwind.config = {
     const active = tasks.filter(t => !t.completed);
     const overdue = active.filter(t => t.dueDate && t.dueDate < today).sort(sortByDateAsc);
     const dueToday = active.filter(t => t.dueDate === today).sort(sortByDateAsc);
+    const undated = active.filter(t => !t.dueDate).sort((a, b) => a.createdAt - b.createdAt);
 
     if (overdue.length > 0) {
       overdueSection.classList.remove('hidden');
@@ -626,6 +628,8 @@ tailwind.config = {
 
     if (dueToday.length > 0) {
       todayList.innerHTML = dueToday.map(t => renderTaskRow(t)).join('');
+    } else if (undated.length > 0) {
+      todayList.innerHTML = '';
     } else {
       todayList.innerHTML = `
         <div class="py-10 text-center">
@@ -637,6 +641,14 @@ tailwind.config = {
         </div>
       `;
     }
+
+    if (undated.length > 0) {
+      undatedSection.classList.remove('hidden');
+      undatedList.innerHTML = undated.map(t => renderTaskRow(t)).join('');
+    } else {
+      undatedSection.classList.add('hidden');
+      undatedList.innerHTML = '';
+    }
   }
 
   window.setAllView = function(view) {
@@ -644,9 +656,9 @@ tailwind.config = {
     allView = view;
     document.querySelectorAll('.allview-btn').forEach(b => {
       if (b.dataset.allview === view) {
-        b.className = "allview-btn px-4 py-2 rounded-lg font-semibold transition bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm";
+        b.className = "allview-btn py-2 rounded-lg font-semibold transition text-center bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm";
       } else {
-        b.className = "allview-btn px-4 py-2 rounded-lg font-semibold transition text-zinc-500 hover:text-zinc-900 dark:hover:text-white";
+        b.className = "allview-btn py-2 rounded-lg font-semibold transition text-center text-zinc-500 hover:text-zinc-900 dark:hover:text-white";
       }
     });
     renderAll();
