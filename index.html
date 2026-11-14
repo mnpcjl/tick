@@ -219,13 +219,12 @@ tailwind.config = {
         </div>
 
         <div>
-          <p class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2">Reduce Animations</p>
+          <p class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2">Reduce Motion</p>
           <div class="inline-flex w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-xl p-1 text-xs">
             <button onclick="setMotionPref('auto')" data-motion="auto" class="motion-btn flex-1 px-2 py-2 rounded-lg font-semibold transition">Follow System</button>
             <button onclick="setMotionPref('on')" data-motion="on" class="motion-btn flex-1 px-2 py-2 rounded-lg font-semibold transition">On</button>
             <button onclick="setMotionPref('off')" data-motion="off" class="motion-btn flex-1 px-2 py-2 rounded-lg font-semibold transition">Off</button>
           </div>
-          <p class="text-[10px] text-zinc-400 mt-1.5">"On" blocks animations. "Off" forces them on, even if iOS Reduce Motion is enabled.</p>
         </div>
 
         <div>
@@ -532,7 +531,7 @@ tailwind.config = {
     motionPref = pref;
     storageSet(MOTION_KEY, pref);
     applyMotionPref();
-    const msg = pref === 'auto' ? 'Following system motion' : pref === 'on' ? 'Animations reduced' : 'Animations enabled';
+    const msg = pref === 'auto' ? 'Following system motion' : pref === 'on' ? 'Motion reduced' : 'Motion enabled';
     showToast(msg);
   };
 
