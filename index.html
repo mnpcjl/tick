@@ -177,7 +177,7 @@ tailwind.config = {
   <section id="all-view" class="tab-view hidden">
     <div class="flex justify-center mb-4">
       <div class="grid grid-cols-2 w-60 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-1 text-xs">
-        <button onclick="setAllView('scheduled')" data-allview="scheduled" class="allview-btn py-2 rounded-lg font-semibold transition text-center">Scheduled</button>
+        <button onclick="setAllView('upcoming')" data-allview="upcoming" class="allview-btn py-2 rounded-lg font-semibold transition text-center">Upcoming</button>
         <button onclick="setAllView('done')" data-allview="done" class="allview-btn py-2 rounded-lg font-semibold transition text-center">Done</button>
       </div>
     </div>
@@ -341,7 +341,7 @@ tailwind.config = {
 
   let tasks = [];
   let currentTab = 'today';
-  let allView = 'scheduled';
+  let allView = 'upcoming';
   let editingId = null;
   let pendingConfirmAction = null;
   let pendingImportData = null;
@@ -652,7 +652,7 @@ tailwind.config = {
   }
 
   window.setAllView = function(view) {
-    if (!['scheduled', 'done'].includes(view)) return;
+    if (!['upcoming', 'done'].includes(view)) return;
     allView = view;
     document.querySelectorAll('.allview-btn').forEach(b => {
       if (b.dataset.allview === view) {
@@ -665,7 +665,7 @@ tailwind.config = {
   };
 
   function renderAll() {
-    if (allView === 'scheduled') renderScheduled();
+    if (allView === 'upcoming') renderUpcoming();
     else renderDone();
   }
 
@@ -677,22 +677,22 @@ tailwind.config = {
            (t.notes && t.notes.toLowerCase().includes(query));
   }
 
-  function renderScheduled() {
+  function renderUpcoming() {
     const today = todayStr();
     const query = getSearchQuery();
 
-    const scheduled = tasks.filter(t => !t.completed && (!t.dueDate || t.dueDate > today))
+    const upcoming = tasks.filter(t => !t.completed && (!t.dueDate || t.dueDate > today))
       .filter(t => matchesSearch(t, query))
       .sort(sortByDateAsc);
 
-    if (scheduled.length === 0) {
+    if (upcoming.length === 0) {
       allContent.innerHTML = '';
       allEmpty.classList.remove('hidden');
       if (query) {
         allEmptyTitle.textContent = 'No matches';
         allEmptySub.textContent = 'Try a different search.';
       } else {
-        allEmptyTitle.textContent = 'Nothing scheduled';
+        allEmptyTitle.textContent = 'Nothing upcoming';
         allEmptySub.textContent = 'Tasks with future dates or no date appear here.';
       }
       return;
@@ -700,8 +700,8 @@ tailwind.config = {
 
     allEmpty.classList.add('hidden');
 
-    const dated = scheduled.filter(t => t.dueDate);
-    const undated = scheduled.filter(t => !t.dueDate);
+    const dated = upcoming.filter(t => t.dueDate);
+    const undated = upcoming.filter(t => !t.dueDate);
 
     let html = '';
     if (dated.length > 0) {
@@ -997,7 +997,7 @@ tailwind.config = {
     applyMotionPref();
 
     loadData();
-    setAllView('scheduled');
+    setAllView('upcoming');
     renderToday();
 
     if ('serviceWorker' in navigator) {
