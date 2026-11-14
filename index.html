@@ -73,13 +73,27 @@ tailwind.config = {
 
   :focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 
+  /* Motion preference:
+     - default (no class): respects OS prefers-reduced-motion
+     - html.motion-on: force reduce (block fades)
+     - html.motion-off: force motion (allow fades even if OS says reduce) */
   @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
+    html:not(.motion-off) *,
+    html:not(.motion-off) *::before,
+    html:not(.motion-off) *::after {
       scroll-behavior: auto !important;
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
+  }
+  html.motion-on *,
+  html.motion-on *::before,
+  html.motion-on *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 </style>
 </head>
@@ -125,8 +139,11 @@ tailwind.config = {
   <section id="today-view" class="tab-view">
     <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm mb-6 p-5">
       <form id="taskForm" onsubmit="return false;">
-        <input type="text" id="titleInput" placeholder="What needs to be done?" required autocomplete="off" maxlength="200"
-          class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
+        <div>
+          <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Task</label>
+          <input type="text" id="titleInput" placeholder="What needs to be done?" required autocomplete="off" maxlength="200"
+            class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
+        </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
           <div>
@@ -202,6 +219,16 @@ tailwind.config = {
         </div>
 
         <div>
+          <p class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2">Reduce Animations</p>
+          <div class="inline-flex w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-xl p-1 text-xs">
+            <button onclick="setMotionPref('auto')" data-motion="auto" class="motion-btn flex-1 px-2 py-2 rounded-lg font-semibold transition">Follow System</button>
+            <button onclick="setMotionPref('on')" data-motion="on" class="motion-btn flex-1 px-2 py-2 rounded-lg font-semibold transition">On</button>
+            <button onclick="setMotionPref('off')" data-motion="off" class="motion-btn flex-1 px-2 py-2 rounded-lg font-semibold transition">Off</button>
+          </div>
+          <p class="text-[10px] text-zinc-400 mt-1.5">"On" blocks animations. "Off" forces them on, even if iOS Reduce Motion is enabled.</p>
+        </div>
+
+        <div>
           <p class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2">Export</p>
           <button id="exportBtn" class="w-full px-4 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition text-sm font-semibold flex items-center justify-center gap-2">
             <i class="fa-solid fa-download"></i> Download JSON Backup
@@ -257,7 +284,7 @@ tailwind.config = {
 
     <form id="editForm" onsubmit="return false;">
       <div class="mb-3">
-        <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Title</label>
+        <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Task</label>
         <input type="text" id="editTitleInput" required maxlength="200" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
       </div>
       <div class="mb-3">
@@ -311,6 +338,7 @@ tailwind.config = {
 <script>
   const STORAGE_KEY = 'todo_tasks_v2';
   const THEME_KEY = 'todo_theme_v2';
+  const MOTION_KEY = 'todo_motion_v2';
   const MAX_VISIBLE_TOASTS = 3;
 
   let tasks = [];
@@ -319,6 +347,7 @@ tailwind.config = {
   let editingId = null;
   let pendingConfirmAction = null;
   let pendingImportData = null;
+  let motionPref = 'auto';
 
   function storageGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function storageSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
@@ -477,6 +506,35 @@ tailwind.config = {
     if (currentTab === 'today') renderToday();
     if (currentTab === 'all') renderAll();
   }
+
+  function loadMotionPref() {
+    const v = storageGet(MOTION_KEY);
+    if (v === 'auto' || v === 'on' || v === 'off') motionPref = v;
+  }
+
+  function applyMotionPref() {
+    const html = document.documentElement;
+    html.classList.remove('motion-on', 'motion-off');
+    if (motionPref === 'on') html.classList.add('motion-on');
+    else if (motionPref === 'off') html.classList.add('motion-off');
+    updateMotionButtons();
+  }
+
+  function updateMotionButtons() {
+    document.querySelectorAll('.motion-btn').forEach(b => {
+      const on = b.dataset.motion === motionPref;
+      b.className = `motion-btn flex-1 px-2 py-2 rounded-lg font-semibold transition ${on ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'}`;
+    });
+  }
+
+  window.setMotionPref = function(pref) {
+    if (!['auto', 'on', 'off'].includes(pref)) return;
+    motionPref = pref;
+    storageSet(MOTION_KEY, pref);
+    applyMotionPref();
+    const msg = pref === 'auto' ? 'Following system motion' : pref === 'on' ? 'Animations reduced' : 'Animations enabled';
+    showToast(msg);
+  };
 
   window.switchTab = function(tabId) {
     if (!['today', 'all', 'settings'].includes(tabId)) return;
@@ -923,6 +981,9 @@ tailwind.config = {
     if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       document.documentElement.classList.add('dark');
     }
+
+    loadMotionPref();
+    applyMotionPref();
 
     loadData();
     setAllView('scheduled');
