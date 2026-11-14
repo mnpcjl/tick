@@ -42,15 +42,13 @@ tailwind.config = {
   }
   input[type="date"]::-webkit-date-and-time-value { text-align: left; }
 
-  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  /* Subtle motion: pure fades only. No slides, no springs, no scale. */
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
-  @keyframes pop { 0% { transform: scale(0.8); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
-  @keyframes completeOut { 0% { opacity: 1; transform: translateX(0); } 100% { opacity: 0; transform: translateX(24px); } }
 
-  .toast-enter { animation: slideUp 0.25s ease-out forwards; }
-  .toast-exit { animation: fadeOut 0.25s ease-in forwards; }
-  .pop { animation: pop 0.25s ease-out; }
-  .completing { animation: completeOut 0.4s ease-in forwards; pointer-events: none; }
+  .toast-enter { animation: fadeIn 0.22s ease-out forwards; }
+  .toast-exit { animation: fadeOut 0.2s ease-in forwards; }
+  .completing { animation: fadeOut 0.3s ease-in forwards; pointer-events: none; }
 
   .checkbox {
     width: 22px; height: 22px; border-radius: 50%;
@@ -128,7 +126,7 @@ tailwind.config = {
     <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm mb-6 p-5">
       <form id="taskForm" onsubmit="return false;">
         <input type="text" id="titleInput" placeholder="What needs to be done?" required autocomplete="off" maxlength="200"
-          class="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-base font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
+          class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
           <div>
@@ -219,7 +217,7 @@ tailwind.config = {
         </div>
 
         <div>
-          <p class="text-[10px] uppercase font-bold tracking-wider text-rose-500 mb-2">Danger Zone</p>
+          <p class="text-[10px] uppercase font-bold tracking-wider text-rose-500 mb-2">Reset</p>
           <button id="resetBtn" class="w-full px-4 py-3 rounded-xl border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-semibold text-sm transition flex items-center justify-center gap-2">
             <i class="fa-solid fa-trash-can"></i> Clear All Data
           </button>
@@ -228,9 +226,6 @@ tailwind.config = {
     </div>
   </section>
 
-  <footer class="mt-8 text-center text-xs text-zinc-400 dark:text-zinc-600 py-4">
-    Tick • Stored locally in your browser • Private &amp; Safe
-  </footer>
 </div>
 
 <nav class="mobile-bottom-nav md:hidden flex justify-around py-2">
@@ -350,9 +345,7 @@ tailwind.config = {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
-  function daysBetween(a, b) {
-    return Math.round((parseDate(b) - parseDate(a)) / 86400000);
-  }
+  function daysBetween(a, b) { return Math.round((parseDate(b) - parseDate(a)) / 86400000); }
 
   function isValidDateString(value) {
     if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
@@ -607,9 +600,7 @@ tailwind.config = {
     else renderDone();
   }
 
-  function getSearchQuery() {
-    return (searchInput.value || '').trim().toLowerCase();
-  }
+  function getSearchQuery() { return (searchInput.value || '').trim().toLowerCase(); }
 
   function matchesSearch(t, query) {
     if (!query) return true;
@@ -745,11 +736,7 @@ tailwind.config = {
     const rows = document.querySelectorAll(`.task-row[data-task-id="${id}"]`);
     rows.forEach(row => {
       const cb = row.querySelector('.checkbox');
-      if (cb) {
-        cb.classList.toggle('done', t.completed);
-        cb.classList.add('pop');
-        setTimeout(() => cb.classList.remove('pop'), 250);
-      }
+      if (cb) cb.classList.toggle('done', t.completed);
       row.classList.add('completing');
     });
 
