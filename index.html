@@ -22,9 +22,7 @@
 <script>
 tailwind.config = {
   darkMode: 'class',
-  theme: {
-    extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } }
-  }
+  theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } }
 };
 </script>
 
@@ -36,70 +34,23 @@ tailwind.config = {
   ::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 9999px; }
   .dark ::-webkit-scrollbar-thumb { background: #3f3f46; }
 
-  input[type="number"]::-webkit-outer-spin-button,
-  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-  input[type="number"] { -moz-appearance: textfield; }
+  input[type="date"] {
+    -webkit-appearance: none; appearance: none;
+    min-width: 0; max-width: 100%; width: 100%;
+    box-sizing: border-box; display: block;
+    line-height: 1.25rem; min-height: 2.5rem;
+  }
+  input[type="date"]::-webkit-date-and-time-value { text-align: left; }
 
   @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
   @keyframes pop { 0% { transform: scale(0.8); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
-  @keyframes completeOut { 0% { opacity: 1; transform: translateX(0); } 100% { opacity: 0; transform: translateX(20px); } }
-  @keyframes dropdownIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes completeOut { 0% { opacity: 1; transform: translateX(0); } 100% { opacity: 0; transform: translateX(24px); } }
 
   .toast-enter { animation: slideUp 0.25s ease-out forwards; }
   .toast-exit { animation: fadeOut 0.25s ease-in forwards; }
-  .completing { animation: completeOut 0.4s ease-out forwards; }
   .pop { animation: pop 0.25s ease-out; }
-  .dropdown-enter { animation: dropdownIn 0.12s ease-out forwards; }
-
-  .form-header-btn {
-    background-color: transparent;
-    -webkit-tap-highlight-color: transparent;
-    -webkit-user-select: none;
-    user-select: none;
-    touch-action: manipulation;
-    cursor: pointer;
-    transition: background-color 0.15s ease;
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .form-header-btn:not(.expanded):hover {
-      background-color: rgba(0, 0, 0, 0.035);
-    }
-    .dark .form-header-btn:not(.expanded):hover {
-      background-color: rgba(255, 255, 255, 0.05);
-    }
-  }
-  .form-header-btn:not(.expanded):active {
-    background-color: rgba(0, 0, 0, 0.07);
-  }
-  .dark .form-header-btn:not(.expanded):active {
-    background-color: rgba(255, 255, 255, 0.09);
-  }
-
-  .form-collapsible {
-    overflow: hidden;
-    height: 0;
-    transition: height 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .pri-mark {
-    display: inline-block;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-weight: 700;
-    text-align: right;
-    width: 1.75rem;
-    flex-shrink: 0;
-    letter-spacing: -0.5px;
-    transition: opacity 0.15s ease;
-  }
-  .pri-mark-high { color: #dc2626; }
-  .dark .pri-mark-high { color: #f87171; }
-  .pri-mark-medium { color: #ea580c; }
-  .dark .pri-mark-medium { color: #fb923c; }
-  .pri-mark-low { color: #ca8a04; }
-  .dark .pri-mark-low { color: #facc15; }
-  .pri-mark-none { visibility: hidden; }
-  .pri-mark.completed { opacity: 0.4; }
+  .completing { animation: completeOut 0.4s ease-in forwards; pointer-events: none; }
 
   .checkbox {
     width: 22px; height: 22px; border-radius: 50%;
@@ -115,127 +66,22 @@ tailwind.config = {
   .checkbox.done { background: #18181b; border-color: #18181b; color: white; }
   .dark .checkbox.done { background: #fafafa; border-color: #fafafa; color: #09090b; }
 
-  .popover {
-    position: absolute;
-    background: white;
-    border: 1px solid #e4e4e7;
-    border-radius: 0.75rem;
-    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
-    padding: 0.3rem;
-    z-index: 40;
-    min-width: 130px;
-  }
-  .dark .popover { background: #18181b; border-color: #27272a; }
-
-  input[type="date"], input[type="time"] {
-    -webkit-appearance: none;
-    appearance: none;
-    -webkit-min-logical-width: 0;
-    min-width: 0;
-    max-width: 100%;
-    width: 100%;
-    box-sizing: border-box;
-    display: block;
-    line-height: 1.25rem;
-    min-height: 2.625rem;
-  }
-  input[type="date"]::-webkit-date-and-time-value,
-  input[type="time"]::-webkit-date-and-time-value { text-align: left; }
-
-  .history-date-input {
-    background: transparent; border: none; color: inherit; font-family: inherit;
-    font-size: 0.875rem; font-weight: 500; padding: 3px 4px; border-radius: 6px;
-    cursor: pointer; width: 100%; box-sizing: border-box;
-  }
-  .history-date-input:hover { background: rgba(0,0,0,0.04); }
-  .dark .history-date-input:hover { background: rgba(255,255,255,0.05); }
-  .history-date-input:focus { outline: none; background: rgba(0,0,0,0.04); }
-  .dark .history-date-input:focus { background: rgba(255,255,255,0.05); }
-
   .mobile-bottom-nav {
     padding-bottom: env(safe-area-inset-bottom, 0);
-    background: white;
-    border-top: 1px solid #e4e4e7;
-    box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.05);
-    z-index: 50;
-    flex-shrink: 0;
+    background: white; border-top: 1px solid #e4e4e7;
+    z-index: 50; flex-shrink: 0;
   }
   .dark .mobile-bottom-nav { background: #18181b; border-top-color: #27272a; }
 
-  .weekday-btn {
-    width: 2.25rem; height: 2.25rem;
-    border-radius: 0.5rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    transition: all 0.15s ease;
-    display: inline-flex; align-items: center; justify-content: center;
-  }
-  .weekday-btn.inactive {
-    background: #f4f4f5; color: #52525b;
-  }
-  .dark .weekday-btn.inactive { background: #27272a; color: #a1a1aa; }
-  .weekday-btn.inactive:hover { background: #e4e4e7; }
-  .dark .weekday-btn.inactive:hover { background: #3f3f46; }
-  .weekday-btn.active {
-    background: #18181b; color: #ffffff;
-  }
-  .dark .weekday-btn.active { background: #fafafa; color: #09090b; }
-
-  .tt-day-tab {
-    flex: 1;
-    min-width: 3.5rem;
-    padding: 0.5rem 0;
-    text-align: center;
-    border-radius: 0.5rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #71717a;
-    transition: all 0.15s ease;
-    cursor: pointer;
-    border: 1px solid transparent;
-  }
-  .dark .tt-day-tab { color: #a1a1aa; }
-  .tt-day-tab:hover { background: #f4f4f5; }
-  .dark .tt-day-tab:hover { background: #27272a; }
-  .tt-day-tab.active {
-    background: #18181b;
-    color: #ffffff;
-    border-color: #18181b;
-  }
-  .dark .tt-day-tab.active {
-    background: #fafafa;
-    color: #09090b;
-    border-color: #fafafa;
-  }
-  .tt-tab-count {
-    display: block;
-    font-size: 0.65rem;
-    font-weight: 700;
-    margin-top: 2px;
-  }
-  .tt-day-tab.active .tt-tab-count { color: rgba(255, 255, 255, 0.8); }
-  .dark .tt-day-tab.active .tt-tab-count { color: rgba(9, 9, 11, 0.7); }
-
   :focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 
-  /* Motion: "auto" = follow system; "on" = force reduced; "off" = force motion (override OS) */
   @media (prefers-reduced-motion: reduce) {
-    html:not(.motion-off) *,
-    html:not(.motion-off) *::before,
-    html:not(.motion-off) *::after {
+    *, *::before, *::after {
       scroll-behavior: auto !important;
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
-  }
-  html.motion-on *,
-  html.motion-on *::before,
-  html.motion-on *::after {
-    scroll-behavior: auto !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
   }
 </style>
 </head>
@@ -274,126 +120,31 @@ tailwind.config = {
 
   <div id="storageWarning" class="hidden mb-6 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-200 text-sm flex items-start gap-3">
     <i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
-    <p>Storage is unavailable. Entries won't be saved. Try opening this page in a normal browser tab.</p>
+    <p>Storage is unavailable. Entries won't be saved.</p>
   </div>
 
   <!-- TODAY -->
   <section id="today-view" class="tab-view">
+    <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm mb-6 p-5">
+      <form id="taskForm" onsubmit="return false;">
+        <input type="text" id="titleInput" placeholder="What needs to be done?" required autocomplete="off" maxlength="200"
+          class="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-base font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
 
-    <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm mb-6 overflow-hidden">
-      <button id="formHeaderBtn" type="button" class="form-header-btn w-full flex items-center justify-between gap-2 px-5 py-4 text-base font-bold text-zinc-800 dark:text-zinc-100">
-        <span class="flex items-center gap-2">
-          <i class="fa-solid fa-plus text-zinc-400" id="formHeaderIcon"></i>
-          <span id="formHeaderText">New Task</span>
-        </span>
-        <i class="fa-solid fa-chevron-down text-xs text-zinc-400 transition-transform duration-200" id="formChevron" style="transform: rotate(0deg);"></i>
-      </button>
-
-      <div id="formExpandable" class="form-collapsible">
-        <div class="px-5 pb-5 pt-3">
-          <form id="taskForm" onsubmit="return false;">
-            <input type="text" id="titleInput" placeholder="What needs to be done?" required autocomplete="off" maxlength="200"
-              class="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-base font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-              <div>
-                <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Type</label>
-                <select id="typeSelect" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition"></select>
-              </div>
-              <div>
-                <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Priority</label>
-                <select id="prioritySelect" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
-                  <option value="high">!!! High</option>
-                  <option value="medium">!! Medium</option>
-                  <option value="low">! Low</option>
-                  <option value="none">None</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
-              <div>
-                <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Due Date</label>
-                <input type="date" id="dateInput" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
-              </div>
-              <div>
-                <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Start Time</label>
-                <input type="time" id="timeInput" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
-              </div>
-              <div>
-                <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">End Time</label>
-                <input type="time" id="endTimeInput" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
-              </div>
-            </div>
-
-            <!-- #4: First occurrence hint (display-only, no behavior change) -->
-            <div id="firstOccurrenceHint" class="hidden mt-2 px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-200 text-[11px] flex items-start gap-1.5">
-              <i class="fa-solid fa-circle-info mt-0.5"></i>
-              <span id="firstOccurrenceHintText"></span>
-            </div>
-
-            <div class="mt-3">
-              <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Repeat</label>
-              <select id="repeatSelect" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
-                <option value="">Never</option>
-                <option value="daily">Daily</option>
-                <option value="weekdays">Weekdays</option>
-                <option value="weekends">Weekends</option>
-                <option value="weekly">Weekly</option>
-                <option value="biweekly">Biweekly</option>
-                <option value="monthly">Monthly</option>
-                <option value="quarterly">Quarterly</option>
-                <option value="halfyearly">Half-yearly</option>
-                <option value="yearly">Yearly</option>
-                <option value="custom">Custom…</option>
-              </select>
-              <div id="weekdayPickerRow" class="hidden mt-2">
-                <div class="flex gap-1.5" id="weekdayPicker">
-                  <button type="button" class="weekday-btn inactive" data-weekday="0">S</button>
-                  <button type="button" class="weekday-btn inactive" data-weekday="1">M</button>
-                  <button type="button" class="weekday-btn inactive" data-weekday="2">T</button>
-                  <button type="button" class="weekday-btn inactive" data-weekday="3">W</button>
-                  <button type="button" class="weekday-btn inactive" data-weekday="4">T</button>
-                  <button type="button" class="weekday-btn inactive" data-weekday="5">F</button>
-                  <button type="button" class="weekday-btn inactive" data-weekday="6">S</button>
-                </div>
-              </div>
-              <div id="customRepeatRow" class="hidden mt-2 flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300">
-                <span>Every</span>
-                <input type="number" id="customInterval" min="1" max="3650" value="3" class="w-16 px-2 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100">
-                <select id="customUnit" class="px-2 py-1.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100">
-                  <option value="daily">day(s)</option>
-                  <option value="weekly">week(s)</option>
-                  <option value="monthly">month(s)</option>
-                  <option value="yearly">year(s)</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="mt-3">
-              <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Notes <span class="normal-case font-normal">(optional)</span></label>
-              <textarea id="notesInput" rows="2" maxlength="10000" placeholder="Add details…" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition resize-none"></textarea>
-            </div>
-
-            <div class="flex gap-3 mt-4">
-              <button type="submit" id="submitBtn" class="flex-1 py-3 rounded-xl bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 font-bold text-sm shadow-sm transition-all duration-200 flex items-center justify-center gap-2">
-                <i class="fa-solid fa-plus"></i> Add Task
-              </button>
-              <button type="button" id="cancelEditBtn" class="hidden px-5 py-3 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 font-bold text-sm transition">
-                Cancel
-              </button>
-            </div>
-          </form>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
+          <div>
+            <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Date <span class="normal-case font-normal">(optional)</span></label>
+            <input type="date" id="dateInput" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Notes <span class="normal-case font-normal">(optional)</span></label>
+            <textarea id="notesInput" rows="1" maxlength="10000" placeholder="Add details…" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition resize-none"></textarea>
+          </div>
         </div>
-      </div>
-    </div>
 
-    <div class="flex justify-between items-center mb-4">
-      <h2 class="text-xs uppercase font-semibold tracking-wider text-zinc-400">Your Tasks</h2>
-      <div class="inline-flex bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-0.5 text-xs" id="todaySortGroup">
-        <button onclick="setSortPref('deadline')" data-sort="deadline" class="sort-btn px-3 py-1 rounded-md font-semibold transition">Deadline</button>
-        <button onclick="setSortPref('priority')" data-sort="priority" class="sort-btn px-3 py-1 rounded-md font-semibold transition">Priority</button>
-      </div>
+        <button type="submit" class="w-full mt-3 py-3 rounded-xl bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 font-bold text-sm shadow-sm transition-all duration-200 flex items-center justify-center gap-2">
+          <i class="fa-solid fa-plus"></i> Add Task
+        </button>
+      </form>
     </div>
 
     <div id="overdueSection" class="hidden mb-6">
@@ -403,119 +154,33 @@ tailwind.config = {
       <div id="overdueList" class="space-y-2"></div>
     </div>
 
-    <div id="todaySection" class="mb-6">
+    <div id="todaySection">
       <div id="todayList" class="space-y-2"></div>
-    </div>
-
-    <div id="doneTodaySection" class="hidden mt-4">
-      <button id="doneTodayToggle" type="button" class="w-full flex items-center justify-between gap-2 px-3 py-2.5 bg-zinc-100 dark:bg-zinc-900 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-800 transition text-sm font-semibold text-zinc-700 dark:text-zinc-200"></button>
-      <div id="doneTodayList" class="hidden mt-2 space-y-2"></div>
     </div>
   </section>
 
   <!-- ALL -->
   <section id="all-view" class="tab-view hidden">
-
-    <div class="flex justify-center mb-6" id="allViewDropdownWrapper" style="position: relative;">
-      <button type="button" id="allViewDropdownBtn" class="inline-flex items-center gap-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 text-sm font-semibold text-zinc-800 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition min-w-[180px] justify-between">
-        <span id="allViewDropdownLabel">Upcoming</span>
-        <i class="fa-solid fa-chevron-down text-xs text-zinc-400"></i>
-      </button>
-      <div id="allViewDropdownMenu" class="hidden absolute top-full mt-1 left-1/2 w-[180px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-lg z-20 overflow-hidden dropdown-enter" style="transform: translateX(-50%);">
-        <button type="button" onclick="selectAllView('upcoming')" data-view="upcoming" class="all-view-option w-full text-left px-4 py-2.5 text-sm font-semibold text-zinc-800 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition flex items-center justify-between">
-          <span>Upcoming</span>
-          <i class="fa-solid fa-check text-xs text-zinc-800 dark:text-zinc-100 hidden" data-check="upcoming"></i>
-        </button>
-        <button type="button" onclick="selectAllView('timetable')" data-view="timetable" class="all-view-option w-full text-left px-4 py-2.5 text-sm font-semibold text-zinc-800 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition flex items-center justify-between">
-          <span>Timetable</span>
-          <i class="fa-solid fa-check text-xs text-zinc-800 dark:text-zinc-100 hidden" data-check="timetable"></i>
-        </button>
-        <button type="button" onclick="selectAllView('completed')" data-view="completed" class="all-view-option w-full text-left px-4 py-2.5 text-sm font-semibold text-zinc-800 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition flex items-center justify-between">
-          <span>Completed</span>
-          <i class="fa-solid fa-check text-xs text-zinc-800 dark:text-zinc-100 hidden" data-check="completed"></i>
-        </button>
-        <button type="button" onclick="selectAllView('archived')" data-view="archived" class="all-view-option w-full text-left px-4 py-2.5 text-sm font-semibold text-zinc-800 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition flex items-center justify-between">
-          <span>Archive</span>
-          <i class="fa-solid fa-check text-xs text-zinc-800 dark:text-zinc-100 hidden" data-check="archived"></i>
-        </button>
+    <div class="flex justify-center mb-4">
+      <div class="inline-flex bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-1 text-xs">
+        <button onclick="setAllView('scheduled')" data-allview="scheduled" class="allview-btn px-4 py-2 rounded-lg font-semibold transition">Scheduled</button>
+        <button onclick="setAllView('done')" data-allview="done" class="allview-btn px-4 py-2 rounded-lg font-semibold transition">Done</button>
       </div>
     </div>
 
-    <div id="all-upcoming-view">
-      <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-5">
-        <div class="flex flex-col sm:flex-row gap-2 mb-5">
-          <input type="text" id="searchInput" placeholder="Search upcoming tasks…"
-            class="text-xs px-3 py-2 bg-zinc-100 dark:bg-zinc-800 border-0 rounded-xl text-zinc-700 dark:text-zinc-200 font-medium focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 w-full sm:flex-1">
-          <div class="flex items-center gap-2">
-            <input type="month" id="monthFilter"
-              class="text-xs px-3 py-2 bg-zinc-100 dark:bg-zinc-800 border-0 rounded-xl text-zinc-700 dark:text-zinc-200 font-medium focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 flex-1 sm:flex-none">
-            <div class="inline-flex bg-zinc-100 dark:bg-zinc-800 rounded-lg p-0.5 text-xs" id="listSortGroup">
-              <button onclick="setSortPref('deadline')" data-sort="deadline" class="sort-btn px-2.5 py-1.5 rounded-md font-semibold transition">Deadline</button>
-              <button onclick="setSortPref('priority')" data-sort="priority" class="sort-btn px-2.5 py-1.5 rounded-md font-semibold transition">Priority</button>
-            </div>
-            <button id="clearFiltersBtn" title="Reset filters" class="p-2 text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 flex-shrink-0">
-              <i class="fa-solid fa-rotate-left"></i>
-            </button>
-          </div>
-        </div>
-
-        <div id="listContent" class="space-y-5"></div>
-        <div id="listEmpty" class="hidden py-12 text-center">
-          <div class="w-12 h-12 mx-auto mb-3 text-zinc-300 dark:text-zinc-600 flex items-center justify-center rounded-full bg-zinc-50 dark:bg-zinc-950">
-            <i class="fa-solid fa-clipboard-list text-xl"></i>
-          </div>
-          <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">No upcoming tasks</p>
-          <p class="text-xs text-zinc-400 mt-1">Tasks due tomorrow or later appear here. Today's tasks live in the Today tab.</p>
-        </div>
+    <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-5">
+      <div class="mb-4">
+        <input type="text" id="searchInput" placeholder="Search tasks…"
+          class="text-xs px-3 py-2 bg-zinc-100 dark:bg-zinc-800 border-0 rounded-xl text-zinc-700 dark:text-zinc-200 font-medium focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 w-full">
       </div>
-    </div>
 
-    <!-- TIMETABLE VIEW (computed from tasks with start+end time) -->
-    <div id="all-timetable-view" class="hidden">
-      <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-5">
-        <div class="flex gap-1 mb-6 overflow-x-auto pb-1" id="tt-day-tabs"></div>
-        <div id="ttSlotList" class="space-y-3"></div>
-        <div id="ttEmptyState" class="hidden py-10 text-center">
-          <div class="w-12 h-12 mx-auto mb-3 text-zinc-300 dark:text-zinc-700 flex items-center justify-center rounded-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
-            <i class="fa-regular fa-calendar text-lg"></i>
-          </div>
-          <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400" id="ttEmptyText">No scheduled tasks on this day.</p>
-          <p class="text-xs text-zinc-400 mt-1">Add a task with both a start and end time — it appears here automatically.</p>
+      <div id="allContent" class="space-y-5"></div>
+      <div id="allEmpty" class="hidden py-12 text-center">
+        <div class="w-12 h-12 mx-auto mb-3 text-zinc-300 dark:text-zinc-600 flex items-center justify-center rounded-full bg-zinc-50 dark:bg-zinc-950">
+          <i class="fa-solid fa-clipboard-list text-xl"></i>
         </div>
-      </div>
-    </div>
-
-    <div id="all-completed-view" class="hidden">
-      <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-5">
-        <div class="mb-4">
-          <input type="text" id="archiveSearchInput" placeholder="Search completed tasks…"
-            class="text-xs px-3 py-2 bg-zinc-100 dark:bg-zinc-800 border-0 rounded-xl text-zinc-700 dark:text-zinc-200 font-medium focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 w-full">
-        </div>
-        <div id="archiveContent" class="space-y-5"></div>
-        <div id="archiveEmpty" class="hidden py-12 text-center">
-          <div class="w-12 h-12 mx-auto mb-3 text-zinc-300 dark:text-zinc-600 flex items-center justify-center rounded-full bg-zinc-50 dark:bg-zinc-950">
-            <i class="fa-solid fa-box-archive text-xl"></i>
-          </div>
-          <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Nothing completed yet</p>
-          <p class="text-xs text-zinc-400 mt-1">Completed tasks appear here.</p>
-        </div>
-      </div>
-    </div>
-
-    <div id="all-archived-view" class="hidden">
-      <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-5">
-        <div class="mb-4">
-          <input type="text" id="archivedSearchInput" placeholder="Search archived tasks…"
-            class="text-xs px-3 py-2 bg-zinc-100 dark:bg-zinc-800 border-0 rounded-xl text-zinc-700 dark:text-zinc-200 font-medium focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 w-full">
-        </div>
-        <div id="archivedContent" class="space-y-5"></div>
-        <div id="archivedEmpty" class="hidden py-12 text-center">
-          <div class="w-12 h-12 mx-auto mb-3 text-zinc-300 dark:text-zinc-600 flex items-center justify-center rounded-full bg-zinc-50 dark:bg-zinc-950">
-            <i class="fa-solid fa-inbox text-xl"></i>
-          </div>
-          <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Archive is empty</p>
-          <p class="text-xs text-zinc-400 mt-1">Archived tasks are hidden from active views. Tap any task's Archive button to move it here.</p>
-        </div>
+        <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400" id="allEmptyTitle">No tasks</p>
+        <p class="text-xs text-zinc-400 mt-1" id="allEmptySub"></p>
       </div>
     </div>
   </section>
@@ -535,25 +200,6 @@ tailwind.config = {
             <i class="fa-solid fa-sun hidden dark:block text-amber-400"></i>
             <span class="dark:hidden">Dark Mode</span>
             <span class="hidden dark:inline">Light Mode</span>
-          </button>
-        </div>
-
-        <!-- #2: Reduce Animations toggle -->
-        <div>
-          <p class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2">Reduce Animations</p>
-          <div class="inline-flex w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-xl p-1 text-xs">
-            <button onclick="setMotionPref('auto')" data-motion="auto" class="motion-btn flex-1 px-2 py-2 rounded-lg font-semibold transition">Follow System</button>
-            <button onclick="setMotionPref('on')" data-motion="on" class="motion-btn flex-1 px-2 py-2 rounded-lg font-semibold transition">On</button>
-            <button onclick="setMotionPref('off')" data-motion="off" class="motion-btn flex-1 px-2 py-2 rounded-lg font-semibold transition">Off</button>
-          </div>
-          <p class="text-[10px] text-zinc-400 mt-1.5">"On" disables all animations. "Off" forces animations even if iOS Reduce Motion is enabled.</p>
-        </div>
-
-        <div>
-          <p class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2">Recurring</p>
-          <button id="recurringTasksBtn" class="w-full px-4 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition text-sm font-semibold flex items-center justify-between gap-2">
-            <span class="flex items-center gap-2"><i class="fa-solid fa-rotate"></i> Recurring Tasks</span>
-            <span id="recurringTasksCount" class="text-xs text-zinc-500 dark:text-zinc-400">None</span>
           </button>
         </div>
 
@@ -583,7 +229,7 @@ tailwind.config = {
   </section>
 
   <footer class="mt-8 text-center text-xs text-zinc-400 dark:text-zinc-600 py-4">
-    Tick • Stored locally in your browser • Private & Safe
+    Tick • Stored locally in your browser • Private &amp; Safe
   </footer>
 </div>
 
@@ -604,32 +250,62 @@ tailwind.config = {
 
 <div id="toastContainer" role="status" aria-live="polite" aria-atomic="true" class="fixed bottom-24 md:bottom-10 left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center gap-2 pointer-events-none w-full px-4"></div>
 
-<div id="confirmModal" class="hidden fixed inset-0 bg-zinc-950/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-  <div role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle" class="bg-white dark:bg-zinc-900 rounded-2xl max-w-sm w-full p-6 shadow-xl border border-zinc-100 dark:border-zinc-800">
-    <h3 id="confirmModalTitle" class="text-lg font-bold text-zinc-900 dark:text-white mb-2">Clear All Data?</h3>
-    <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-6">This will permanently delete all tasks and their history. Export a backup first if you want to keep them.</p>
+<!-- Edit Modal -->
+<div id="editModal" class="hidden fixed inset-0 bg-zinc-950/50 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+  <div role="dialog" aria-modal="true" class="bg-white dark:bg-zinc-900 rounded-2xl max-w-md w-full p-6 shadow-xl border border-zinc-100 dark:border-zinc-800 max-h-[85vh] overflow-y-auto">
+    <div class="flex items-start justify-between mb-4">
+      <h3 class="text-lg font-bold text-zinc-900 dark:text-white">Edit Task</h3>
+      <button id="closeEditBtn" class="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+    </div>
+
+    <form id="editForm" onsubmit="return false;">
+      <div class="mb-3">
+        <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Title</label>
+        <input type="text" id="editTitleInput" required maxlength="200" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
+      </div>
+      <div class="mb-3">
+        <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Date <span class="normal-case font-normal">(optional)</span></label>
+        <input type="date" id="editDateInput" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition">
+      </div>
+      <div class="mb-4">
+        <label class="block text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Notes <span class="normal-case font-normal">(optional)</span></label>
+        <textarea id="editNotesInput" rows="3" maxlength="10000" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition resize-none"></textarea>
+      </div>
+
+      <div class="flex gap-2">
+        <button type="button" id="editDeleteBtn" title="Delete task" class="px-3 py-2.5 rounded-xl border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-bold text-sm transition">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+        <button type="button" id="editCancelBtn" class="flex-1 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 font-bold text-sm transition">
+          Cancel
+        </button>
+        <button type="submit" class="flex-1 py-2.5 rounded-xl bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 font-bold text-sm transition">
+          Save
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div id="confirmModal" class="hidden fixed inset-0 bg-zinc-950/50 backdrop-blur-sm z-[75] flex items-center justify-center p-4">
+  <div role="dialog" aria-modal="true" class="bg-white dark:bg-zinc-900 rounded-2xl max-w-sm w-full p-6 shadow-xl border border-zinc-100 dark:border-zinc-800">
+    <h3 id="confirmTitle" class="text-lg font-bold text-zinc-900 dark:text-white mb-2">Confirm</h3>
+    <p id="confirmMessage" class="text-sm text-zinc-500 dark:text-zinc-400 mb-6"></p>
     <div class="flex gap-3 justify-end">
-      <button id="cancelResetBtn" class="px-4 py-2 text-sm font-semibold text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-xl transition">Cancel</button>
-      <button id="confirmResetBtn" class="px-4 py-2 text-sm font-semibold text-white bg-rose-500 hover:bg-rose-600 rounded-xl transition">Clear All</button>
+      <button id="confirmCancelBtn" class="px-4 py-2 text-sm font-semibold text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-xl transition">Cancel</button>
+      <button id="confirmOkBtn" class="px-4 py-2 text-sm font-semibold text-white bg-rose-500 hover:bg-rose-600 rounded-xl transition">Confirm</button>
     </div>
   </div>
 </div>
 
-<div id="deleteConfirmModal" class="hidden fixed inset-0 bg-zinc-950/50 backdrop-blur-sm z-[65] flex items-center justify-center p-4">
-  <div role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle" class="bg-white dark:bg-zinc-900 rounded-2xl max-w-sm w-full p-6 shadow-xl border border-zinc-100 dark:border-zinc-800">
-    <h3 id="deleteModalTitle" class="text-lg font-bold text-zinc-900 dark:text-white mb-2">Delete this task?</h3>
-    <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-6">This will permanently remove the task and its completion history.</p>
-    <div class="flex gap-3 justify-end">
-      <button id="cancelDeleteBtn" class="px-4 py-2 text-sm font-semibold text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-xl transition">Cancel</button>
-      <button id="confirmDeleteBtn" class="px-4 py-2 text-sm font-semibold text-white bg-rose-500 hover:bg-rose-600 rounded-xl transition">Delete</button>
-    </div>
-  </div>
-</div>
-
+<!-- Import Confirm -->
 <div id="importConfirmModal" class="hidden fixed inset-0 bg-zinc-950/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-  <div role="dialog" aria-modal="true" aria-labelledby="importModalTitle" class="bg-white dark:bg-zinc-900 rounded-2xl max-w-sm w-full p-6 shadow-xl border border-zinc-100 dark:border-zinc-800">
-    <h3 id="importModalTitle" class="text-lg font-bold text-zinc-900 dark:text-white mb-2">Replace All Data?</h3>
-    <p id="importConfirmText" class="text-sm text-zinc-500 dark:text-zinc-400 mb-6">This will replace all your current data with the imported data.</p>
+  <div role="dialog" aria-modal="true" class="bg-white dark:bg-zinc-900 rounded-2xl max-w-sm w-full p-6 shadow-xl border border-zinc-100 dark:border-zinc-800">
+    <h3 class="text-lg font-bold text-zinc-900 dark:text-white mb-2">Replace All Data?</h3>
+    <p id="importConfirmText" class="text-sm text-zinc-500 dark:text-zinc-400 mb-6"></p>
     <div class="flex gap-3 justify-end">
       <button id="cancelImportBtn" class="px-4 py-2 text-sm font-semibold text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-xl transition">Cancel</button>
       <button id="confirmImportBtn" class="px-4 py-2 text-sm font-semibold text-white bg-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 hover:bg-black dark:hover:bg-white rounded-xl transition">Replace</button>
@@ -637,2383 +313,613 @@ tailwind.config = {
   </div>
 </div>
 
-<div id="recurringModal" class="hidden fixed inset-0 bg-zinc-950/50 backdrop-blur-sm z-[68] flex items-center justify-center p-4">
-  <div role="dialog" aria-modal="true" aria-labelledby="recurringModalTitle" class="bg-white dark:bg-zinc-900 rounded-2xl max-w-md w-full p-6 shadow-xl border border-zinc-100 dark:border-zinc-800 max-h-[85vh] overflow-y-auto">
-    <div class="flex items-start justify-between mb-4">
-      <h3 id="recurringModalTitle" class="text-lg font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-        <i class="fa-solid fa-rotate text-zinc-400"></i> Recurring Tasks
-      </h3>
-      <button id="closeRecurringBtn" class="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition">
-        <i class="fa-solid fa-xmark text-lg"></i>
-      </button>
-    </div>
-    <div id="recurringList" class="space-y-2"></div>
-  </div>
-</div>
-
-<div id="detailModal" class="hidden fixed inset-0 bg-zinc-950/50 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
-  <div role="dialog" aria-modal="true" aria-labelledby="detailTitle" class="bg-white dark:bg-zinc-900 rounded-2xl max-w-md w-full p-6 shadow-xl border border-zinc-100 dark:border-zinc-800 max-h-[85vh] overflow-y-auto">
-    <div class="flex items-start justify-between mb-4">
-      <div class="flex items-start gap-3 min-w-0 flex-1">
-        <div id="detailIcon" class="w-11 h-11 rounded-xl flex items-center justify-center text-base font-bold flex-shrink-0 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300"></div>
-        <div class="min-w-0 flex-1">
-          <p id="detailType" class="text-[10px] uppercase font-bold tracking-wider text-zinc-400"></p>
-          <p id="detailTitle" class="text-lg font-extrabold tracking-tight leading-tight text-zinc-900 dark:text-white break-words"></p>
-        </div>
-      </div>
-      <button id="closeDetailBtn" class="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition flex-shrink-0">
-        <i class="fa-solid fa-xmark text-lg"></i>
-      </button>
-    </div>
-
-    <div class="space-y-3 py-4 border-t border-b border-zinc-100 dark:border-zinc-800">
-      <div class="flex justify-between gap-4">
-        <span class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 flex-shrink-0">Priority</span>
-        <span id="detailPriority" class="text-sm font-semibold text-zinc-800 dark:text-zinc-100 text-right"></span>
-      </div>
-      <div class="flex justify-between gap-4" id="detailScheduleRow" style="display: none;">
-        <span class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 flex-shrink-0">Schedule</span>
-        <span id="detailSchedule" class="text-sm font-semibold text-right"></span>
-      </div>
-      <div class="flex justify-between gap-4" id="detailDateRow">
-        <span class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 flex-shrink-0">Due</span>
-        <span id="detailDate" class="text-sm font-semibold text-zinc-800 dark:text-zinc-100 text-right"></span>
-      </div>
-      <div class="flex justify-between gap-4" id="detailRepeatRow">
-        <span class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 flex-shrink-0">Repeats</span>
-        <button id="detailRepeatBtn" class="text-sm font-semibold text-zinc-800 dark:text-zinc-100 text-right hover:opacity-70 transition"></button>
-      </div>
-      <div id="historyPanel" class="hidden pt-3 border-t border-zinc-100 dark:border-zinc-800">
-        <div class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2">History</div>
-        <div id="historyList" class="space-y-0.5 max-h-[200px] overflow-y-auto"></div>
-        <button id="collapseHistoryBtn" class="mt-3 text-xs font-semibold text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 transition">
-          Collapse
-        </button>
-      </div>
-      <div class="pt-2 border-t border-zinc-100 dark:border-zinc-800">
-        <span class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 block mb-2">Notes</span>
-        <p id="detailNotes" class="text-sm text-zinc-700 dark:text-zinc-200 leading-relaxed break-words whitespace-pre-wrap"></p>
-      </div>
-    </div>
-
-    <div class="flex gap-2 mt-5">
-      <button id="detailEditBtn" class="flex-1 py-2.5 rounded-xl bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 font-bold text-sm transition flex items-center justify-center gap-2">
-        <i class="fa-solid fa-pen"></i> Edit
-      </button>
-      <button id="detailArchiveBtn" class="flex-1 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800 font-bold text-sm transition flex items-center justify-center gap-2">
-        <i class="fa-solid fa-box-archive"></i> Archive
-      </button>
-      <button id="detailDeleteBtn" class="flex-1 py-2.5 rounded-xl border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-bold text-sm transition flex items-center justify-center gap-2">
-        <i class="fa-solid fa-trash-can"></i> Delete
-      </button>
-    </div>
-  </div>
-</div>
-
 <script>
-const CATEGORIES = [
-  { name: 'Academic',       icon: 'fa-graduation-cap' },
-  { name: 'Occupational',   icon: 'fa-briefcase' },
-  { name: 'Administrative', icon: 'fa-file-lines' },
-  { name: 'Entertainment',  icon: 'fa-gamepad' },
-  { name: 'Workout',        icon: 'fa-dumbbell' },
-  { name: 'Music',          icon: 'fa-music' },
-  { name: 'Chores',         icon: 'fa-broom' },
-  { name: 'Social',         icon: 'fa-user-group' },
-  { name: 'Others',         icon: 'fa-circle' }
-];
+  const STORAGE_KEY = 'todo_tasks_v2';
+  const THEME_KEY = 'todo_theme_v2';
+  const MAX_VISIBLE_TOASTS = 3;
 
-const PRIORITY_LABEL = { high: 'High', medium: 'Medium', low: 'Low', none: 'None' };
-const PRIORITY_MARKS = { high: '!!!', medium: '!!', low: '!', none: '' };
-const PRIORITY_COLOR = {
-  high: 'pri-mark-high',
-  medium: 'pri-mark-medium',
-  low: 'pri-mark-low',
-  none: 'pri-mark-none'
-};
-const PRIORITY_ORDER = { high: 0, medium: 1, low: 2, none: 3 };
+  let tasks = [];
+  let currentTab = 'today';
+  let allView = 'scheduled';
+  let editingId = null;
+  let pendingConfirmAction = null;
+  let pendingImportData = null;
 
-const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const DAY_NAMES_FULL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  function storageGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function storageSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
+  function testStorage() { try { const p = '__probe__'; localStorage.setItem(p, '1'); localStorage.removeItem(p); return true; } catch (e) { return false; } }
 
-const STORAGE_KEY_TASKS = 'todo_tasks_v1';
-const STORAGE_KEY_SLOTS = 'timetable_slots_v1';
-const STORAGE_KEY_MIGRATED = 'slots_migrated_v1';
-const STORAGE_KEY_THEME = 'todo_theme';
-const STORAGE_KEY_SORT = 'todo_sort_pref';
-const STORAGE_KEY_MOTION = 'todo_motion_pref';
-const MAX_VISIBLE_TOASTS = 3;
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function formatDate(d) { return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+  function parseDate(str) { const [y, m, d] = str.split('-').map(Number); return new Date(y, m-1, d); }
+  function todayStr() { return formatDate(new Date()); }
 
-let tasks = [];
-let currentTab = 'today';
-let sortPref = 'deadline';
-let motionPref = 'auto';
-let editingId = null;
-let detailId = null;
-let pendingDeleteId = null;
-let currentFormType = 'Academic';
-let allSubView = 'upcoming';
-let snoozeOpenForId = null;
-let cameFromTab = null;
-let pendingImportData = null;
-let currentDays = [];
-let doneTodayExpanded = false;
-let isFormExpanded = false;
-
-// Timetable state
-let selectedTimetableDay = new Date().getDay();
-
-let storageUsable = true;
-function storageGet(k) { try { return localStorage.getItem(k); } catch (e) { storageUsable = false; return null; } }
-function storageSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { storageUsable = false; return false; } }
-function testStorage() { try { const p='__probe__'; localStorage.setItem(p,'1'); localStorage.removeItem(p); return true; } catch (e) { return false; } }
-
-function pad(n) { return String(n).padStart(2, '0'); }
-function formatDate(d) { return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
-function parseDate(str) { const [y,m,d] = str.split('-').map(Number); return new Date(y, m-1, d); }
-function todayStr() { return formatDate(new Date()); }
-function addDaysStr(dateStr, n) { const d = parseDate(dateStr); d.setDate(d.getDate() + n); return formatDate(d); }
-function addMonthsStr(dateStr, n) {
-  const d = parseDate(dateStr);
-  const day = d.getDate();
-  d.setDate(1);
-  d.setMonth(d.getMonth() + n);
-  const lastDay = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
-  d.setDate(Math.min(day, lastDay));
-  return formatDate(d);
-}
-function addYearsStr(dateStr, n) {
-  const d = parseDate(dateStr);
-  const day = d.getDate();
-  d.setDate(1);
-  d.setFullYear(d.getFullYear() + n);
-  const lastDay = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
-  d.setDate(Math.min(day, lastDay));
-  return formatDate(d);
-}
-function daysBetween(a, b) {
-  return Math.round((parseDate(b) - parseDate(a)) / 86400000);
-}
-
-function isTimePast(timeStr) {
-  if (!timeStr) return false;
-  const now = new Date();
-  const [h, m] = timeStr.split(':').map(Number);
-  const dueMinutes = h * 60 + m;
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
-  return nowMinutes > dueMinutes;
-}
-
-function getWeekStart(dateStr) {
-  const d = parseDate(dateStr);
-  const day = d.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  d.setDate(d.getDate() + diff);
-  return formatDate(d);
-}
-
-function advanceWeekly(fromDate, days, interval, anchor) {
-  const anchorWeekStart = getWeekStart(anchor);
-  const d = parseDate(fromDate);
-  for (let i = 1; i <= 400; i++) {
-    d.setDate(d.getDate() + 1);
-    if (!days.includes(d.getDay())) continue;
-    const dStr = formatDate(d);
-    const dWeekStart = getWeekStart(dStr);
-    const weeksDiff = Math.round(daysBetween(anchorWeekStart, dWeekStart) / 7);
-    if (weeksDiff >= 0 && weeksDiff % interval === 0) return dStr;
-  }
-  return formatDate(d);
-}
-
-function advanceDate(fromDate, recurrence) {
-  if (!recurrence) return fromDate;
-  const { freq, interval } = recurrence;
-  if (freq === 'daily') return addDaysStr(fromDate, interval);
-  if (freq === 'weekly') {
-    if (recurrence.days && recurrence.days.length > 0) {
-      const anchor = recurrence.anchor || fromDate;
-      return advanceWeekly(fromDate, recurrence.days, interval, anchor);
+  function formatDateLabel(dateStr) {
+    if (!dateStr) return '';
+    const today = todayStr();
+    if (dateStr === today) return 'Today';
+    const t = new Date(); t.setDate(t.getDate() + 1);
+    if (dateStr === formatDate(t)) return 'Tomorrow';
+    const y = new Date(); y.setDate(y.getDate() - 1);
+    if (dateStr === formatDate(y)) return 'Yesterday';
+    const d = parseDate(dateStr);
+    const now = new Date();
+    if (d.getFullYear() === now.getFullYear()) {
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }
-    return addDaysStr(fromDate, interval * 7);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
-  if (freq === 'monthly') return addMonthsStr(fromDate, interval);
-  if (freq === 'yearly') return addYearsStr(fromDate, interval);
-  if (freq === 'weekdays') {
-    let next = addDaysStr(fromDate, 1);
-    for (let i = 0; i < 10; i++) {
-      const day = parseDate(next).getDay();
-      if (day !== 0 && day !== 6) return next;
-      next = addDaysStr(next, 1);
+
+  function daysBetween(a, b) {
+    return Math.round((parseDate(b) - parseDate(a)) / 86400000);
+  }
+
+  function isValidDateString(value) {
+    if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+    const d = parseDate(value);
+    return Number.isFinite(d.getTime()) && formatDate(d) === value;
+  }
+
+  function escapeHtml(str) {
+    return String(str == null ? '' : str)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+  }
+
+  function showToast(message, type = 'success') {
+    while (toastContainer.children.length >= MAX_VISIBLE_TOASTS) {
+      toastContainer.removeChild(toastContainer.firstChild);
     }
-    return next;
-  }
-  if (freq === 'weekends') {
-    let next = addDaysStr(fromDate, 1);
-    for (let i = 0; i < 10; i++) {
-      const day = parseDate(next).getDay();
-      if (day === 0 || day === 6) return next;
-      next = addDaysStr(next, 1);
-    }
-    return next;
-  }
-  return addDaysStr(fromDate, 1);
-}
-
-function advanceDuePast(fromDate, recurrence, today) {
-  let d = fromDate;
-  let guard = 0;
-  while (d < today && guard < 5000) {
-    d = advanceDate(d, recurrence);
-    guard++;
-  }
-  return d;
-}
-
-function formatRecurrenceLabel(r) {
-  if (!r) return '';
-  const { freq, interval } = r;
-  if (freq === 'weekdays') return 'Every weekday';
-  if (freq === 'weekends') return 'Every weekend';
-  if (freq === 'weekly') {
-    const days = r.days || [];
-    if (days.length > 0) {
-      const label = days.map(d => DAY_LABELS[d]).join(', ');
-      if (interval === 1) return label;
-      return `${label} · Biweekly`;
-    }
-    if (interval === 1) return 'Every week';
-    if (interval === 2) return 'Every 2 weeks';
-  }
-  if (freq === 'monthly' && interval === 3) return 'Every quarter';
-  if (freq === 'monthly' && interval === 6) return 'Every 6 months';
-  const unit = { daily: 'day', monthly: 'month', yearly: 'year' }[freq] || 'day';
-  if (interval === 1) {
-    if (freq === 'daily') return 'Every day';
-    if (freq === 'monthly') return 'Every month';
-    if (freq === 'yearly') return 'Every year';
-  }
-  return `Every ${interval} ${unit}s`;
-}
-
-function formatDateLabel(dateStr) {
-  if (!dateStr) return '';
-  const today = todayStr();
-  const tomorrow = addDaysStr(today, 1);
-  const yesterday = addDaysStr(today, -1);
-  if (dateStr === today) return 'Today';
-  if (dateStr === tomorrow) return 'Tomorrow';
-  if (dateStr === yesterday) return 'Yesterday';
-  const d = parseDate(dateStr);
-  const now = new Date();
-  if (d.getFullYear() === now.getFullYear()) {
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  }
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
-
-function formatPanelDate(dateStr) {
-  if (!dateStr) return '';
-  const today = todayStr();
-  if (dateStr === today) return 'Today';
-  if (dateStr === addDaysStr(today, 1)) return 'Tomorrow';
-  const d = parseDate(dateStr);
-  const now = new Date();
-  if (d.getFullYear() === now.getFullYear()) {
-    return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-  }
-  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
-}
-
-function getTypeIcon(type) {
-  const cat = CATEGORIES.find(c => c.name === type);
-  return cat ? cat.icon : 'fa-circle';
-}
-
-function escapeHtml(str) {
-  return String(str == null ? '' : str)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-}
-
-function isValidDateString(value) {
-  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const date = parseDate(value);
-  return Number.isFinite(date.getTime()) && formatDate(date) === value;
-}
-
-function isValidTimeString(value) {
-  return typeof value === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
-}
-
-function sanitizeTasks(input) {
-  if (!Array.isArray(input)) return [];
-  const usedIds = new Set();
-  let nextId = Date.now();
-  const safeTimestamp = value => {
-    const parsed = typeof value === 'number' ? value : Date.parse(value);
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
-  };
-
-  return input.slice(0, 10000).filter(item => item && typeof item === 'object' && !Array.isArray(item)).map(item => {
-    let id = Number.isSafeInteger(item.id) && item.id > 0 ? item.id : null;
-    if (id === null || usedIds.has(id)) {
-      while (usedIds.has(nextId)) nextId++;
-      id = nextId++;
-    }
-    usedIds.add(id);
-
-    const rawRecurrence = item.recurrence;
-    let recurrence = null;
-    if (rawRecurrence && typeof rawRecurrence === 'object') {
-      const validFrequencies = ['daily', 'weekly', 'monthly', 'yearly', 'weekdays', 'weekends'];
-      const freq = validFrequencies.includes(rawRecurrence.freq) ? rawRecurrence.freq : null;
-      const interval = Math.min(3650, Math.max(1, Math.floor(Number(rawRecurrence.interval) || 1)));
-      if (freq) {
-        recurrence = { freq, interval: (freq === 'weekdays' || freq === 'weekends') ? 1 : interval };
-        if (freq === 'weekly' && Array.isArray(rawRecurrence.days)) {
-          const cleanDays = rawRecurrence.days
-            .map(d => Math.floor(Number(d)))
-            .filter(d => Number.isInteger(d) && d >= 0 && d <= 6);
-          const uniqueDays = Array.from(new Set(cleanDays)).sort((a, b) => a - b);
-          if (uniqueDays.length > 0) recurrence.days = uniqueDays;
-        }
-        if (freq === 'weekly' && isValidDateString(rawRecurrence.anchor)) {
-          recurrence.anchor = rawRecurrence.anchor;
-        }
-      }
-    }
-
-    const history = Array.isArray(item.history) ? item.history.slice(-5000).flatMap(entry => {
-      if (!entry || typeof entry !== 'object') return [];
-      const completedAt = safeTimestamp(entry.completedAt);
-      return completedAt ? [{
-        dueDate: isValidDateString(entry.dueDate) ? entry.dueDate : null,
-        completedAt: new Date(completedAt).toISOString()
-      }] : [];
-    }) : [];
-    const completedAtMs = safeTimestamp(item.completedAt);
-    const createdAt = safeTimestamp(item.createdAt);
-    const archivedAtMs = safeTimestamp(item.archivedAt);
-    const isArchived = item.archived === true;
-    const validType = CATEGORIES.some(category => category.name === item.type) ? item.type : 'Others';
-    const validPriority = Object.prototype.hasOwnProperty.call(PRIORITY_ORDER, item.priority) ? item.priority : 'none';
-
-    const dueTime = isValidTimeString(item.dueTime) ? item.dueTime : null;
-    let endTime = isValidTimeString(item.endTime) ? item.endTime : null;
-    if (dueTime && endTime && endTime <= dueTime) endTime = null;
-
-    return {
-      id,
-      title: String(item.title == null ? '' : item.title).trim().slice(0, 200),
-      notes: String(item.notes == null ? '' : item.notes).slice(0, 10000),
-      type: validType,
-      priority: validPriority,
-      dueDate: isValidDateString(item.dueDate) ? item.dueDate : null,
-      dueTime,
-      endTime,
-      recurrence,
-      completed: item.completed === true && !!completedAtMs,
-      completedAt: completedAtMs ? new Date(completedAtMs).toISOString() : null,
-      archived: isArchived,
-      archivedAt: isArchived ? new Date(archivedAtMs || Date.now()).toISOString() : null,
-      history,
-      createdAt: createdAt || Date.now()
-    };
-  }).filter(task => task.title.length > 0);
-}
-
-function sanitizeSlots(input) {
-  if (!Array.isArray(input)) return [];
-  return input.filter(item => item && typeof item === 'object' && !Array.isArray(item)).map(item => {
-    const startTime = typeof item.startTime === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(item.startTime) ? item.startTime : '09:00';
-    let endTime = typeof item.endTime === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(item.endTime) ? item.endTime : '10:00';
-    if (endTime <= startTime) endTime = '10:00';
-    return {
-      id: Number.isSafeInteger(item.id) && item.id > 0 ? item.id : Date.now() + Math.random(),
-      title: String(item.title == null ? '' : item.title).trim().slice(0, 200),
-      day: (Number.isInteger(item.day) && item.day >= 0 && item.day <= 6) ? item.day : 1,
-      startTime,
-      endTime,
-      type: CATEGORIES.some(c => c.name === item.type) ? item.type : 'Others',
-      location: String(item.location == null ? '' : item.location).trim().slice(0, 100),
-      notes: String(item.notes == null ? '' : item.notes).trim().slice(0, 10000)
-    };
-  }).filter(s => s.title.length > 0);
-}
-
-function showToast(message, type = 'success', actionLabel = null, actionFn = null) {
-  while (toastContainer.children.length >= MAX_VISIBLE_TOASTS) {
-    toastContainer.removeChild(toastContainer.firstChild);
-  }
-
-  const toast = document.createElement('div');
-  const isSuccess = type === 'success';
-  toast.className = `${isSuccess ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900' : 'bg-rose-500 text-white'} px-5 py-3 rounded-xl shadow-lg font-semibold text-sm toast-enter flex items-center gap-2 pointer-events-auto`;
-  const icon = isSuccess ? 'fa-circle-check' : 'fa-circle-exclamation';
-  toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${escapeHtml(message)}</span>`;
-  if (actionLabel && actionFn) {
-    const btn = document.createElement('button');
-    btn.className = 'ml-2 px-2.5 py-1 rounded-md bg-white/20 dark:bg-zinc-900/20 hover:bg-white/30 dark:hover:bg-zinc-900/30 text-xs font-bold transition';
-    btn.textContent = actionLabel;
-    btn.onclick = () => {
-      actionFn();
+    const toast = document.createElement('div');
+    const isSuccess = type === 'success';
+    toast.className = `${isSuccess ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900' : 'bg-rose-500 text-white'} px-5 py-3 rounded-xl shadow-lg font-semibold text-sm toast-enter flex items-center gap-2 pointer-events-auto`;
+    const icon = isSuccess ? 'fa-circle-check' : 'fa-circle-exclamation';
+    toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${escapeHtml(message)}</span>`;
+    toastContainer.appendChild(toast);
+    setTimeout(() => {
       toast.classList.remove('toast-enter');
       toast.classList.add('toast-exit');
-      setTimeout(() => toast.remove(), 250);
+      setTimeout(() => toast.remove(), 300);
+    }, 2500);
+  }
+
+  const appEl = document.getElementById('app');
+  const toastContainer = document.getElementById('toastContainer');
+  const storageWarning = document.getElementById('storageWarning');
+
+  const taskForm = document.getElementById('taskForm');
+  const titleInput = document.getElementById('titleInput');
+  const dateInput = document.getElementById('dateInput');
+  const notesInput = document.getElementById('notesInput');
+
+  const overdueSection = document.getElementById('overdueSection');
+  const overdueList = document.getElementById('overdueList');
+  const todayList = document.getElementById('todayList');
+
+  const searchInput = document.getElementById('searchInput');
+  const allContent = document.getElementById('allContent');
+  const allEmpty = document.getElementById('allEmpty');
+  const allEmptyTitle = document.getElementById('allEmptyTitle');
+  const allEmptySub = document.getElementById('allEmptySub');
+
+  const editModal = document.getElementById('editModal');
+  const editTitleInput = document.getElementById('editTitleInput');
+  const editDateInput = document.getElementById('editDateInput');
+  const editNotesInput = document.getElementById('editNotesInput');
+  const closeEditBtn = document.getElementById('closeEditBtn');
+  const editCancelBtn = document.getElementById('editCancelBtn');
+  const editDeleteBtn = document.getElementById('editDeleteBtn');
+  const editForm = document.getElementById('editForm');
+
+  const confirmModal = document.getElementById('confirmModal');
+  const confirmTitle = document.getElementById('confirmTitle');
+  const confirmMessage = document.getElementById('confirmMessage');
+  const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+  const confirmOkBtn = document.getElementById('confirmOkBtn');
+
+  const importConfirmModal = document.getElementById('importConfirmModal');
+  const importConfirmText = document.getElementById('importConfirmText');
+  const cancelImportBtn = document.getElementById('cancelImportBtn');
+  const confirmImportBtn = document.getElementById('confirmImportBtn');
+  const importFileInput = document.getElementById('importFileInput');
+
+  function loadData() {
+    const raw = storageGet(STORAGE_KEY);
+    if (!raw) { tasks = []; return; }
+    try {
+      const parsed = JSON.parse(raw);
+      tasks = Array.isArray(parsed) ? sanitizeTasks(parsed) : [];
+    } catch (e) { tasks = []; }
+  }
+
+  function sanitizeTasks(input) {
+    if (!Array.isArray(input)) return [];
+    const usedIds = new Set();
+    let nextId = Date.now();
+    const safeTs = v => {
+      const p = typeof v === 'number' ? v : Date.parse(v);
+      return Number.isFinite(p) && p > 0 ? p : null;
     };
-    toast.appendChild(btn);
-  }
-  toastContainer.appendChild(toast);
-  setTimeout(() => {
-    toast.classList.remove('toast-enter');
-    toast.classList.add('toast-exit');
-    setTimeout(() => toast.remove(), 300);
-  }, actionLabel ? 5000 : 2500);
-}
-
-const appEl = document.getElementById('app');
-const toastContainer = document.getElementById('toastContainer');
-const storageWarning = document.getElementById('storageWarning');
-
-// Task DOM elements
-const taskForm = document.getElementById('taskForm');
-const titleInput = document.getElementById('titleInput');
-const typeSelect = document.getElementById('typeSelect');
-const prioritySelect = document.getElementById('prioritySelect');
-const dateInput = document.getElementById('dateInput');
-const timeInput = document.getElementById('timeInput');
-const endTimeInput = document.getElementById('endTimeInput');
-const repeatSelect = document.getElementById('repeatSelect');
-const weekdayPickerRow = document.getElementById('weekdayPickerRow');
-const weekdayPicker = document.getElementById('weekdayPicker');
-const customRepeatRow = document.getElementById('customRepeatRow');
-const customInterval = document.getElementById('customInterval');
-const customUnit = document.getElementById('customUnit');
-const notesInput = document.getElementById('notesInput');
-const submitBtn = document.getElementById('submitBtn');
-const cancelEditBtn = document.getElementById('cancelEditBtn');
-const formHeaderIcon = document.getElementById('formHeaderIcon');
-const formHeaderText = document.getElementById('formHeaderText');
-const firstOccurrenceHint = document.getElementById('firstOccurrenceHint');
-const firstOccurrenceHintText = document.getElementById('firstOccurrenceHintText');
-
-const formHeaderBtn = document.getElementById('formHeaderBtn');
-const formChevron = document.getElementById('formChevron');
-const formExpandable = document.getElementById('formExpandable');
-
-const overdueSection = document.getElementById('overdueSection');
-const overdueList = document.getElementById('overdueList');
-const todayList = document.getElementById('todayList');
-const doneTodaySection = document.getElementById('doneTodaySection');
-const doneTodayToggle = document.getElementById('doneTodayToggle');
-const doneTodayList = document.getElementById('doneTodayList');
-
-const searchInput = document.getElementById('searchInput');
-const monthFilter = document.getElementById('monthFilter');
-const clearFiltersBtn = document.getElementById('clearFiltersBtn');
-const listContent = document.getElementById('listContent');
-const listEmpty = document.getElementById('listEmpty');
-
-const archiveSearchInput = document.getElementById('archiveSearchInput');
-const archiveContent = document.getElementById('archiveContent');
-const archiveEmpty = document.getElementById('archiveEmpty');
-
-const archivedSearchInput = document.getElementById('archivedSearchInput');
-const archivedContent = document.getElementById('archivedContent');
-const archivedEmpty = document.getElementById('archivedEmpty');
-
-const allViewDropdownWrapper = document.getElementById('allViewDropdownWrapper');
-const allViewDropdownBtn = document.getElementById('allViewDropdownBtn');
-const allViewDropdownMenu = document.getElementById('allViewDropdownMenu');
-const allViewDropdownLabel = document.getElementById('allViewDropdownLabel');
-
-const detailModal = document.getElementById('detailModal');
-const deleteConfirmModal = document.getElementById('deleteConfirmModal');
-const confirmModal = document.getElementById('confirmModal');
-const importConfirmModal = document.getElementById('importConfirmModal');
-const recurringModal = document.getElementById('recurringModal');
-const recurringList = document.getElementById('recurringList');
-const recurringTasksBtn = document.getElementById('recurringTasksBtn');
-const recurringTasksCount = document.getElementById('recurringTasksCount');
-
-const historyPanel = document.getElementById('historyPanel');
-const historyList = document.getElementById('historyList');
-
-// Timetable DOM elements
-const ttDayTabs = document.getElementById('tt-day-tabs');
-const ttSlotList = document.getElementById('ttSlotList');
-const ttEmptyState = document.getElementById('ttEmptyState');
-const ttEmptyText = document.getElementById('ttEmptyText');
-
-const isTouchDevice = () => window.matchMedia('(hover: none)').matches || window.innerWidth < 768;
-
-/* =====================================================
-   MOTION PREFERENCE (#2)
-===================================================== */
-function loadMotionPref() {
-  const v = storageGet(STORAGE_KEY_MOTION);
-  if (v === 'auto' || v === 'on' || v === 'off') motionPref = v;
-}
-
-function applyMotionPref() {
-  const html = document.documentElement;
-  html.classList.remove('motion-on', 'motion-off');
-  if (motionPref === 'on') html.classList.add('motion-on');
-  else if (motionPref === 'off') html.classList.add('motion-off');
-  updateMotionButtons();
-}
-
-function updateMotionButtons() {
-  document.querySelectorAll('.motion-btn').forEach(b => {
-    const on = b.dataset.motion === motionPref;
-    b.className = `motion-btn flex-1 px-2 py-2 rounded-lg font-semibold transition ${on ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'}`;
-  });
-}
-
-window.setMotionPref = function(pref) {
-  if (!['auto', 'on', 'off'].includes(pref)) return;
-  motionPref = pref;
-  storageSet(STORAGE_KEY_MOTION, pref);
-  applyMotionPref();
-  const msg = pref === 'auto' ? 'Animations follow system' : pref === 'on' ? 'Animations reduced' : 'Animations enabled';
-  showToast(msg);
-};
-
-/* =====================================================
-   COLLAPSIBLE TASK FORM
-===================================================== */
-function expandTaskForm() {
-  if (isFormExpanded) return;
-  isFormExpanded = true;
-  formHeaderBtn.classList.add('expanded');
-
-  // Measure with height:auto, then check for zero (parent hidden / not ready)
-  formExpandable.style.height = 'auto';
-  const targetHeight = formExpandable.scrollHeight;
-
-  // #3 guard: if layout hasn't settled (parent hidden), skip animation
-  if (targetHeight === 0) {
-    formChevron.style.transform = 'rotate(180deg)';
-    return;
+    return input.slice(0, 10000).filter(item => item && typeof item === 'object' && !Array.isArray(item)).map(item => {
+      let id = Number.isSafeInteger(item.id) && item.id > 0 ? item.id : null;
+      if (id === null || usedIds.has(id)) {
+        while (usedIds.has(nextId)) nextId++;
+        id = nextId++;
+      }
+      usedIds.add(id);
+      const completedAtMs = safeTs(item.completedAt);
+      return {
+        id,
+        title: String(item.title == null ? '' : item.title).trim().slice(0, 200),
+        notes: String(item.notes == null ? '' : item.notes).slice(0, 10000),
+        dueDate: isValidDateString(item.dueDate) ? item.dueDate : null,
+        completed: item.completed === true && !!completedAtMs,
+        completedAt: completedAtMs ? new Date(completedAtMs).toISOString() : null,
+        createdAt: safeTs(item.createdAt) || Date.now()
+      };
+    }).filter(t => t.title.length > 0);
   }
 
-  formExpandable.style.transition = 'none';
-  formExpandable.style.height = '0px';
-  void formExpandable.offsetHeight;
-  formExpandable.style.transition = '';
-  formExpandable.style.height = targetHeight + 'px';
-  formChevron.style.transform = 'rotate(180deg)';
-  formExpandable.addEventListener('transitionend', function onEnd() {
-    if (isFormExpanded) formExpandable.style.height = 'auto';
-  }, { once: true });
-}
+  function saveData() { storageSet(STORAGE_KEY, JSON.stringify(tasks)); }
 
-function collapseTaskForm() {
-  if (!isFormExpanded) return;
-  isFormExpanded = false;
-  formHeaderBtn.classList.remove('expanded');
-  const currentHeight = formExpandable.scrollHeight;
-  formExpandable.style.transition = 'none';
-  formExpandable.style.height = currentHeight + 'px';
-  void formExpandable.offsetHeight;
-  formExpandable.style.transition = '';
-  formExpandable.style.height = '0px';
-  formChevron.style.transform = 'rotate(0deg)';
-}
+  function createTaskId() {
+    let id = Date.now();
+    while (tasks.some(t => t.id === id)) id++;
+    return id;
+  }
 
-formHeaderBtn.addEventListener('click', () => {
-  if (isFormExpanded) {
-    collapseTaskForm();
-  } else {
-    expandTaskForm();
-    if (!isTouchDevice()) setTimeout(() => titleInput.focus({ preventScroll: true }), 320);
+  function sortByDateAsc(a, b) {
+    if (!a.dueDate && !b.dueDate) return a.createdAt - b.createdAt;
+    if (!a.dueDate) return 1;
+    if (!b.dueDate) return -1;
+    if (a.dueDate !== b.dueDate) return a.dueDate < b.dueDate ? -1 : 1;
+    return a.createdAt - b.createdAt;
   }
-});
 
-/* =====================================================
-   FIRST-OCCURRENCE HINT (#4, display-only)
-   NOTE (deferred): auto-clamping daily/weekdays/weekends tasks with a future
-   start date to today was discussed but intentionally NOT implemented — we keep
-   Apple Reminders semantics (dueDate = first occurrence). If later desired, add
-   to taskForm submit: if recurrence in [daily,weekdays,weekends] && dueDate > today,
-   set dueDate = today and toast "Started today".
-===================================================== */
-function updateFirstOccurrenceHint() {
-  if (!firstOccurrenceHint || !firstOccurrenceHintText) return;
-  const rep = repeatSelect.value;
-  const dateVal = dateInput.value;
-  if (!rep || !dateVal || !isValidDateString(dateVal)) {
-    firstOccurrenceHint.classList.add('hidden');
-    return;
+  function sortByCompletedDesc(a, b) {
+    return new Date(b.completedAt || 0) - new Date(a.completedAt || 0);
   }
-  if (dateVal > todayStr()) {
-    firstOccurrenceHint.classList.remove('hidden');
-    firstOccurrenceHintText.textContent = `First occurrence: ${formatDateLabel(dateVal)}. This task appears in Today on that date.`;
-  } else {
-    firstOccurrenceHint.classList.add('hidden');
-  }
-}
 
-/* =====================================================
-   TIMETABLE HELPERS (computed from tasks)
-===================================================== */
-function getTimetableWeekdays(t) {
-  if (!t.dueTime || !t.endTime) return [];
-  if (!t.recurrence) {
-    if (!t.dueDate) return [];
-    return [parseDate(t.dueDate).getDay()];
+  function refreshCurrentView() {
+    if (currentTab === 'today') renderToday();
+    if (currentTab === 'all') renderAll();
   }
-  const r = t.recurrence;
-  if (r.freq === 'daily') return [0,1,2,3,4,5,6];
-  if (r.freq === 'weekdays') return [1,2,3,4,5];
-  if (r.freq === 'weekends') return [0,6];
-  if (r.freq === 'weekly') {
-    if (r.days && r.days.length > 0) return [...r.days];
-    if (!t.dueDate) return [];
-    return [parseDate(t.dueDate).getDay()];
-  }
-  if (!t.dueDate) return [];
-  return [parseDate(t.dueDate).getDay()];
-}
 
-function getTimetableBadge(t) {
-  if (!t.recurrence) {
-    if (!t.dueDate) return '';
+  window.switchTab = function(tabId) {
+    if (!['today', 'all', 'settings'].includes(tabId)) return;
+    currentTab = tabId;
+    document.querySelectorAll('.tab-view').forEach(v => v.classList.add('hidden'));
+    document.getElementById(tabId + '-view').classList.remove('hidden');
+
+    document.querySelectorAll('.desktop-tab').forEach(btn => {
+      if (btn.dataset.tab === tabId) {
+        btn.className = "desktop-tab flex-1 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 tab-active bg-zinc-50 dark:bg-zinc-950";
+      } else {
+        btn.className = "desktop-tab flex-1 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-white";
+      }
+    });
+    document.querySelectorAll('.mobile-tab').forEach(btn => {
+      if (btn.dataset.tab === tabId) {
+        btn.className = "mobile-tab flex flex-col items-center gap-1 p-2 text-zinc-900 dark:text-white";
+      } else {
+        btn.className = "mobile-tab flex flex-col items-center gap-1 p-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200";
+      }
+    });
+
+    if (tabId === 'today') renderToday();
+    if (tabId === 'all') renderAll();
+    appEl.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  function renderTaskRow(t, opts = {}) {
+    const { showOverdue = false } = opts;
     const today = todayStr();
-    if (t.dueDate === today) return 'Today';
-    return formatDateLabel(t.dueDate);
-  }
-  const r = t.recurrence;
-  if (r.freq === 'daily') return '';
-  if (r.freq === 'weekdays') return '';
-  if (r.freq === 'weekends') return '';
-  if (r.freq === 'weekly') {
-    const days = r.days || (t.dueDate ? [parseDate(t.dueDate).getDay()] : []);
-    if (r.interval === 1) {
-      if (days.length <= 1) return '';
-      return days.map(d => DAY_LABELS[d]).join(' · ');
+    const isOverdue = !t.completed && t.dueDate && t.dueDate < today;
+
+    let rightSide = '';
+    if (t.dueDate) {
+      if (isOverdue && showOverdue) {
+        const days = daysBetween(t.dueDate, today);
+        rightSide = `<span class="text-xs text-rose-500 font-semibold flex-shrink-0">${days}d overdue</span>`;
+      } else {
+        rightSide = `<span class="text-xs text-zinc-400 dark:text-zinc-500 flex-shrink-0">${formatDateLabel(t.dueDate)}</span>`;
+      }
     }
-    return `Biweekly · ${formatDateLabel(getNextOccurrenceDate(t))}`;
-  }
-  if (r.freq === 'monthly') {
-    return `Monthly · ${formatDateLabel(getNextOccurrenceDate(t))}`;
-  }
-  if (r.freq === 'yearly') {
-    return `Yearly · ${formatDateLabel(getNextOccurrenceDate(t))}`;
-  }
-  return '';
-}
 
-function renderTimetable() {
-  ttDayTabs.innerHTML = '';
-  for (let i = 0; i < 7; i++) {
-    const count = tasks.filter(t =>
-      !t.archived &&
-      (!t.completed || t.recurrence) &&
-      getTimetableWeekdays(t).includes(i)
-    ).length;
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = `tt-day-tab ${selectedTimetableDay === i ? 'active' : ''}`;
-    btn.onclick = () => {
-      selectedTimetableDay = i;
-      renderTimetable();
-    };
-    btn.innerHTML = `${DAY_LABELS[i]}${count > 0 ? `<span class="tt-tab-count">${count}</span>` : ''}`;
-    ttDayTabs.appendChild(btn);
-  }
+    const notePreview = t.notes ? t.notes.split('\n')[0] : '';
+    const leftBorder = isOverdue ? 'border-l-2 border-l-rose-500' : 'border-l-2 border-l-transparent';
 
-  const dayTasks = tasks.filter(t =>
-    !t.archived &&
-    (!t.completed || t.recurrence) &&
-    getTimetableWeekdays(t).includes(selectedTimetableDay)
-  );
-  dayTasks.sort((a, b) => (a.dueTime || '').localeCompare(b.dueTime || ''));
-
-  ttSlotList.innerHTML = '';
-  if (dayTasks.length === 0) {
-    ttEmptyState.classList.remove('hidden');
-    ttEmptyText.textContent = `No scheduled tasks on ${DAY_NAMES_FULL[selectedTimetableDay]}.`;
-  } else {
-    ttEmptyState.classList.add('hidden');
-    dayTasks.forEach(t => {
-      const icon = getTypeIcon(t.type);
-      const badge = getTimetableBadge(t);
-      const pri = t.priority || 'none';
-      const priClass = PRIORITY_COLOR[pri];
-      const priMark = PRIORITY_MARKS[pri];
-      const notesPreview = t.notes ? t.notes.split('\n')[0] : '';
-
-      const card = document.createElement('div');
-      card.className = "flex items-start gap-3 p-3 bg-zinc-50 dark:bg-zinc-950/60 rounded-xl border border-zinc-100 dark:border-zinc-800/50 hover:border-zinc-300 dark:hover:border-zinc-600 transition cursor-pointer";
-      card.onclick = () => openDetail(t.id);
-      card.innerHTML = `
-        <div class="w-10 h-10 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">
-          <i class="fa-solid ${icon}"></i>
-        </div>
+    return `
+      <div class="task-row flex items-center gap-3 p-3 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 ${leftBorder} hover:border-zinc-300 dark:hover:border-zinc-700 transition cursor-pointer" data-task-id="${t.id}" onclick="openEdit(${t.id})">
+        <button class="checkbox" type="button" aria-label="Complete task" onclick="event.stopPropagation(); toggleComplete(${t.id})">
+          <i class="fa-solid fa-check"></i>
+        </button>
         <div class="flex-1 min-w-0">
-          <div class="flex items-start justify-between gap-2">
-            <p class="text-sm font-bold text-zinc-800 dark:text-zinc-100 break-words">${escapeHtml(t.title)}</p>
-            <div class="flex items-center gap-1.5 flex-shrink-0">
-              ${priMark ? `<span class="pri-mark ${priClass}">${priMark}</span>` : ''}
-              <span class="text-xs font-semibold text-zinc-600 dark:text-zinc-300 whitespace-nowrap">${escapeHtml(t.dueTime)}–${escapeHtml(t.endTime)}</span>
-            </div>
+          <p class="text-sm font-semibold text-zinc-900 dark:text-white break-words">${escapeHtml(t.title)}</p>
+          ${notePreview ? `<p class="text-[11px] text-zinc-400 dark:text-zinc-500 mt-0.5 italic truncate">${escapeHtml(notePreview)}</p>` : ''}
+        </div>
+        ${rightSide}
+      </div>
+    `;
+  }
+
+  function renderDoneRow(t) {
+    const completedLabel = new Date(t.completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const notePreview = t.notes ? t.notes.split('\n')[0] : '';
+    return `
+      <div class="task-row flex items-center gap-3 p-3 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition cursor-pointer" data-task-id="${t.id}" onclick="openEdit(${t.id})">
+        <button class="checkbox done" type="button" aria-label="Mark active" onclick="event.stopPropagation(); toggleComplete(${t.id})">
+          <i class="fa-solid fa-check"></i>
+        </button>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold text-zinc-900 dark:text-white line-through opacity-60 break-words">${escapeHtml(t.title)}</p>
+          ${notePreview ? `<p class="text-[11px] text-zinc-400 dark:text-zinc-500 mt-0.5 italic truncate">${escapeHtml(notePreview)}</p>` : ''}
+        </div>
+        <span class="text-xs text-zinc-400 dark:text-zinc-500 flex-shrink-0">${completedLabel}</span>
+      </div>
+    `;
+  }
+
+  function renderToday() {
+    const today = todayStr();
+    const active = tasks.filter(t => !t.completed);
+    const overdue = active.filter(t => t.dueDate && t.dueDate < today).sort(sortByDateAsc);
+    const dueToday = active.filter(t => t.dueDate === today).sort(sortByDateAsc);
+
+    if (overdue.length > 0) {
+      overdueSection.classList.remove('hidden');
+      overdueList.innerHTML = overdue.map(t => renderTaskRow(t, { showOverdue: true })).join('');
+    } else {
+      overdueSection.classList.add('hidden');
+      overdueList.innerHTML = '';
+    }
+
+    if (dueToday.length > 0) {
+      todayList.innerHTML = dueToday.map(t => renderTaskRow(t)).join('');
+    } else {
+      todayList.innerHTML = `
+        <div class="py-10 text-center">
+          <div class="w-12 h-12 mx-auto mb-3 text-zinc-300 dark:text-zinc-700 flex items-center justify-center rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+            <i class="fa-solid fa-mug-hot text-lg"></i>
           </div>
-          <div class="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 flex-wrap">
-            <span class="inline-flex items-center gap-1"><i class="fa-solid ${icon} text-[10px] opacity-70"></i>${escapeHtml(t.type)}</span>
-            ${badge ? `<span class="opacity-40">·</span><span class="text-zinc-400 dark:text-zinc-500">${escapeHtml(badge)}</span>` : ''}
-          </div>
-          ${notesPreview ? `<p class="text-xs text-zinc-400 dark:text-zinc-500 italic mt-1 line-clamp-1">${escapeHtml(notesPreview)}</p>` : ''}
+          <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Nothing due today.</p>
+          <p class="text-xs text-zinc-400 mt-1">Enjoy the quiet.</p>
         </div>
       `;
-      ttSlotList.appendChild(card);
-    });
-  }
-}
-
-/* =====================================================
-   MIGRATION: slots → tasks (one-time)
-===================================================== */
-function migrateSlotsToTasks() {
-  if (storageGet(STORAGE_KEY_MIGRATED) === 'true') return;
-  const rawSlots = storageGet(STORAGE_KEY_SLOTS);
-  if (!rawSlots) {
-    storageSet(STORAGE_KEY_MIGRATED, 'true');
-    return;
-  }
-  try {
-    const parsed = JSON.parse(rawSlots);
-    if (!Array.isArray(parsed) || parsed.length === 0) {
-      storageSet(STORAGE_KEY_MIGRATED, 'true');
-      try { localStorage.removeItem(STORAGE_KEY_SLOTS); } catch (e) {}
-      return;
-    }
-    const sanitized = sanitizeSlots(parsed);
-    const today = todayStr();
-    const todayDow = parseDate(today).getDay();
-    let count = 0;
-    sanitized.forEach(slot => {
-      const diff = (slot.day - todayDow + 7) % 7;
-      const dueDate = addDaysStr(today, diff);
-      const mergedNotes = [slot.location, slot.notes].filter(Boolean).join('\n');
-      tasks.push({
-        id: createTaskId(),
-        title: slot.title,
-        notes: mergedNotes,
-        type: slot.type,
-        priority: 'none',
-        dueDate: dueDate,
-        dueTime: slot.startTime,
-        endTime: slot.endTime,
-        recurrence: { freq: 'weekly', interval: 1, days: [slot.day], anchor: dueDate },
-        completed: false,
-        completedAt: null,
-        archived: false,
-        archivedAt: null,
-        history: [],
-        createdAt: Date.now()
-      });
-      count++;
-    });
-    saveData();
-    try { localStorage.removeItem(STORAGE_KEY_SLOTS); } catch (e) {}
-    storageSet(STORAGE_KEY_MIGRATED, 'true');
-    if (count > 0) {
-      showToast(`Migrated ${count} slot${count === 1 ? '' : 's'} to tasks`);
-    }
-  } catch (e) {
-    console.error('Slots migration failed:', e);
-    storageSet(STORAGE_KEY_MIGRATED, 'true');
-  }
-}
-
-/* =====================================================
-   TASK LOGIC
-===================================================== */
-function renderWeekdayPicker() {
-  weekdayPicker.querySelectorAll('.weekday-btn').forEach(b => {
-    const wd = parseInt(b.dataset.weekday, 10);
-    const active = currentDays.includes(wd);
-    b.className = `weekday-btn ${active ? 'active' : 'inactive'}`;
-  });
-}
-
-function syncWeekdayPickerVisibility() {
-  const v = repeatSelect.value;
-  const show = v === 'weekly' || v === 'biweekly';
-  weekdayPickerRow.classList.toggle('hidden', !show);
-  if (show) {
-    if (currentDays.length === 0) {
-      const dt = (dateInput.value && isValidDateString(dateInput.value)) ? parseDate(dateInput.value) : new Date();
-      currentDays = [dt.getDay()];
-    }
-    renderWeekdayPicker();
-  }
-}
-
-function snapDateToSelectedDays() {
-  if (currentDays.length === 0) return;
-  const base = parseDate(isValidDateString(dateInput.value) ? dateInput.value : todayStr());
-  for (let i = 0; i <= 14; i++) {
-    if (currentDays.includes(base.getDay())) {
-      dateInput.value = formatDate(base);
-      return;
-    }
-    base.setDate(base.getDate() + 1);
-  }
-}
-
-weekdayPicker.addEventListener('click', (e) => {
-  const btn = e.target.closest('.weekday-btn');
-  if (!btn) return;
-  const wd = parseInt(btn.dataset.weekday, 10);
-  if (currentDays.includes(wd)) {
-    if (currentDays.length === 1) return;
-    currentDays = currentDays.filter(d => d !== wd);
-  } else {
-    currentDays = [...currentDays, wd].sort((a, b) => a - b);
-  }
-  snapDateToSelectedDays();
-  renderWeekdayPicker();
-  if (isFormExpanded) formExpandable.style.height = 'auto';
-  updateFirstOccurrenceHint();
-});
-
-dateInput.addEventListener('change', () => {
-  const v = repeatSelect.value;
-  if ((v === 'weekly' || v === 'biweekly') && dateInput.value && isValidDateString(dateInput.value)) {
-    const day = parseDate(dateInput.value).getDay();
-    if (!currentDays.includes(day)) {
-      snapDateToSelectedDays();
     }
   }
-  updateFirstOccurrenceHint();
-});
 
-function normalizeRecurring() {
-  const today = todayStr();
-  let changed = false;
-  tasks.forEach(t => {
-    if (!t.recurrence) return;
-    if (t.archived) return;
-    const completedToday = t.completed && t.completedAt &&
-      formatDate(new Date(t.completedAt)) === today;
-
-    if (completedToday) return;
-
-    if (t.completed) {
-      t.completed = false;
-      t.completedAt = null;
-      changed = true;
-    }
-    if (!t.dueDate) {
-      t.dueDate = today;
-      changed = true;
-    } else if (t.dueDate < today) {
-      t.dueDate = advanceDuePast(t.dueDate, t.recurrence, today);
-      changed = true;
-    }
-  });
-  if (changed) saveData();
-}
-
-window.switchTab = function(tabId) {
-  if (!['today', 'all', 'settings'].includes(tabId)) return;
-  currentTab = tabId;
-  document.querySelectorAll('.tab-view').forEach(v => v.classList.add('hidden'));
-  const target = document.getElementById(tabId + '-view');
-  if (target) target.classList.remove('hidden');
-
-  document.querySelectorAll('.desktop-tab').forEach(btn => {
-    if (btn.dataset.tab === tabId) {
-      btn.className = "desktop-tab flex-1 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 tab-active bg-zinc-50 dark:bg-zinc-950";
-    } else {
-      btn.className = "desktop-tab flex-1 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-white";
-    }
-  });
-  document.querySelectorAll('.mobile-tab').forEach(btn => {
-    if (btn.dataset.tab === tabId) {
-      btn.className = "mobile-tab flex flex-col items-center gap-1 p-2 text-zinc-900 dark:text-white";
-    } else {
-      btn.className = "mobile-tab flex flex-col items-center gap-1 p-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200";
-    }
-  });
-
-  if (tabId === 'all') renderAll();
-  if (tabId === 'today') renderToday();
-  appEl.scrollTo({ top: 0, behavior: 'smooth' });
-};
-
-function loadData() {
-  const rawTasks = storageGet(STORAGE_KEY_TASKS);
-  if (rawTasks) {
-    try {
-      const parsed = JSON.parse(rawTasks);
-      tasks = Array.isArray(parsed) ? parsed : [];
-    } catch (e) { tasks = []; storageWarning.classList.remove('hidden'); }
-  } else { tasks = []; }
-}
-
-function saveData() {
-  const ok = storageSet(STORAGE_KEY_TASKS, JSON.stringify(tasks));
-  if (!ok) storageWarning.classList.remove('hidden');
-  return ok;
-}
-
-function createTaskId() {
-  let id = Date.now();
-  while (tasks.some(task => task.id === id)) id++;
-  return id;
-}
-
-function populateTypeSelect() {
-  typeSelect.innerHTML = '';
-  CATEGORIES.forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c.name;
-    opt.textContent = c.name;
-    typeSelect.appendChild(opt);
-  });
-  typeSelect.value = currentFormType;
-}
-
-repeatSelect.addEventListener('change', () => {
-  const v = repeatSelect.value;
-  customRepeatRow.classList.toggle('hidden', v !== 'custom');
-  if (v !== 'weekly' && v !== 'biweekly') {
-    currentDays = [];
-  }
-  syncWeekdayPickerVisibility();
-  if ((v === 'weekly' || v === 'biweekly')) {
-    if (!dateInput.value) dateInput.value = todayStr();
-    snapDateToSelectedDays();
-  }
-  if (isFormExpanded) formExpandable.style.height = 'auto';
-  updateFirstOccurrenceHint();
-});
-
-function getRecurrenceFromForm() {
-  const v = repeatSelect.value;
-  if (!v) return null;
-  if (v === 'daily') return { freq: 'daily', interval: 1 };
-  if (v === 'weekdays') return { freq: 'weekdays', interval: 1 };
-  if (v === 'weekends') return { freq: 'weekends', interval: 1 };
-  if (v === 'weekly') return { freq: 'weekly', interval: 1, days: [...currentDays], anchor: dateInput.value || todayStr() };
-  if (v === 'biweekly') return { freq: 'weekly', interval: 2, days: [...currentDays], anchor: dateInput.value || todayStr() };
-  if (v === 'monthly') return { freq: 'monthly', interval: 1 };
-  if (v === 'quarterly') return { freq: 'monthly', interval: 3 };
-  if (v === 'halfyearly') return { freq: 'monthly', interval: 6 };
-  if (v === 'yearly') return { freq: 'yearly', interval: 1 };
-  if (v === 'custom') {
-    const n = Math.min(3650, Math.max(1, parseInt(customInterval.value, 10) || 1));
-    return { freq: customUnit.value, interval: n };
-  }
-  return null;
-}
-
-function setFormRecurrence(r) {
-  if (!r) {
-    repeatSelect.value = '';
-    customRepeatRow.classList.add('hidden');
-    currentDays = [];
-    weekdayPickerRow.classList.add('hidden');
-    updateFirstOccurrenceHint();
-    return;
-  }
-  const { freq, interval } = r;
-  if (freq === 'daily' && interval === 1) repeatSelect.value = 'daily';
-  else if (freq === 'weekdays') repeatSelect.value = 'weekdays';
-  else if (freq === 'weekends') repeatSelect.value = 'weekends';
-  else if (freq === 'weekly' && interval === 1) repeatSelect.value = 'weekly';
-  else if (freq === 'weekly' && interval === 2) repeatSelect.value = 'biweekly';
-  else if (freq === 'monthly' && interval === 1) repeatSelect.value = 'monthly';
-  else if (freq === 'monthly' && interval === 3) repeatSelect.value = 'quarterly';
-  else if (freq === 'monthly' && interval === 6) repeatSelect.value = 'halfyearly';
-  else if (freq === 'yearly' && interval === 1) repeatSelect.value = 'yearly';
-  else { repeatSelect.value = 'custom'; customInterval.value = interval; customUnit.value = freq; }
-  customRepeatRow.classList.toggle('hidden', repeatSelect.value !== 'custom');
-
-  if (repeatSelect.value === 'weekly' || repeatSelect.value === 'biweekly') {
-    if (r.days && r.days.length > 0) {
-      currentDays = [...r.days];
-    } else if (dateInput.value && isValidDateString(dateInput.value)) {
-      currentDays = [parseDate(dateInput.value).getDay()];
-    } else {
-      currentDays = [new Date().getDay()];
-    }
-    weekdayPickerRow.classList.remove('hidden');
-    renderWeekdayPicker();
-  } else {
-    currentDays = [];
-    weekdayPickerRow.classList.add('hidden');
-  }
-  updateFirstOccurrenceHint();
-}
-
-function resetForm() {
-  const returnTo = cameFromTab;
-  cameFromTab = null;
-  editingId = null;
-  titleInput.value = '';
-  notesInput.value = '';
-  timeInput.value = '';
-  endTimeInput.value = '';
-  dateInput.value = todayStr();
-  setFormRecurrence(null);
-  prioritySelect.value = 'none';
-  currentFormType = 'Academic';
-  typeSelect.value = currentFormType;
-  formHeaderIcon.className = 'fa-solid fa-plus text-zinc-400';
-  formHeaderText.textContent = 'New Task';
-  submitBtn.innerHTML = '<i class="fa-solid fa-plus"></i> Add Task';
-  submitBtn.className = 'flex-1 py-3 rounded-xl bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 font-bold text-sm shadow-sm transition-all duration-200 flex items-center justify-center gap-2';
-  cancelEditBtn.classList.add('hidden');
-  collapseTaskForm();
-  updateFirstOccurrenceHint();
-  if (returnTo && returnTo !== 'today' && currentTab === 'today') {
-    switchTab(returnTo);
-  }
-}
-
-window.startEdit = function(id) {
-  const t = tasks.find(x => x.id === id);
-  if (!t) return;
-  cameFromTab = currentTab;
-  closeDetail();
-  editingId = id;
-  titleInput.value = t.title;
-  currentFormType = t.type;
-  typeSelect.value = t.type;
-  prioritySelect.value = t.priority || 'none';
-  dateInput.value = t.dueDate || '';
-  timeInput.value = t.dueTime || '';
-  endTimeInput.value = t.endTime || '';
-  notesInput.value = t.notes || '';
-  setFormRecurrence(t.recurrence);
-  formHeaderIcon.className = 'fa-solid fa-pen text-blue-500';
-  formHeaderText.textContent = 'Edit Task';
-  submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> Update Task';
-  submitBtn.className = 'flex-1 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-bold text-sm shadow-sm transition-all duration-200 flex items-center justify-center gap-2';
-  cancelEditBtn.classList.remove('hidden');
-  updateFirstOccurrenceHint();
-
-  // #3 fix: switch tab BEFORE expanding, then expand on next frame
-  if (currentTab !== 'today') switchTab('today');
-  requestAnimationFrame(() => {
-    expandTaskForm();
-    appEl.scrollTo({ top: 0, behavior: 'smooth' });
-    setTimeout(() => { if (!isTouchDevice()) titleInput.focus({ preventScroll: true }); }, 350);
-  });
-};
-
-cancelEditBtn.addEventListener('click', resetForm);
-
-taskForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const title = titleInput.value.trim().slice(0, 200);
-  if (!title) { titleInput.focus(); return; }
-
-  const v = repeatSelect.value;
-  if ((v === 'weekly' || v === 'biweekly') && currentDays.length === 0) {
-    showToast('Pick at least one weekday', 'error');
-    return;
-  }
-
-  const startTime = timeInput.value || null;
-  let endTimeVal = endTimeInput.value || null;
-
-  if (!startTime && endTimeVal) {
-    showToast('Please add a start time or clear the end time', 'error');
-    return;
-  }
-  if (startTime && endTimeVal && endTimeVal <= startTime) {
-    showToast('End time must be after start time', 'error');
-    return;
-  }
-
-  let dueDate = isValidDateString(dateInput.value) ? dateInput.value : null;
-  const recurrence = getRecurrenceFromForm();
-
-  if (recurrence && !dueDate) dueDate = todayStr();
-
-  // Auto-date: start+end given but no date
-  if (startTime && endTimeVal && !dueDate) {
-    dueDate = todayStr();
-    showToast('Scheduled for today');
-  }
-
-  if (recurrence && recurrence.freq === 'weekly' && recurrence.days && dueDate) {
-    const day = parseDate(dueDate).getDay();
-    if (!recurrence.days.includes(day)) {
-      const base = parseDate(dueDate);
-      for (let i = 0; i <= 14; i++) {
-        if (recurrence.days.includes(base.getDay())) {
-          dueDate = formatDate(base);
-          break;
-        }
-        base.setDate(base.getDate() + 1);
+  window.setAllView = function(view) {
+    if (!['scheduled', 'done'].includes(view)) return;
+    allView = view;
+    document.querySelectorAll('.allview-btn').forEach(b => {
+      if (b.dataset.allview === view) {
+        b.className = "allview-btn px-4 py-2 rounded-lg font-semibold transition bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm";
+      } else {
+        b.className = "allview-btn px-4 py-2 rounded-lg font-semibold transition text-zinc-500 hover:text-zinc-900 dark:hover:text-white";
       }
-      recurrence.anchor = dueDate;
-    }
-  }
-
-  const taskData = {
-    title,
-    notes: notesInput.value.trim(),
-    type: typeSelect.value,
-    priority: prioritySelect.value || 'none',
-    dueDate,
-    dueTime: startTime,
-    endTime: endTimeVal,
-    recurrence
+    });
+    renderAll();
   };
 
-  if (editingId !== null) {
-    const idx = tasks.findIndex(t => t.id === editingId);
-    if (idx !== -1) tasks[idx] = { ...tasks[idx], ...taskData };
-    showToast('Task updated');
-    resetForm();
-  } else {
+  function renderAll() {
+    if (allView === 'scheduled') renderScheduled();
+    else renderDone();
+  }
+
+  function getSearchQuery() {
+    return (searchInput.value || '').trim().toLowerCase();
+  }
+
+  function matchesSearch(t, query) {
+    if (!query) return true;
+    return t.title.toLowerCase().includes(query) ||
+           (t.notes && t.notes.toLowerCase().includes(query));
+  }
+
+  function renderScheduled() {
+    const today = todayStr();
+    const query = getSearchQuery();
+
+    const scheduled = tasks.filter(t => !t.completed && (!t.dueDate || t.dueDate > today))
+      .filter(t => matchesSearch(t, query))
+      .sort(sortByDateAsc);
+
+    if (scheduled.length === 0) {
+      allContent.innerHTML = '';
+      allEmpty.classList.remove('hidden');
+      if (query) {
+        allEmptyTitle.textContent = 'No matches';
+        allEmptySub.textContent = 'Try a different search.';
+      } else {
+        allEmptyTitle.textContent = 'Nothing scheduled';
+        allEmptySub.textContent = 'Tasks with future dates or no date appear here.';
+      }
+      return;
+    }
+
+    allEmpty.classList.add('hidden');
+
+    const dated = scheduled.filter(t => t.dueDate);
+    const undated = scheduled.filter(t => !t.dueDate);
+
+    let html = '';
+    if (dated.length > 0) {
+      html += `<div class="space-y-2">${dated.map(t => renderTaskRow(t)).join('')}</div>`;
+    }
+    if (undated.length > 0) {
+      html += `
+        <div>
+          <h4 class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2">No Date</h4>
+          <div class="space-y-2">${undated.map(t => renderTaskRow(t)).join('')}</div>
+        </div>
+      `;
+    }
+
+    allContent.innerHTML = html;
+  }
+
+  function renderDone() {
+    const query = getSearchQuery();
+    const done = tasks.filter(t => t.completed)
+      .filter(t => matchesSearch(t, query))
+      .sort(sortByCompletedDesc);
+
+    if (done.length === 0) {
+      allContent.innerHTML = '';
+      allEmpty.classList.remove('hidden');
+      if (query) {
+        allEmptyTitle.textContent = 'No matches';
+        allEmptySub.textContent = 'Try a different search.';
+      } else {
+        allEmptyTitle.textContent = 'Nothing completed yet';
+        allEmptySub.textContent = 'Completed tasks appear here.';
+      }
+      return;
+    }
+
+    allEmpty.classList.add('hidden');
+
+    const groups = {};
+    done.forEach(t => {
+      const dt = new Date(t.completedAt);
+      const key = `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}`;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(t);
+    });
+
+    const sortedKeys = Object.keys(groups).sort().reverse();
+    let html = '';
+    sortedKeys.forEach(k => {
+      const [y, m] = k.split('-').map(Number);
+      const label = new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      html += `
+        <div>
+          <h4 class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2">${label}</h4>
+          <div class="space-y-2">${groups[k].map(t => renderDoneRow(t)).join('')}</div>
+        </div>
+      `;
+    });
+
+    allContent.innerHTML = html;
+  }
+
+  taskForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const title = titleInput.value.trim().slice(0, 200);
+    if (!title) { titleInput.focus(); return; }
+
     const newTask = {
       id: createTaskId(),
-      ...taskData,
+      title,
+      notes: notesInput.value.trim().slice(0, 10000),
+      dueDate: isValidDateString(dateInput.value) ? dateInput.value : null,
       completed: false,
       completedAt: null,
-      archived: false,
-      archivedAt: null,
-      history: [],
       createdAt: Date.now()
     };
+
     tasks.unshift(newTask);
+    saveData();
+
     titleInput.value = '';
+    dateInput.value = '';
     notesInput.value = '';
-    timeInput.value = '';
-    endTimeInput.value = '';
-    setFormRecurrence(null);
-    collapseTaskForm();
+    titleInput.focus();
+
     showToast('Task added');
-  }
-  saveData();
-  if (currentTab === 'all') renderAll();
-  renderToday();
-});
-
-window.setSortPref = function(pref) {
-  if (pref !== 'deadline' && pref !== 'priority') return;
-  sortPref = pref;
-  storageSet(STORAGE_KEY_SORT, pref);
-  updateSortButtons();
-  renderToday();
-  if (currentTab === 'all' && allSubView === 'upcoming') renderUpcoming();
-};
-function updateSortButtons() {
-  document.querySelectorAll('.sort-btn').forEach(b => {
-    const on = b.dataset.sort === sortPref;
-    b.className = `sort-btn px-2.5 py-1.5 rounded-md font-semibold transition ${on ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'}`;
+    refreshCurrentView();
   });
-}
 
-function compareByDeadline(a, b) {
-  if (!a.dueDate && !b.dueDate) return (b.createdAt || 0) - (a.createdAt || 0);
-  if (!a.dueDate) return 1;
-  if (!b.dueDate) return -1;
-  if (a.dueDate !== b.dueDate) return a.dueDate < b.dueDate ? -1 : 1;
-  if (a.dueTime && b.dueTime && a.dueTime !== b.dueTime) return a.dueTime < b.dueTime ? -1 : 1;
-  if (a.dueTime && !b.dueTime) return -1;
-  if (!a.dueTime && b.dueTime) return 1;
-  return (PRIORITY_ORDER[a.priority] ?? 3) - (PRIORITY_ORDER[b.priority] ?? 3);
-}
-function compareByPriority(a, b) {
-  const pa = PRIORITY_ORDER[a.priority] ?? 3;
-  const pb = PRIORITY_ORDER[b.priority] ?? 3;
-  if (pa !== pb) return pa - pb;
-  return compareByDeadline(a, b);
-}
-function sortTasks(list) {
-  const arr = [...list];
-  arr.sort(sortPref === 'priority' ? compareByPriority : compareByDeadline);
-  return arr;
-}
+  window.toggleComplete = function(id) {
+    const t = tasks.find(x => x.id === id);
+    if (!t) return;
 
-function renderTaskRow(t, opts = {}) {
-  const { showSnooze = false, hideDate = false } = opts;
-  const isCompleted = !!t.completed;
-  const isArchived = !!t.archived;
-  const today = todayStr();
-  const displayDate = t.dueDate;
+    const wasCompleted = t.completed;
+    t.completed = !wasCompleted;
+    t.completedAt = wasCompleted ? null : new Date().toISOString();
+    saveData();
 
-  const isTimeOverdue = displayDate === today && t.dueTime && isTimePast(t.dueTime);
-  const isOverdue = !isCompleted && !isArchived && displayDate && (displayDate < today || isTimeOverdue);
+    if (wasCompleted) showToast('Task moved to active');
 
-  const typeIcon = getTypeIcon(t.type);
-  const pri = t.priority || 'none';
-  const priClass = isCompleted ? `${PRIORITY_COLOR[pri]} completed` : PRIORITY_COLOR[pri];
-
-  const metaParts = [];
-  if (displayDate && !hideDate) {
-    if (isOverdue) {
-      if (displayDate < today) {
-        const days = daysBetween(displayDate, today);
-        metaParts.push(`<span data-date-meta class="text-rose-500 font-semibold">${days}d overdue</span>`);
-      } else {
-        metaParts.push(`<span data-date-meta class="text-rose-500 font-semibold">Overdue</span>`);
+    const rows = document.querySelectorAll(`.task-row[data-task-id="${id}"]`);
+    rows.forEach(row => {
+      const cb = row.querySelector('.checkbox');
+      if (cb) {
+        cb.classList.toggle('done', t.completed);
+        cb.classList.add('pop');
+        setTimeout(() => cb.classList.remove('pop'), 250);
       }
-    } else {
-      metaParts.push(`<span data-date-meta>${formatDateLabel(displayDate)}</span>`);
-    }
-  }
-  if (t.dueTime && t.endTime) metaParts.push(`<span>${escapeHtml(t.dueTime)}–${escapeHtml(t.endTime)}</span>`);
-  else if (t.dueTime) metaParts.push(`<span>${escapeHtml(t.dueTime)}</span>`);
-  metaParts.push(`<span class="inline-flex items-center gap-1"><i class="fa-solid ${typeIcon} text-[10px] opacity-70"></i>${escapeHtml(t.type)}</span>`);
-  if (t.recurrence) metaParts.push(`<span class="inline-flex items-center gap-1"><i class="fa-solid fa-rotate text-[10px]"></i>${escapeHtml(formatRecurrenceLabel(t.recurrence))}</span>`);
-  if (isArchived && t.archivedAt) {
-    const archivedLabel = new Date(t.archivedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    metaParts.push(`<span class="text-zinc-500 dark:text-zinc-400">Archived ${archivedLabel}</span>`);
-  }
-  if (isCompleted && t.recurrence && displayDate === today && !hideDate) {
-    metaParts.push(`<span class="text-emerald-600 dark:text-emerald-400 font-semibold">Done today</span>`);
-  }
-  if (!isArchived && !isCompleted) {
-    if (t.dueTime && !t.endTime) {
-      metaParts.push(`<span class="text-amber-500 dark:text-amber-400" title="Not in timetable — missing end time">No end time</span>`);
-    } else if (!t.dueTime && t.endTime) {
-      metaParts.push(`<span class="text-amber-500 dark:text-amber-400" title="Not in timetable — missing start time">No start time</span>`);
-    }
-  }
-
-  const leftBorder = isOverdue ? 'border-l-2 border-l-rose-500' : 'border-l-2 border-l-transparent';
-
-  const leftSlot = isArchived
-    ? `<div class="w-[22px] h-[22px] flex items-center justify-center text-zinc-400 dark:text-zinc-500 flex-shrink-0"><i class="fa-solid fa-box-archive text-xs" aria-hidden="true"></i></div>`
-    : `<button class="checkbox ${isCompleted ? 'done' : ''}" type="button" aria-label="${isCompleted ? 'Mark active' : 'Complete'}: ${escapeHtml(t.title)}" data-check-id="${t.id}" onclick="event.stopPropagation(); toggleComplete(${t.id})">
-        <i class="fa-solid fa-check" aria-hidden="true"></i>
-      </button>`;
-
-  return `
-    <div class="task-row flex items-center gap-3 p-3 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 ${leftBorder} hover:border-zinc-300 dark:hover:border-zinc-700 transition cursor-pointer" data-task-id="${t.id}" tabindex="0" onclick="openDetail(${t.id})" onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();openDetail(${t.id})}">
-      ${leftSlot}
-      <div class="flex-1 min-w-0">
-        <p class="text-sm font-semibold text-zinc-900 dark:text-white ${isCompleted ? 'line-through opacity-60' : ''} break-words">${escapeHtml(t.title)}</p>
-        <div class="flex items-center gap-2 text-[11px] text-zinc-400 dark:text-zinc-500 mt-0.5 flex-wrap">
-          ${metaParts.join('<span class="opacity-40">·</span>')}
-        </div>
-      </div>
-      <div class="flex items-center gap-2 flex-shrink-0">
-        <span class="pri-mark ${priClass}">${PRIORITY_MARKS[pri]}</span>
-        ${showSnooze && isOverdue ? `
-          <button type="button" class="p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800" data-snooze-btn="${t.id}" onclick="event.stopPropagation(); openSnooze(event, ${t.id})">
-            <i class="fa-solid fa-clock-rotate-left text-xs"></i>
-          </button>
-        ` : ''}
-      </div>
-    </div>
-  `;
-}
-
-function getVisibleTaskRows(id) {
-  return Array.from(document.querySelectorAll(`.task-row[data-task-id="${id}"]`)).filter(r => r.offsetParent !== null);
-}
-
-function getTodayBuckets() {
-  const today = todayStr();
-  const activeOverdue = [];
-  const activeToday = [];
-  const doneToday = [];
-
-  tasks.forEach(t => {
-    if (!t.dueDate) return;
-    if (t.archived) return;
-    const completedToday = t.completed && t.completedAt && formatDate(new Date(t.completedAt)) === today;
-
-    if (t.recurrence) {
-      if (completedToday) { doneToday.push(t); return; }
-      if (t.dueDate === today) { activeToday.push(t); return; }
-      if (t.dueDate < today && !t.completed) activeOverdue.push(t);
-      return;
-    }
-
-    if (t.completed) {
-      if (completedToday) doneToday.push(t);
-      return;
-    }
-    if (t.dueDate === today) activeToday.push(t);
-    else if (t.dueDate < today) activeOverdue.push(t);
-  });
-
-  return { overdue: activeOverdue, dueToday: activeToday, doneToday };
-}
-
-function renderDoneTodaySection(doneToday) {
-  if (!doneToday || doneToday.length === 0) {
-    doneTodaySection.classList.add('hidden');
-    doneTodayList.classList.add('hidden');
-    doneTodayList.innerHTML = '';
-    doneTodayToggle.innerHTML = '';
-    return;
-  }
-
-  doneTodaySection.classList.remove('hidden');
-  const count = doneToday.length;
-  const label = count === 1 ? '1 done today' : `${count} done today`;
-  const chevron = doneTodayExpanded ? 'fa-chevron-up' : 'fa-chevron-down';
-  doneTodayToggle.innerHTML = `
-    <span class="inline-flex items-center gap-2">
-      <i class="fa-solid fa-circle-check text-emerald-500"></i>
-      <span>${label}</span>
-    </span>
-    <i class="fa-solid ${chevron} text-xs text-zinc-400"></i>
-  `;
-
-  if (doneTodayExpanded) {
-    const sortedDone = [...doneToday].sort((a, b) => new Date(b.completedAt || 0) - new Date(a.completedAt || 0));
-    doneTodayList.classList.remove('hidden');
-    doneTodayList.innerHTML = sortedDone.map(t => renderTaskRow(t, { hideDate: true })).join('');
-  } else {
-    doneTodayList.classList.add('hidden');
-    doneTodayList.innerHTML = '';
-  }
-}
-
-function renderToday() {
-  normalizeRecurring();
-  const today = todayStr();
-  const { overdue, dueToday, doneToday } = getTodayBuckets();
-
-  const sortedOverdue = sortTasks(overdue);
-  const sortedToday = sortTasks(dueToday);
-
-  if (sortedOverdue.length > 0) {
-    overdueSection.classList.remove('hidden');
-    overdueList.innerHTML = sortedOverdue.map(t => renderTaskRow(t, { showSnooze: true })).join('');
-  } else {
-    overdueSection.classList.add('hidden');
-    overdueList.innerHTML = '';
-  }
-
-  if (sortedToday.length > 0) {
-    todayList.innerHTML = sortedToday.map(t => renderTaskRow(t, { showSnooze: true })).join('');
-  } else {
-    todayList.innerHTML = `
-      <div class="py-10 text-center">
-        <div class="w-12 h-12 mx-auto mb-3 text-zinc-300 dark:text-zinc-700 flex items-center justify-center rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-          <i class="fa-solid fa-mug-hot text-lg"></i>
-        </div>
-        <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Nothing due today.</p>
-        <p class="text-xs text-zinc-400 mt-1">Enjoy the quiet.</p>
-      </div>
-    `;
-  }
-
-  renderDoneTodaySection(doneToday);
-  updateRecurringCount();
-}
-
-doneTodayToggle.addEventListener('click', () => {
-  doneTodayExpanded = !doneTodayExpanded;
-  const { doneToday } = getTodayBuckets();
-  renderDoneTodaySection(doneToday);
-});
-
-function openAllViewDropdown() {
-  allViewDropdownMenu.classList.remove('hidden');
-  allViewDropdownMenu.classList.remove('dropdown-enter');
-  void allViewDropdownMenu.offsetWidth;
-  allViewDropdownMenu.classList.add('dropdown-enter');
-}
-
-function closeAllViewDropdown() {
-  allViewDropdownMenu.classList.add('hidden');
-}
-
-allViewDropdownBtn.addEventListener('click', (e) => {
-  e.stopPropagation();
-  if (allViewDropdownMenu.classList.contains('hidden')) openAllViewDropdown();
-  else closeAllViewDropdown();
-});
-
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('#allViewDropdownWrapper')) closeAllViewDropdown();
-});
-
-function applyAllView(view) {
-  if (!['upcoming', 'timetable', 'completed', 'archived'].includes(view)) view = 'upcoming';
-  const labels = { upcoming: 'Upcoming', timetable: 'Timetable', completed: 'Completed', archived: 'Archive' };
-  allViewDropdownLabel.textContent = labels[view];
-
-  document.querySelectorAll('.all-view-option').forEach(b => {
-    const check = b.querySelector('[data-check]');
-    if (check) check.classList.toggle('hidden', b.dataset.view !== view);
-  });
-
-  document.getElementById('all-upcoming-view').classList.toggle('hidden', view !== 'upcoming');
-  document.getElementById('all-timetable-view').classList.toggle('hidden', view !== 'timetable');
-  document.getElementById('all-completed-view').classList.toggle('hidden', view !== 'completed');
-  document.getElementById('all-archived-view').classList.toggle('hidden', view !== 'archived');
-
-  if (view === 'upcoming') renderUpcoming();
-  if (view === 'timetable') renderTimetable();
-  if (view === 'completed') renderCompleted();
-  if (view === 'archived') renderArchived();
-}
-
-window.selectAllView = function(view) {
-  if (!['upcoming', 'timetable', 'completed', 'archived'].includes(view)) return;
-
-  if (allSubView === view) {
-    if (view === 'upcoming') {
-      searchInput.value = '';
-      monthFilter.value = '';
-    } else if (view === 'completed') {
-      archiveSearchInput.value = '';
-    } else if (view === 'archived') {
-      archivedSearchInput.value = '';
-    }
-  }
-
-  allSubView = view;
-  closeAllViewDropdown();
-  applyAllView(view);
-  appEl.scrollTo({ top: 0, behavior: 'smooth' });
-};
-
-function renderAll() {
-  normalizeRecurring();
-  applyAllView(allSubView);
-}
-
-function renderUpcoming() {
-  normalizeRecurring();
-  const query = (searchInput.value || '').trim().toLowerCase();
-  const month = monthFilter.value;
-
-  let filtered = tasks.filter(t => !t.archived && (!t.completed || t.recurrence));
-
-  if (month) filtered = filtered.filter(t => t.dueDate && t.dueDate.startsWith(month));
-  if (query) {
-    filtered = filtered.filter(t => {
-      if (t.title && t.title.toLowerCase().includes(query)) return true;
-      if (t.notes && t.notes.toLowerCase().includes(query)) return true;
-      if (t.type && t.type.toLowerCase().includes(query)) return true;
-      if (t.dueDate) {
-        if (t.dueDate.includes(query)) return true;
-        const formatted = parseDate(t.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toLowerCase();
-        if (formatted.includes(query)) return true;
-      }
-      return false;
+      row.classList.add('completing');
     });
-  }
 
-  const today = todayStr();
-  const futureFiltered = filtered.filter(t => !t.dueDate || t.dueDate > today);
-
-  if (futureFiltered.length === 0) {
-    listContent.innerHTML = '';
-    listEmpty.classList.remove('hidden');
-    return;
-  }
-  listEmpty.classList.add('hidden');
-
-  const tomorrow = addDaysStr(today, 1);
-  const soonEnd = addDaysStr(today, 7);
-
-  const groups = { tomorrow: [], soon: [], later: [], nodate: [] };
-
-  futureFiltered.forEach(t => {
-    if (!t.dueDate) groups.nodate.push(t);
-    else if (t.dueDate === tomorrow) groups.tomorrow.push(t);
-    else if (t.dueDate <= soonEnd) groups.soon.push(t);
-    else groups.later.push(t);
-  });
-
-  if (sortPref === 'priority') {
-    const sorted = sortTasks(futureFiltered);
-    listContent.innerHTML = `
-      <div>
-        <h4 class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2">All Upcoming</h4>
-        <div class="space-y-2">${sorted.map(t => renderTaskRow(t)).join('')}</div>
-      </div>
-    `;
-    return;
-  }
-
-  const sections = [
-    { key: 'tomorrow', label: 'Tomorrow', color: 'text-zinc-800 dark:text-zinc-200' },
-    { key: 'soon', label: 'Soon', color: 'text-zinc-800 dark:text-zinc-200' },
-    { key: 'later', label: 'Later', color: 'text-zinc-800 dark:text-zinc-200' },
-    { key: 'nodate', label: 'No Date', color: 'text-zinc-500 dark:text-zinc-500' }
-  ];
-
-  let html = '';
-  sections.forEach(s => {
-    const arr = groups[s.key];
-    if (!arr || arr.length === 0) return;
-    const sorted = sortTasks(arr);
-    html += `
-      <div>
-        <h4 class="text-[10px] uppercase font-bold tracking-wider ${s.color} mb-2">${s.label}</h4>
-        <div class="space-y-2">${sorted.map(t => renderTaskRow(t)).join('')}</div>
-      </div>
-    `;
-  });
-
-  listContent.innerHTML = html;
-}
-
-searchInput.addEventListener('input', renderUpcoming);
-monthFilter.addEventListener('change', renderUpcoming);
-clearFiltersBtn.addEventListener('click', () => {
-  searchInput.value = '';
-  monthFilter.value = '';
-  renderUpcoming();
-});
-
-function renderCompleted() {
-  const query = (archiveSearchInput.value || '').trim().toLowerCase();
-  let completed = tasks.filter(t => t.completed && !t.recurrence && !t.archived);
-  if (query) {
-    completed = completed.filter(t =>
-      (t.title && t.title.toLowerCase().includes(query)) ||
-      (t.notes && t.notes.toLowerCase().includes(query)) ||
-      (t.type && t.type.toLowerCase().includes(query))
-    );
-  }
-
-  if (completed.length === 0) {
-    archiveContent.innerHTML = '';
-    archiveEmpty.classList.remove('hidden');
-    return;
-  }
-  archiveEmpty.classList.add('hidden');
-
-  const groups = {};
-  completed.forEach(t => {
-    const dt = t.completedAt ? new Date(t.completedAt) : new Date(t.createdAt || Date.now());
-    const key = `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}`;
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(t);
-  });
-
-  const sortedKeys = Object.keys(groups).sort().reverse();
-  let html = '';
-  sortedKeys.forEach(k => {
-    const [y, m] = k.split('-').map(Number);
-    const label = new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-    const arr = groups[k].sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
-    html += `
-      <div>
-        <h4 class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2">${label}</h4>
-        <div class="space-y-2">${arr.map(t => renderTaskRow(t)).join('')}</div>
-      </div>
-    `;
-  });
-  archiveContent.innerHTML = html;
-}
-
-archiveSearchInput.addEventListener('input', renderCompleted);
-
-function renderArchived() {
-  const query = (archivedSearchInput.value || '').trim().toLowerCase();
-  let archived = tasks.filter(t => t.archived);
-  if (query) {
-    archived = archived.filter(t =>
-      (t.title && t.title.toLowerCase().includes(query)) ||
-      (t.notes && t.notes.toLowerCase().includes(query)) ||
-      (t.type && t.type.toLowerCase().includes(query))
-    );
-  }
-
-  if (archived.length === 0) {
-    archivedContent.innerHTML = '';
-    archivedEmpty.classList.remove('hidden');
-    return;
-  }
-  archivedEmpty.classList.add('hidden');
-
-  const groups = {};
-  archived.forEach(t => {
-    const dt = t.archivedAt ? new Date(t.archivedAt) : new Date(t.createdAt || Date.now());
-    const key = `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}`;
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(t);
-  });
-
-  const sortedKeys = Object.keys(groups).sort().reverse();
-  let html = '';
-  sortedKeys.forEach(k => {
-    const [y, m] = k.split('-').map(Number);
-    const label = new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-    const arr = groups[k].sort((a, b) => new Date(b.archivedAt || 0) - new Date(a.archivedAt || 0));
-    html += `
-      <div>
-        <h4 class="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2">${label}</h4>
-        <div class="space-y-2">${arr.map(t => renderTaskRow(t)).join('')}</div>
-      </div>
-    `;
-  });
-  archivedContent.innerHTML = html;
-}
-
-archivedSearchInput.addEventListener('input', renderArchived);
-
-function updateRecurringCount() {
-  const count = tasks.filter(t => t.recurrence && !t.archived).length;
-  if (count === 0) recurringTasksCount.textContent = 'None';
-  else if (count === 1) recurringTasksCount.textContent = '1 active';
-  else recurringTasksCount.textContent = count + ' active';
-}
-
-function getNextOccurrenceDate(task) {
-  const today = todayStr();
-  if (!task.recurrence) return task.dueDate || today;
-  const completedToday = task.completed && task.completedAt && formatDate(new Date(task.completedAt)) === today;
-  if (completedToday) {
-    let next = advanceDate(task.dueDate || today, task.recurrence);
-    let guard = 0;
-    while (next <= today && guard < 1000) {
-      next = advanceDate(next, task.recurrence);
-      guard++;
-    }
-    return next;
-  }
-  return task.dueDate || today;
-}
-
-function renderRecurringPanel() {
-  const recurring = tasks.filter(t => t.recurrence && !t.archived);
-  if (recurring.length === 0) {
-    recurringList.innerHTML = `<p class="text-sm text-zinc-500 dark:text-zinc-400 italic text-center py-4">No recurring tasks yet. Create one by setting "Repeat" when you add a task.</p>`;
-    return;
-  }
-  const sorted = [...recurring].sort((a, b) => {
-    const aNext = getNextOccurrenceDate(a);
-    const bNext = getNextOccurrenceDate(b);
-    if (aNext !== bNext) return aNext < bNext ? -1 : 1;
-    return 0;
-  });
-  recurringList.innerHTML = sorted.map(t => {
-    const icon = getTypeIcon(t.type);
-    const nextDate = getNextOccurrenceDate(t);
-    const nextLabel = formatPanelDate(nextDate);
-    const pattern = formatRecurrenceLabel(t.recurrence);
-    return `
-      <div class="flex items-center justify-between gap-3 p-3 bg-zinc-50 dark:bg-zinc-950/60 rounded-xl border border-zinc-100 dark:border-zinc-800/50 hover:border-zinc-300 dark:hover:border-zinc-700 transition cursor-pointer" onclick="openRecurringTaskDetail(${t.id})">
-        <div class="flex items-center gap-3 min-w-0 flex-1">
-          <div class="w-9 h-9 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 flex items-center justify-center text-sm flex-shrink-0">
-            <i class="fa-solid ${icon}"></i>
-          </div>
-          <div class="min-w-0">
-            <p class="text-sm font-bold text-zinc-800 dark:text-zinc-100 truncate">${escapeHtml(t.title)}</p>
-            <div class="flex items-center gap-2 text-xs text-zinc-400 mt-0.5 flex-wrap">
-              <span class="inline-flex items-center gap-1"><i class="fa-solid fa-rotate text-[10px]"></i>${escapeHtml(pattern)}</span>
-              <span>·</span>
-              <span>Next: ${escapeHtml(nextLabel)}</span>
-            </div>
-          </div>
-        </div>
-        <button type="button" class="p-1.5 text-zinc-400 hover:text-rose-500 transition flex-shrink-0" onclick="event.stopPropagation(); promptDeleteRecurring(${t.id})" title="Delete task">
-          <i class="fa-solid fa-trash-can text-sm"></i>
-        </button>
-      </div>
-    `;
-  }).join('');
-}
-
-window.openRecurringTaskDetail = function(id) {
-  recurringModal.classList.add('hidden');
-  openDetail(id);
-};
-
-window.promptDeleteRecurring = function(id) {
-  pendingDeleteId = id;
-  deleteConfirmModal.classList.remove('hidden');
-};
-
-recurringTasksBtn.addEventListener('click', () => {
-  renderRecurringPanel();
-  recurringModal.classList.remove('hidden');
-});
-
-document.getElementById('closeRecurringBtn').addEventListener('click', () => {
-  recurringModal.classList.add('hidden');
-});
-
-recurringModal.addEventListener('click', (e) => {
-  if (e.target === recurringModal) recurringModal.classList.add('hidden');
-});
-
-window.toggleComplete = function(id) {
-  const t = tasks.find(x => x.id === id);
-  if (!t) return;
-  if (t.archived) return;
-  const today = todayStr();
-
-  if (!t.completed) {
-    if (t.recurrence) {
-      t.history = t.history || [];
-      const completedAt = new Date().toISOString();
-      t.history.push({ dueDate: t.dueDate || today, completedAt });
-      t.completed = true;
-      t.completedAt = completedAt;
-
-      const originalDue = t.dueDate;
-      let nextDate;
-
-      if (t.dueDate && today < t.dueDate) {
-        nextDate = advanceDate(t.dueDate, t.recurrence);
-        t.dueDate = nextDate;
-        let guard = 0;
-        while (t.dueDate <= today && guard < 100) {
-          t.dueDate = advanceDate(t.dueDate, t.recurrence);
-          nextDate = t.dueDate;
-          guard++;
-        }
-      } else {
-        nextDate = advanceDate(t.dueDate || today, t.recurrence);
-        let guard = 0;
-        while (nextDate <= today && guard < 1000) {
-          nextDate = advanceDate(nextDate, t.recurrence);
-          guard++;
-        }
-      }
-
-      saveData();
-      const nextLabel = formatDateLabel(nextDate);
-
-      const rows = getVisibleTaskRows(id);
-      const fadeInPlace = currentTab === 'today';
-      rows.forEach(row => {
-        const cb = row.querySelector('.checkbox');
-        if (cb) { cb.classList.add('done', 'pop'); setTimeout(() => cb.classList.remove('pop'), 300); }
-        if (fadeInPlace) {
-          setTimeout(() => { if (row.parentNode) row.classList.add('completing'); }, 100);
-          setTimeout(() => { if (row.parentNode) row.classList.remove('completing'); }, 500);
-        }
-      });
-
-      const undoFn = () => {
-        if (t.history && t.history.length > 0) {
-          const last = t.history[t.history.length - 1];
-          if (last && last.completedAt && formatDate(new Date(last.completedAt)) === today) {
-            t.history.pop();
-          }
-        }
-        t.completed = false;
-        t.completedAt = null;
-        if (originalDue !== null && originalDue !== undefined) {
-          t.dueDate = originalDue;
-        }
-        saveData();
-        renderToday();
-        if (currentTab === 'all') {
-          if (allSubView === 'upcoming') renderUpcoming();
-          if (allSubView === 'completed') renderCompleted();
-          if (allSubView === 'archived') renderArchived();
-          if (allSubView === 'timetable') renderTimetable();
-        }
-        showToast('Undone');
-      };
-
-      showToast(`Completed · Next: ${nextLabel}`, 'success', 'Undo', undoFn);
-
-      setTimeout(() => {
-        renderToday();
-        if (currentTab === 'all') {
-          if (allSubView === 'upcoming') renderUpcoming();
-          if (allSubView === 'completed') renderCompleted();
-          if (allSubView === 'archived') renderArchived();
-          if (allSubView === 'timetable') renderTimetable();
-        }
-      }, fadeInPlace ? 550 : 300);
-    } else {
-      t.completed = true;
-      t.completedAt = new Date().toISOString();
-      saveData();
-
-      const rows = getVisibleTaskRows(id);
-      rows.forEach(row => {
-        const cb = row.querySelector('.checkbox');
-        if (cb) { cb.classList.add('done', 'pop'); }
-        setTimeout(() => { if (row.parentNode) row.classList.add('completing'); }, 100);
-        setTimeout(() => { if (row.parentNode) row.classList.remove('completing'); }, 500);
-      });
-
-      setTimeout(() => {
-        renderToday();
-        if (currentTab === 'all') {
-          if (allSubView === 'upcoming') renderUpcoming();
-          if (allSubView === 'completed') renderCompleted();
-          if (allSubView === 'archived') renderArchived();
-          if (allSubView === 'timetable') renderTimetable();
-        }
-      }, 550);
-
-      const undoFn = () => {
-        t.completed = false;
-        t.completedAt = null;
-        saveData();
-        renderToday();
-        if (currentTab === 'all') {
-          if (allSubView === 'upcoming') renderUpcoming();
-          if (allSubView === 'completed') renderCompleted();
-          if (allSubView === 'archived') renderArchived();
-          if (allSubView === 'timetable') renderTimetable();
-        }
-        showToast('Undone');
-      };
-
-      showToast('Task completed', 'success', 'Undo', undoFn);
-    }
-  } else {
-    if (t.recurrence && t.history && t.history.length > 0) {
-      const last = t.history[t.history.length - 1];
-      if (last && last.completedAt && formatDate(new Date(last.completedAt)) === today) {
-        if (last.dueDate && last.dueDate < t.dueDate) {
-          t.dueDate = last.dueDate;
-        }
-        t.history.pop();
-      }
-    }
-    t.completed = false;
-    t.completedAt = null;
-    saveData();
-    renderToday();
-    if (currentTab === 'all') {
-      if (allSubView === 'completed') renderCompleted();
-      if (allSubView === 'upcoming') renderUpcoming();
-      if (allSubView === 'archived') renderArchived();
-      if (allSubView === 'timetable') renderTimetable();
-    }
-    showToast('Moved back to active');
-  }
-};
-
-let activePopover = null;
-function closeActivePopover() {
-  if (activePopover) { activePopover.remove(); activePopover = null; snoozeOpenForId = null; }
-}
-document.addEventListener('click', (e) => {
-  if (activePopover && !e.target.closest('.popover') && !e.target.closest('[data-snooze-btn]')) {
-    closeActivePopover();
-  }
-});
-
-window.openSnooze = function(e, id) {
-  e.stopPropagation();
-  if (snoozeOpenForId === id) { closeActivePopover(); return; }
-  closeActivePopover();
-
-  const btn = e.currentTarget;
-  const rect = btn.getBoundingClientRect();
-
-  const pop = document.createElement('div');
-  pop.className = 'popover';
-  pop.style.top = (rect.bottom + 6 + window.scrollY) + 'px';
-  pop.style.left = Math.max(8, rect.right - 140 + window.scrollX) + 'px';
-
-  pop.innerHTML = `
-    <button type="button" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition" onclick="snoozeTask(${id}, 1)">+1 day</button>
-    <button type="button" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition" onclick="snoozeTask(${id}, 7)">+1 week</button>
-    <button type="button" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition" onclick="snoozePick(${id})">Pick date…</button>
-  `;
-  document.body.appendChild(pop);
-  activePopover = pop;
-  snoozeOpenForId = id;
-};
-
-window.snoozeTask = function(id, days) {
-  const t = tasks.find(x => x.id === id);
-  if (!t) return;
-  const base = t.dueDate && t.dueDate > todayStr() ? t.dueDate : todayStr();
-  t.dueDate = addDaysStr(base, days);
-  saveData();
-  closeActivePopover();
-  renderToday();
-  if (currentTab === 'all' && allSubView === 'upcoming') renderUpcoming();
-  showToast(`Snoozed ${days} day${days > 1 ? 's' : ''}`);
-};
-
-window.snoozePick = function(id) {
-  const t = tasks.find(x => x.id === id);
-  if (!t) return;
-  closeActivePopover();
-  startEdit(id);
-};
-
-window.archiveTask = function(id) {
-  const t = tasks.find(x => x.id === id);
-  if (!t) return;
-  const prevArchived = t.archived || false;
-  const prevArchivedAt = t.archivedAt || null;
-  t.archived = true;
-  t.archivedAt = new Date().toISOString();
-  saveData();
-  closeDetail();
-  renderToday();
-  if (currentTab === 'all') {
-    if (allSubView === 'upcoming') renderUpcoming();
-    if (allSubView === 'completed') renderCompleted();
-    if (allSubView === 'archived') renderArchived();
-    if (allSubView === 'timetable') renderTimetable();
-  }
-  showToast('Archived', 'success', 'Undo', () => {
-    t.archived = prevArchived;
-    t.archivedAt = prevArchivedAt;
-    saveData();
-    renderToday();
-    if (currentTab === 'all') {
-      if (allSubView === 'upcoming') renderUpcoming();
-      if (allSubView === 'completed') renderCompleted();
-      if (allSubView === 'archived') renderArchived();
-      if (allSubView === 'timetable') renderTimetable();
-    }
-    showToast('Restored');
-  });
-};
-
-window.unarchiveTask = function(id) {
-  const t = tasks.find(x => x.id === id);
-  if (!t) return;
-  t.archived = false;
-  t.archivedAt = null;
-  saveData();
-  closeDetail();
-  renderToday();
-  if (currentTab === 'all') {
-    if (allSubView === 'upcoming') renderUpcoming();
-    if (allSubView === 'completed') renderCompleted();
-    if (allSubView === 'archived') renderArchived();
-    if (allSubView === 'timetable') renderTimetable();
-  }
-  showToast('Restored');
-};
-
-window.openDetail = function(id) {
-  const t = tasks.find(x => x.id === id);
-  if (!t) return;
-  detailId = id;
-
-  historyPanel.classList.add('hidden');
-  historyList.innerHTML = '';
-
-  const typeIcon = getTypeIcon(t.type);
-  document.getElementById('detailIcon').innerHTML = `<i class="fa-solid ${typeIcon}"></i>`;
-  document.getElementById('detailType').textContent = t.type;
-  document.getElementById('detailTitle').textContent = t.title;
-
-  const pri = t.priority || 'none';
-  const priEl = document.getElementById('detailPriority');
-  if (pri === 'none') {
-    priEl.innerHTML = '<span class="text-zinc-400 dark:text-zinc-500">None</span>';
-  } else {
-    const priClass = t.completed ? `${PRIORITY_COLOR[pri]} completed` : PRIORITY_COLOR[pri];
-    priEl.innerHTML = `<span class="inline-flex items-center gap-2"><span class="pri-mark ${priClass}" style="width:auto">${PRIORITY_MARKS[pri]}</span><span>${PRIORITY_LABEL[pri]}</span></span>`;
-  }
-
-  const scheduleRow = document.getElementById('detailScheduleRow');
-  const scheduleEl = document.getElementById('detailSchedule');
-  if (t.dueTime && t.endTime) {
-    scheduleRow.style.display = 'flex';
-    scheduleEl.innerHTML = `<span class="text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-calendar-check mr-1"></i>In timetable</span>`;
-  } else if (t.dueTime && !t.endTime) {
-    scheduleRow.style.display = 'flex';
-    scheduleEl.innerHTML = `<span class="text-amber-600 dark:text-amber-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Missing end time</span>`;
-  } else if (!t.dueTime && t.endTime) {
-    scheduleRow.style.display = 'flex';
-    scheduleEl.innerHTML = `<span class="text-amber-600 dark:text-amber-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Missing start time</span>`;
-  } else {
-    scheduleRow.style.display = 'none';
-  }
-
-  const dateRow = document.getElementById('detailDateRow');
-  const dateEl = document.getElementById('detailDate');
-  if (t.dueDate) {
-    dateRow.style.display = 'flex';
-    let dateStr = parseDate(t.dueDate).toLocaleDateString('en-US', {
-      weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
-    });
-    if (t.dueTime && t.endTime) dateStr += ` · ${t.dueTime}–${t.endTime}`;
-    else if (t.dueTime) dateStr += ` · ${t.dueTime}`;
-    else if (t.endTime) dateStr += ` · by ${t.endTime}`;
-    dateEl.textContent = dateStr;
-  } else {
-    dateRow.style.display = 'none';
-  }
-
-  const repeatRow = document.getElementById('detailRepeatRow');
-  const repeatBtn = document.getElementById('detailRepeatBtn');
-  const history = t.history || [];
-  const count = history.length;
-
-  if (t.recurrence) {
-    repeatRow.style.display = 'flex';
-    let label = formatRecurrenceLabel(t.recurrence);
-    if (count > 0) {
-      const sorted = [...history].sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
-      const last = new Date(sorted[0].completedAt);
-      const lastLabel = last.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      label += ` · Completed ${count}× · Last: ${lastLabel}`;
-      repeatBtn.style.cursor = 'pointer';
-      repeatBtn.title = 'Click to view history';
-    } else {
-      repeatBtn.style.cursor = 'default';
-      repeatBtn.title = '';
-    }
-    repeatBtn.textContent = label;
-  } else if (count > 0) {
-    repeatRow.style.display = 'flex';
-    const sorted = [...history].sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
-    const last = new Date(sorted[0].completedAt);
-    const lastLabel = last.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    repeatBtn.textContent = `Previously recurring · Completed ${count}× · Last: ${lastLabel}`;
-    repeatBtn.style.cursor = 'pointer';
-    repeatBtn.title = 'Click to view history';
-  } else {
-    repeatRow.style.display = 'none';
-    repeatBtn.textContent = '';
-    repeatBtn.style.cursor = 'default';
-    repeatBtn.title = '';
-  }
-
-  const notesEl = document.getElementById('detailNotes');
-  if (t.notes && t.notes.trim()) {
-    notesEl.textContent = t.notes;
-    notesEl.className = 'text-sm text-zinc-700 dark:text-zinc-200 leading-relaxed break-words whitespace-pre-wrap';
-  } else {
-    notesEl.textContent = 'No notes added.';
-    notesEl.className = 'text-sm text-zinc-400 dark:text-zinc-500 italic leading-relaxed whitespace-pre-wrap';
-  }
-
-  const archiveBtn = document.getElementById('detailArchiveBtn');
-  if (t.archived) {
-    archiveBtn.classList.remove('hidden');
-    archiveBtn.innerHTML = '<i class="fa-solid fa-inbox"></i> Restore';
-  } else if (t.completed && !t.recurrence) {
-    archiveBtn.classList.add('hidden');
-  } else {
-    archiveBtn.classList.remove('hidden');
-    archiveBtn.innerHTML = '<i class="fa-solid fa-box-archive"></i> Archive';
-  }
-
-  detailModal.classList.remove('hidden');
-};
-
-window.closeDetail = function() {
-  detailId = null;
-  historyPanel.classList.add('hidden');
-  historyList.innerHTML = '';
-  detailModal.classList.add('hidden');
-};
-
-document.getElementById('closeDetailBtn').addEventListener('click', closeDetail);
-detailModal.addEventListener('click', (e) => { if (e.target === detailModal) closeDetail(); });
-
-document.getElementById('detailEditBtn').addEventListener('click', () => {
-  if (detailId !== null) startEdit(detailId);
-});
-
-document.getElementById('detailArchiveBtn').addEventListener('click', () => {
-  if (detailId === null) return;
-  const t = tasks.find(x => x.id === detailId);
-  if (!t) return;
-  if (t.archived) {
-    unarchiveTask(detailId);
-  } else {
-    archiveTask(detailId);
-  }
-});
-
-document.getElementById('detailDeleteBtn').addEventListener('click', () => {
-  if (detailId === null) return;
-  pendingDeleteId = detailId;
-  closeDetail();
-  deleteConfirmModal.classList.remove('hidden');
-});
-
-document.getElementById('detailRepeatBtn').addEventListener('click', () => {
-  if (detailId === null) return;
-  const t = tasks.find(x => x.id === detailId);
-  if (!t || !(t.history && t.history.length > 0)) return;
-  if (historyPanel.classList.contains('hidden')) {
-    renderHistoryPanel(t);
-    historyPanel.classList.remove('hidden');
-  } else {
-    historyPanel.classList.add('hidden');
-  }
-});
-
-document.getElementById('collapseHistoryBtn').addEventListener('click', () => {
-  historyPanel.classList.add('hidden');
-});
-
-function renderHistoryPanel(t) {
-  const history = [...(t.history || [])].sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
-  historyList.innerHTML = history.map((entry, idx) => {
-    const dt = new Date(entry.completedAt);
-    const dateVal = formatDate(dt);
-    return `
-      <div class="flex items-center justify-between gap-2 py-0.5 pl-1 pr-0.5 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition">
-        <input type="date" class="history-date-input" data-history-index="${idx}" value="${dateVal}">
-        <button type="button" class="history-delete-btn p-1.5 text-zinc-400 hover:text-rose-500 transition flex-shrink-0" data-history-index="${idx}" title="Remove">
-          <i class="fa-solid fa-xmark text-xs"></i>
-        </button>
-      </div>
-    `;
-  }).join('');
-}
-
-historyList.addEventListener('click', (e) => {
-  const dateInput = e.target.closest('.history-date-input');
-  if (dateInput) {
-    if (typeof dateInput.showPicker === 'function') {
-      try { dateInput.showPicker(); } catch (err) {}
-    }
-    return;
-  }
-  const btn = e.target.closest('.history-delete-btn');
-  if (!btn) return;
-  const idx = parseInt(btn.dataset.historyIndex, 10);
-  if (isNaN(idx)) return;
-  if (detailId === null) return;
-  const t = tasks.find(x => x.id === detailId);
-  if (!t || !t.history) return;
-
-  const sorted = [...t.history].sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
-  const removed = sorted[idx];
-  const origIdx = t.history.findIndex(h => h === removed);
-  if (origIdx === -1) return;
-
-  t.history.splice(origIdx, 1);
-  saveData();
-
-  if (t.history.length > 0) {
-    renderHistoryPanel(t);
-  } else {
-    historyPanel.classList.add('hidden');
-  }
-  refreshDetailRepeatLabel(t);
-
-  showToast('Completion removed', 'error', 'Undo', () => {
-    t.history.splice(origIdx, 0, removed);
-    saveData();
-    if (t.history.length > 0) {
-      renderHistoryPanel(t);
-      historyPanel.classList.remove('hidden');
-    }
-    refreshDetailRepeatLabel(t);
-    showToast('Restored');
-  });
-});
-
-historyList.addEventListener('change', (e) => {
-  const input = e.target.closest('.history-date-input');
-  if (!input) return;
-  const idx = parseInt(input.dataset.historyIndex, 10);
-  if (isNaN(idx)) return;
-  if (detailId === null) return;
-  const t = tasks.find(x => x.id === detailId);
-  if (!t || !t.history) return;
-
-  const sorted = [...t.history].sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
-  const entry = sorted[idx];
-  if (!entry) return;
-
-  if (!isValidDateString(input.value)) return;
-  const newDate = parseDate(input.value);
-  if (isNaN(newDate.getTime())) return;
-
-  const old = new Date(entry.completedAt);
-  const updated = new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate(),
-    old.getHours(), old.getMinutes(), old.getSeconds(), old.getMilliseconds());
-  entry.completedAt = updated.toISOString();
-  saveData();
-
-  refreshDetailRepeatLabel(t);
-  showToast('Date updated');
-});
-
-function refreshDetailRepeatLabel(t) {
-  const repeatBtn = document.getElementById('detailRepeatBtn');
-  const history = t.history || [];
-  const count = history.length;
-
-  if (t.recurrence) {
-    let label = formatRecurrenceLabel(t.recurrence);
-    if (count > 0) {
-      const sorted = [...history].sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
-      const last = new Date(sorted[0].completedAt);
-      const lastLabel = last.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      label += ` · Completed ${count}× · Last: ${lastLabel}`;
-    }
-    repeatBtn.textContent = label;
-  } else if (count > 0) {
-    const sorted = [...history].sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
-    const last = new Date(sorted[0].completedAt);
-    const lastLabel = last.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    repeatBtn.textContent = `Previously recurring · Completed ${count}× · Last: ${lastLabel}`;
-  }
-}
-
-document.getElementById('cancelDeleteBtn').addEventListener('click', () => {
-  pendingDeleteId = null;
-  deleteConfirmModal.classList.add('hidden');
-});
-
-document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
-  if (pendingDeleteId === null) return;
-  if (editingId === pendingDeleteId) resetForm();
-  tasks = tasks.filter(t => t.id !== pendingDeleteId);
-  saveData();
-  pendingDeleteId = null;
-  deleteConfirmModal.classList.add('hidden');
-  renderToday();
-  if (currentTab === 'all') {
-    if (allSubView === 'upcoming') renderUpcoming();
-    if (allSubView === 'completed') renderCompleted();
-    if (allSubView === 'archived') renderArchived();
-    if (allSubView === 'timetable') renderTimetable();
-  }
-  if (!recurringModal.classList.contains('hidden')) {
-    renderRecurringPanel();
-  }
-  showToast('Task deleted', 'error');
-});
-
-function toggleTheme() {
-  document.documentElement.classList.toggle('dark');
-  const isDark = document.documentElement.classList.contains('dark');
-  storageSet(STORAGE_KEY_THEME, isDark ? 'dark' : 'light');
-}
-document.getElementById('themeToggleBtn').addEventListener('click', toggleTheme);
-document.getElementById('themeToggleBtnSettings').addEventListener('click', toggleTheme);
-
-document.getElementById('exportBtn').addEventListener('click', () => {
-  const payload = { tasks: tasks, exportedAt: new Date().toISOString() };
-  const dataStr = JSON.stringify(payload, null, 2);
-  const blob = new Blob([dataStr], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  const today = todayStr();
-  a.href = url;
-  a.download = `tick_backup_${today}.json`;
-  a.style.display = 'none';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
-  showToast('Backup exported');
-});
-
-document.getElementById('importFileInput').addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  if (file.size > 5 * 1024 * 1024) {
-    showToast('Backup file is too large (5 MB maximum)', 'error');
-    e.target.value = '';
-    return;
-  }
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    try {
-      const parsed = JSON.parse(ev.target.result);
-      let importedTasks = [];
-
-      if (Array.isArray(parsed)) {
-        importedTasks = parsed;
-      } else if (parsed && typeof parsed === 'object') {
-        importedTasks = Array.isArray(parsed.tasks) ? parsed.tasks.slice() : [];
-        const importedSlotsRaw = Array.isArray(parsed.slots) ? parsed.slots : [];
-        if (importedSlotsRaw.length > 0) {
-          const sanitizedSlots = sanitizeSlots(importedSlotsRaw);
-          const today = todayStr();
-          const todayDow = parseDate(today).getDay();
-          sanitizedSlots.forEach(slot => {
-            const diff = (slot.day - todayDow + 7) % 7;
-            const dueDate = addDaysStr(today, diff);
-            importedTasks.push({
-              title: slot.title,
-              notes: [slot.location, slot.notes].filter(Boolean).join('\n'),
-              type: slot.type,
-              priority: 'none',
-              dueDate: dueDate,
-              dueTime: slot.startTime,
-              endTime: slot.endTime,
-              recurrence: { freq: 'weekly', interval: 1, days: [slot.day], anchor: dueDate },
-              completed: false,
-              archived: false
-            });
-          });
-        }
-      } else {
-        throw new Error('Invalid file format');
-      }
-
-      if (importedTasks.length > 10000) throw new Error('Too many tasks');
-
-      pendingImportData = sanitizeTasks(importedTasks);
-
-      const incomingT = pendingImportData.length;
-      const currentT = tasks.length;
-
-      document.getElementById('importConfirmText').textContent =
-        `You currently have ${currentT} task${currentT === 1 ? '' : 's'}. This backup contains ${incomingT} valid task${incomingT === 1 ? '' : 's'}. All current data will be permanently replaced.`;
-
-      importConfirmModal.classList.remove('hidden');
-    } catch (err) {
-      showToast('Invalid backup file. Choose a valid Tick JSON backup.', 'error');
-    }
+    setTimeout(() => refreshCurrentView(), 400);
   };
-  reader.onerror = () => showToast('Could not read that backup file.', 'error');
-  reader.readAsText(file);
-  e.target.value = '';
-});
 
-document.getElementById('cancelImportBtn').addEventListener('click', () => {
-  pendingImportData = null;
-  importConfirmModal.classList.add('hidden');
-});
+  window.openEdit = function(id) {
+    const t = tasks.find(x => x.id === id);
+    if (!t) return;
+    editingId = id;
+    editTitleInput.value = t.title;
+    editDateInput.value = t.dueDate || '';
+    editNotesInput.value = t.notes || '';
+    editModal.classList.remove('hidden');
+    setTimeout(() => editTitleInput.focus(), 100);
+  };
 
-document.getElementById('confirmImportBtn').addEventListener('click', () => {
-  if (!pendingImportData) return;
-  tasks = pendingImportData;
-  pendingImportData = null;
-  saveData();
-  normalizeRecurring();
-  renderToday();
-  if (currentTab === 'all') renderAll();
-  importConfirmModal.classList.add('hidden');
-  showToast('Backup restored');
-});
+  function closeEdit() {
+    editingId = null;
+    editModal.classList.add('hidden');
+  }
 
-document.getElementById('resetBtn').addEventListener('click', () => confirmModal.classList.remove('hidden'));
-document.getElementById('cancelResetBtn').addEventListener('click', () => confirmModal.classList.add('hidden'));
-document.getElementById('confirmResetBtn').addEventListener('click', () => {
-  tasks = [];
-  saveData();
-  cameFromTab = null;
-  resetForm();
-  renderToday();
-  if (currentTab === 'all') renderAll();
-  confirmModal.classList.add('hidden');
-  showToast('All data cleared', 'error');
-});
+  closeEditBtn.addEventListener('click', closeEdit);
+  editCancelBtn.addEventListener('click', closeEdit);
+  editModal.addEventListener('click', (e) => { if (e.target === editModal) closeEdit(); });
 
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-    if (!allViewDropdownMenu.classList.contains('hidden')) {
-      closeAllViewDropdown();
+  editForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (editingId === null) return;
+    const t = tasks.find(x => x.id === editingId);
+    if (!t) return;
+
+    const title = editTitleInput.value.trim().slice(0, 200);
+    if (!title) { editTitleInput.focus(); return; }
+
+    t.title = title;
+    t.notes = editNotesInput.value.trim().slice(0, 10000);
+    t.dueDate = isValidDateString(editDateInput.value) ? editDateInput.value : null;
+
+    saveData();
+    closeEdit();
+    showToast('Task updated');
+    refreshCurrentView();
+  });
+
+  editDeleteBtn.addEventListener('click', () => {
+    if (editingId === null) return;
+    const id = editingId;
+    closeEdit();
+    openConfirm('Delete this task?', 'This action cannot be undone.', 'Delete', () => {
+      tasks = tasks.filter(t => t.id !== id);
+      saveData();
+      showToast('Task deleted', 'error');
+      refreshCurrentView();
+    });
+  });
+
+  function openConfirm(title, message, buttonText, action) {
+    confirmTitle.textContent = title;
+    confirmMessage.textContent = message;
+    confirmOkBtn.textContent = buttonText;
+    pendingConfirmAction = action;
+    confirmModal.classList.remove('hidden');
+  }
+
+  confirmCancelBtn.addEventListener('click', () => {
+    pendingConfirmAction = null;
+    confirmModal.classList.add('hidden');
+  });
+
+  confirmOkBtn.addEventListener('click', () => {
+    if (pendingConfirmAction) pendingConfirmAction();
+    pendingConfirmAction = null;
+    confirmModal.classList.add('hidden');
+  });
+
+  confirmModal.addEventListener('click', (e) => {
+    if (e.target === confirmModal) {
+      pendingConfirmAction = null;
+      confirmModal.classList.add('hidden');
+    }
+  });
+
+  searchInput.addEventListener('input', renderAll);
+
+  function toggleTheme() {
+    document.documentElement.classList.toggle('dark');
+    const isDark = document.documentElement.classList.contains('dark');
+    storageSet(THEME_KEY, isDark ? 'dark' : 'light');
+  }
+  document.getElementById('themeToggleBtn').addEventListener('click', toggleTheme);
+  document.getElementById('themeToggleBtnSettings').addEventListener('click', toggleTheme);
+
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    const payload = { tasks, exportedAt: new Date().toISOString() };
+    const dataStr = JSON.stringify(payload, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tick_backup_${todayStr()}.json`;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+    showToast('Backup exported');
+  });
+
+  importFileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('File too large (5 MB max)', 'error');
+      e.target.value = '';
       return;
     }
-    if (!deleteConfirmModal.classList.contains('hidden')) {
-      pendingDeleteId = null;
-      deleteConfirmModal.classList.add('hidden');
-      return;
-    }
-    if (!detailModal.classList.contains('hidden')) {
-      closeDetail();
-      return;
-    }
-    if (!recurringModal.classList.contains('hidden')) {
-      recurringModal.classList.add('hidden');
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const parsed = JSON.parse(ev.target.result);
+        let importedTasks = [];
+        if (Array.isArray(parsed)) importedTasks = parsed;
+        else if (parsed && Array.isArray(parsed.tasks)) importedTasks = parsed.tasks;
+        else throw new Error('Invalid format');
+        if (importedTasks.length > 10000) throw new Error('Too many tasks');
+
+        pendingImportData = sanitizeTasks(importedTasks);
+        const incoming = pendingImportData.length;
+        const current = tasks.length;
+        importConfirmText.textContent = `You currently have ${current} task${current === 1 ? '' : 's'}. This backup contains ${incoming} valid task${incoming === 1 ? '' : 's'}. All current data will be replaced.`;
+        importConfirmModal.classList.remove('hidden');
+      } catch (err) {
+        showToast('Invalid backup file', 'error');
+      }
+    };
+    reader.onerror = () => showToast('Could not read file', 'error');
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+
+  cancelImportBtn.addEventListener('click', () => {
+    pendingImportData = null;
+    importConfirmModal.classList.add('hidden');
+  });
+
+  confirmImportBtn.addEventListener('click', () => {
+    if (!pendingImportData) return;
+    tasks = pendingImportData;
+    pendingImportData = null;
+    saveData();
+    importConfirmModal.classList.add('hidden');
+    showToast('Backup restored');
+    refreshCurrentView();
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    openConfirm('Clear all data?', 'This will permanently delete all tasks. Export a backup first if you want to keep them.', 'Clear All', () => {
+      tasks = [];
+      saveData();
+      showToast('All data cleared', 'error');
+      refreshCurrentView();
+    });
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (!editModal.classList.contains('hidden')) { closeEdit(); return; }
+    if (!confirmModal.classList.contains('hidden')) {
+      pendingConfirmAction = null;
+      confirmModal.classList.add('hidden');
       return;
     }
     if (!importConfirmModal.classList.contains('hidden')) {
@@ -3021,72 +927,26 @@ document.addEventListener('keydown', (e) => {
       importConfirmModal.classList.add('hidden');
       return;
     }
-    if (!confirmModal.classList.contains('hidden')) {
-      confirmModal.classList.add('hidden');
-      return;
+  });
+
+  window.addEventListener('load', () => {
+    if (!testStorage()) storageWarning.classList.remove('hidden');
+
+    const savedTheme = storageGet(THEME_KEY);
+    if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
     }
-  }
 
-  if (e.key !== 'n' && e.key !== 'N') return;
-  const tgt = e.target;
-  if (tgt && (tgt.tagName === 'INPUT' || tgt.tagName === 'TEXTAREA' || tgt.tagName === 'SELECT' || tgt.isContentEditable)) return;
-  if (e.metaKey || e.ctrlKey || e.altKey) return;
-  e.preventDefault();
+    loadData();
+    setAllView('scheduled');
+    renderToday();
 
-  if (currentTab !== 'today') switchTab('today');
-  else appEl.scrollTo({ top: 0, behavior: 'smooth' });
-  if (!isFormExpanded) expandTaskForm();
-  setTimeout(() => titleInput.focus({ preventScroll: true }), 350);
-});
-
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden) {
-    normalizeRecurring();
-    if (currentTab === 'today') renderToday();
-    if (currentTab === 'all' && allSubView === 'upcoming') renderUpcoming();
-    if (currentTab === 'all' && allSubView === 'timetable') renderTimetable();
-  }
-});
-
-window.addEventListener('load', () => {
-  if (!testStorage()) {
-    storageUsable = false;
-    storageWarning.classList.remove('hidden');
-  }
-
-  const savedTheme = storageGet(STORAGE_KEY_THEME);
-  if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-    document.documentElement.classList.add('dark');
-  } else {
-    document.documentElement.classList.remove('dark');
-  }
-
-  const savedSort = storageGet(STORAGE_KEY_SORT);
-  if (savedSort === 'priority' || savedSort === 'deadline') sortPref = savedSort;
-
-  loadMotionPref();
-  applyMotionPref();
-
-  populateTypeSelect();
-  prioritySelect.value = 'none';
-  dateInput.value = todayStr();
-
-  loadData();
-  migrateSlotsToTasks();
-  normalizeRecurring();
-
-  updateSortButtons();
-  allSubView = 'upcoming';
-  applyAllView('upcoming');
-  renderToday();
-  updateFirstOccurrenceHint();
-
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
-      .then(() => console.log('SW registered'))
-      .catch(err => console.log('SW registration failed', err));
-  }
-});
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(() => console.log('SW registered'))
+        .catch(err => console.log('SW registration failed', err));
+    }
+  });
 </script>
 </body>
 </html>
